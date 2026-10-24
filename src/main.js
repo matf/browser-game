@@ -4,8 +4,9 @@ import { GameScene } from './scenes/GameScene.js';
 import { UIScene } from './scenes/UIScene.js';
 import { ShopScene } from './scenes/ShopScene.js';
 import { HelpScene } from './scenes/HelpScene.js';
-import { watchOrientation } from './touch.js';
+import { keepFitted, watchOrientation } from './touch.js';
 import { HEIGHT, WIDTH, ZOOM } from './view.js';
+import { watchForUpdates } from './update.js';
 
 function startGame() {
   const game = new Phaser.Game({
@@ -26,8 +27,7 @@ function startGame() {
 
   watchOrientation(game);
 
-  // When Safari's bars slide in or out, the visible area changes size: fit the game again.
-  window.visualViewport?.addEventListener('resize', () => game.scale.refresh());
+  keepFitted(game);
 
   // Handy for poking at the game from the browser console (and for automated testing).
   if (import.meta.env.DEV) window.game = game;
@@ -35,3 +35,4 @@ function startGame() {
 
 // Wait for the font, otherwise the first texts are drawn in a fallback font.
 document.fonts.load('bold 16px Fredoka').finally(startGame);
+watchForUpdates();
