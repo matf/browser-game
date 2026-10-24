@@ -13,6 +13,8 @@ const COINS_PER_ROW = 4; // coins in each row between the pillars
 const COIN_SPACING = 18; // pixels between coins in a row
 const GROUND_HEIGHT = 36; // height of the grass and dirt at the bottom
 const SHOP_DELAY_MS = 2000; // after a level ends, how long until the shop opens
+const NAP_MS = 3000; // how long the dragon sleeps when it runs out of hearts
+const WAKE_HEARTS = 2; // hearts after the nap
 
 export class GameScene extends Phaser.Scene {
   constructor() {
@@ -27,6 +29,7 @@ export class GameScene extends Phaser.Scene {
     this.level = LEVELS[this.levelIndex];
     this.groundY = height - GROUND_HEIGHT;
     this.finished = false;
+    this.napping = false;
     this.elapsed = 0;
     this.rainbow = null;
 
@@ -87,7 +90,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   spawnPillars() {
-    if (this.atEnd) return;
+    if (this.atEnd || this.napping) return;
     const x = this.scale.width + 10;
     const gap = this.level.gap;
     const gapTop = Phaser.Math.Between(40, this.groundY - gap - 30);
@@ -103,7 +106,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   spawnCoinRow() {
-    if (this.atEnd) return;
+    if (this.atEnd || this.napping) return;
     const y = Phaser.Math.Between(40, this.groundY - 30);
     for (let i = 0; i < COINS_PER_ROW; i++) this.spawnCoin(this.scale.width + 10 + i * COIN_SPACING, y);
   }
@@ -115,14 +118,14 @@ export class GameScene extends Phaser.Scene {
   }
 
   spawnBee() {
-    if (this.atEnd) return;
+    if (this.atEnd || this.napping) return;
     const y = Phaser.Math.Between(40, this.groundY - 40);
     const bee = new Bee(this, this.scale.width + 20, y, this.level.beeSpeed).setDepth(3);
     this.obstacles.add(bee);
   }
 
   spawnDrop() {
-    if (this.atEnd) return;
+    if (this.atEnd || this.napping) return;
     const drop = this.obstacles.create(Phaser.Math.Between(60, this.scale.width + 60), -10, 'drop');
     drop.isDrop = true;
     drop.setDepth(3);
@@ -147,7 +150,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   onHit(player, obstacle) {
-    if (this.finished || player.invulnerable) return;
+    if (this.finished || this.napping || player.invulnerable) return;
     if (obstacle.isDrop) this.popDrop(obstacle);
 
     const hearts = this.save.hearts - 1;
@@ -158,15 +161,36 @@ export class GameScene extends Phaser.Scene {
       writeSave(this.save);
       player.hurt();
     } else {
-      // Out of hearts: the dragon takes a nap and wakes up with one heart.
-      this.save.hearts = 1;
-      writeSave(this.save);
-      this.add
-        .text(player.x + 10, player.y - 20, 'Zzz', { fontFamily: 'monospace', fontSize: '14px', fontStyle: 'bold', color: '#ffffff', stroke: '#1b1630', strokeThickness: 4 })
-        .setResolution(4)
-        .setDepth(5);
-      this.finish('gameover', this.levelIndex);
+      this.nap();
     }
+  }
+
+  // Out of hearts: the dragon falls asleep, loses all its coins, and wakes up with WAKE_HEARTS
+  // hearts at the start of the same level (no shop).
+  nap() {
+    this.napping = true;
+    this.physics.pause();
+    this.player.anims.pause();
+    this.save.hearts = WAKE_HEARTS;
+    this.save.coins = 0;
+    writeSave(this.save);
+    this.registry.set('coins', 0);
+    this.events.emit('nap');
+
+    const zzz = this.add
+      .text(this.player.x + 10, this.player.y - 20, 'Zzz', {
+        fontFamily: 'monospace',
+        fontSize: '14px',
+        fontStyle: 'bold',
+        color: '#ffffff',
+        stroke: '#1b1630',
+        strokeThickness: 4,
+      })
+      .setResolution(4)
+      .setDepth(5);
+    this.tweens.add({ targets: zzz, y: zzz.y - 12, alpha: 0.4, duration: 800, yoyo: true, repeat: -1 });
+
+    this.time.delayedCall(NAP_MS, () => this.scene.restart({ level: this.levelIndex }));
   }
 
   // Stop the level, tell the UI, then open the shop. The shop starts `nextLevel` when you leave it.
@@ -188,7 +212,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   update(time, delta) {
-    if (this.finished) return;
+    if (this.finished || this.napping) return;
 
     this.elapsed += delta;
     const dx = (this.level.scroll * delta) / 1000;

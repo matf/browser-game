@@ -44,21 +44,21 @@ export class UIScene extends Phaser.Scene {
       this.tweens.add({ targets: intro, alpha: 0, duration: 500, onComplete: () => intro.destroy() }),
     );
 
-    const onGameOver = () =>
+    const onNap = () =>
       this.showMessage(
         'Oh nein!',
-        `${this.registry.get('dragonName')} macht ein Nickerchen\nund wacht mit 1 Herz auf.\n\nGleich geht's in den Shop...`,
+        `${this.registry.get('dragonName')} macht ein Nickerchen...\nDie Münzen sind weg!`,
       );
     const onLevelWon = ({ last }) =>
       last
         ? this.showMessage('Alle Level geschafft!', "Gleich geht's in den Shop...")
         : this.showMessage('Level geschafft!', "Gleich geht's in den Shop...");
-    this.gameScene.events.on('gameover', onGameOver);
+    this.gameScene.events.on('nap', onNap);
     this.gameScene.events.on('levelwon', onLevelWon);
 
     this.events.once('shutdown', () => {
       this.registry.events.off('changedata', onChange);
-      this.gameScene.events.off('gameover', onGameOver);
+      this.gameScene.events.off('nap', onNap);
       this.gameScene.events.off('levelwon', onLevelWon);
     });
   }
