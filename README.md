@@ -19,7 +19,8 @@ https://matf.github.io/browser-game/
 ## Controls
 
 - Arrow keys or WASD: fly
-- Phone (landscape): put your thumb on the left half of the screen and slide it (joystick).
+- Phone (landscape): the joystick waits bottom left; put your thumb anywhere on the left half
+  (or the dark border) and slide it. A "So geht's!" screen explains this on the first start.
   Held upright, the game pauses and asks you to turn the phone.
 - Shop (opens by itself after every finished level): arrows choose, Space buys, Tab switches
   page, Enter or Esc starts the next level; the mouse works too

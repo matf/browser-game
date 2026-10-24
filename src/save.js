@@ -12,6 +12,7 @@ const DEFAULTS = {
   dragons: ['marshmallow'], // dragons you own
   items: [], // accessories you own
   wear: [], // accessories the dragon is wearing
+  seenHelp: false, // the "So geht's!" screen was shown once
 };
 
 export function loadSave() {

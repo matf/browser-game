@@ -81,6 +81,12 @@ export class GameScene extends Phaser.Scene {
     every(this.level.dropEvery, this.spawnDrop);
 
     this.scene.launch('ui');
+
+    // The very first time: explain how to play before anything moves.
+    if (!this.save.seenHelp) {
+      this.scene.launch('help');
+      this.scene.pause();
+    }
   }
 
   // True once the level's time is up: no new obstacles, only the rainbow.
