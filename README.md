@@ -19,7 +19,10 @@ https://matf.github.io/browser-game/
 ## Controls
 
 - Arrow keys or WASD: fly
-- Space or Enter: fly again after "Oh nein!"
+- Space or Enter: fly again after "Oh nein!", or start the next level
+
+Fly through the rainbow at the end of each level. The level settings (length, speed, pillar gap,
+bees, raindrops) are in `src/levels.js`. Collected coins are saved in `localStorage`.
 
 ## Layout
 
@@ -34,7 +37,7 @@ https://matf.github.io/browser-game/
   Magicae! Games. License as stated on the page: "Can be used in any project commercial and
   non-commercial. You may modify or adapt however you want. You cannot resell these assets, even if
   modified." The pink dragon (Marshmallow) is a recolour of the Air dragon.
-- Background, ground, rock pillars and hearts: [Pixel Platformer](https://opengameart.org/content/pixel-platformer-0)
+- Background, ground, rock pillars, hearts, coins and digits: [Pixel Platformer](https://opengameart.org/content/pixel-platformer-0)
   by Kenney ([kenney.nl](https://kenney.nl)), CC0. `hills.png` is a recoloured strip of its
   background sheet; `ground.png` and the `pillar-*.png` images are assembled from its tiles.
-- Bee and raindrop: drawn for this game.
+- Bee, raindrop and rainbow: drawn for this game.

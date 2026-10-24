@@ -1,15 +1,15 @@
 import Phaser from 'phaser';
 import { Dragon } from '../objects/Dragon.js';
 import { Bee } from '../objects/Bee.js';
+import { LEVELS } from '../levels.js';
+import { loadSave, writeSave } from '../save.js';
 
-const SCROLL_SPEED = 70; // how fast the world moves past, in pixels per second
-const HEARTS = 3; // lives at the start
+// The numbers that change from level to level are in src/levels.js.
+const HEARTS = 3; // lives at the start of each level
 const START_CALM_MS = 2000; // quiet time at the start before obstacles come
-const PILLAR_EVERY_MS = 3500; // a new pair of rock pillars this often
-const PILLAR_GAP = 100; // height of the hole between the two pillars, in pixels
-const BEE_EVERY_MS = 2800; // a new bee this often
-const DROP_EVERY_MS = 1000; // a new raindrop this often
 const DROP_SPEED = 110; // how fast raindrops fall, in pixels per second
+const COINS_PER_ROW = 4; // coins in each row between the pillars
+const COIN_SPACING = 18; // pixels between coins in a row
 const GROUND_HEIGHT = 36; // height of the grass and dirt at the bottom
 
 export class GameScene extends Phaser.Scene {
@@ -17,10 +17,15 @@ export class GameScene extends Phaser.Scene {
     super('game');
   }
 
-  create() {
+  create(data) {
     const { width, height } = this.scale;
+    this.levelIndex = Phaser.Math.Clamp(data?.level ?? 0, 0, LEVELS.length - 1);
+    this.level = LEVELS[this.levelIndex];
     this.groundY = height - GROUND_HEIGHT;
     this.finished = false;
+    this.elapsed = 0;
+    this.rainbow = null;
+    this.save = loadSave();
 
     this.hills = this.add.tileSprite(0, height - 30, width, 48, 'hills').setOrigin(0, 1);
     this.ground = this.add.tileSprite(0, height, width, 54, 'ground').setOrigin(0, 1).setDepth(2);
@@ -29,7 +34,9 @@ export class GameScene extends Phaser.Scene {
     this.player = new Dragon(this, 100, height / 2, 'marshmallow').setDepth(3);
 
     this.obstacles = this.physics.add.group({ allowGravity: false });
+    this.coins = this.physics.add.group({ allowGravity: false });
     this.physics.add.overlap(this.player, this.obstacles, this.onHit, null, this);
+    this.physics.add.overlap(this.player, this.coins, this.onCoin, null, this);
 
     this.splash = this.add.particles(0, 0, 'pixel', {
       lifespan: 400,
@@ -39,44 +46,95 @@ export class GameScene extends Phaser.Scene {
       tint: [0x7ec8f5, 0xd6f1ff],
       emitting: false,
     }).setDepth(4);
+    this.sparkle = this.add.particles(0, 0, 'pixel', {
+      lifespan: 350,
+      speed: { min: 40, max: 110 },
+      scale: { start: 1.5, end: 0 },
+      tint: [0xffd84a, 0xffffff, 0xffb52e],
+      emitting: false,
+    }).setDepth(4);
 
+    this.registry.set('level', this.levelIndex + 1);
     this.registry.set('hearts', HEARTS);
+    this.registry.set('coins', this.save.coins);
 
     const every = (delay, callback) =>
       this.time.addEvent({ delay, callback, callbackScope: this, loop: true, startAt: -START_CALM_MS });
-    every(PILLAR_EVERY_MS, this.spawnPillars);
-    every(BEE_EVERY_MS, this.spawnBee);
-    every(DROP_EVERY_MS, this.spawnDrop);
+    every(this.level.pillarEvery, this.spawnPillars);
+    every(this.level.beeEvery, this.spawnBee);
+    every(this.level.dropEvery, this.spawnDrop);
 
     this.scene.launch('ui');
   }
 
+  // True once the level's time is up: no new obstacles, only the rainbow.
+  get atEnd() {
+    return this.elapsed >= this.level.seconds * 1000;
+  }
+
+  moveLeft(sprite) {
+    sprite.body.velocity.x = -this.level.scroll;
+    return sprite;
+  }
+
   spawnPillars() {
+    if (this.atEnd) return;
     const x = this.scale.width + 10;
-    const gapTop = Phaser.Math.Between(40, this.groundY - PILLAR_GAP - 30);
+    const gap = this.level.gap;
+    const gapTop = Phaser.Math.Between(40, this.groundY - gap - 30);
     const top = this.obstacles.create(x, gapTop, 'pillar-top').setOrigin(0, 1).setDepth(1);
-    const bottom = this.obstacles
-      .create(x, gapTop + PILLAR_GAP, 'pillar-bottom')
-      .setOrigin(0, 0)
-      .setDepth(1);
+    const bottom = this.obstacles.create(x, gapTop + gap, 'pillar-bottom').setOrigin(0, 0).setDepth(1);
     for (const pillar of [top, bottom]) {
       pillar.body.setSize(30, pillar.height).setOffset(3, 0);
-      pillar.body.velocity.x = -SCROLL_SPEED;
+      this.moveLeft(pillar);
     }
+    // A coin in the hole, and a row of coins halfway to the next pillars.
+    this.spawnCoin(x + 18, gapTop + gap / 2);
+    this.time.delayedCall(this.level.pillarEvery / 2, this.spawnCoinRow, null, this);
+  }
+
+  spawnCoinRow() {
+    if (this.atEnd) return;
+    const y = Phaser.Math.Between(40, this.groundY - 30);
+    for (let i = 0; i < COINS_PER_ROW; i++) this.spawnCoin(this.scale.width + 10 + i * COIN_SPACING, y);
+  }
+
+  spawnCoin(x, y) {
+    const coin = this.coins.create(x, y, 'tiles').play('coin-spin').setDepth(3);
+    coin.body.setSize(12, 12).setOffset(3, 3);
+    this.moveLeft(coin);
   }
 
   spawnBee() {
-    const bee = new Bee(this, this.scale.width + 20, Phaser.Math.Between(40, this.groundY - 40));
-    bee.setDepth(3);
+    if (this.atEnd) return;
+    const y = Phaser.Math.Between(40, this.groundY - 40);
+    const bee = new Bee(this, this.scale.width + 20, y, this.level.beeSpeed).setDepth(3);
     this.obstacles.add(bee);
   }
 
   spawnDrop() {
+    if (this.atEnd) return;
     const drop = this.obstacles.create(Phaser.Math.Between(60, this.scale.width + 60), -10, 'drop');
     drop.isDrop = true;
     drop.setDepth(3);
     drop.body.setSize(8, 10).setOffset(2, 5);
-    drop.body.setVelocity(-SCROLL_SPEED * 0.3, DROP_SPEED);
+    drop.body.setVelocity(-this.level.scroll * 0.3, DROP_SPEED);
+  }
+
+  spawnRainbow() {
+    this.rainbow = this.physics.add
+      .image(this.scale.width + 80, this.groundY + 4, 'rainbow')
+      .setOrigin(0.5, 1)
+      .setDepth(1);
+    this.moveLeft(this.rainbow);
+  }
+
+  onCoin(player, coin) {
+    this.sparkle.explode(10, coin.x, coin.y);
+    coin.destroy();
+    this.save.coins += 1;
+    writeSave(this.save);
+    this.registry.set('coins', this.save.coins);
   }
 
   onHit(player, obstacle) {
@@ -89,18 +147,23 @@ export class GameScene extends Phaser.Scene {
     if (hearts > 0) {
       player.hurt();
     } else {
-      this.finished = true;
-      this.physics.pause();
-      this.time.paused = true;
-      this.player.anims.pause();
-      this.events.emit('gameover');
-      const restart = () => {
-        this.time.paused = false;
-        this.scene.restart();
-      };
-      this.input.keyboard.once('keydown-SPACE', restart);
-      this.input.keyboard.once('keydown-ENTER', restart);
+      this.finish('gameover', this.levelIndex);
     }
+  }
+
+  // Stop the level, tell the UI, and start `nextLevel` when Space or Enter is pressed.
+  finish(event, nextLevel) {
+    this.finished = true;
+    this.physics.pause();
+    this.time.paused = true;
+    this.player.anims.pause();
+    this.events.emit(event, { level: this.levelIndex + 1, last: this.levelIndex === LEVELS.length - 1 });
+    const restart = () => {
+      this.time.paused = false;
+      this.scene.restart({ level: nextLevel });
+    };
+    this.input.keyboard.once('keydown-SPACE', restart);
+    this.input.keyboard.once('keydown-ENTER', restart);
   }
 
   popDrop(drop) {
@@ -111,14 +174,24 @@ export class GameScene extends Phaser.Scene {
   update(time, delta) {
     if (this.finished) return;
 
-    const dx = (SCROLL_SPEED * delta) / 1000;
+    this.elapsed += delta;
+    const dx = (this.level.scroll * delta) / 1000;
     this.ground.tilePositionX += dx;
     this.hills.tilePositionX += dx * 0.3;
     this.player.update(time);
+
+    if (this.atEnd && !this.rainbow) this.spawnRainbow();
+    if (this.rainbow && this.player.x >= this.rainbow.x) {
+      this.sparkle.explode(40, this.player.x, this.player.y);
+      // After the last level, start again at level 1.
+      this.finish('levelwon', (this.levelIndex + 1) % LEVELS.length);
+      return;
+    }
 
     for (const obstacle of this.obstacles.getChildren().slice()) {
       if (obstacle.isDrop && obstacle.y > this.groundY - 4) this.popDrop(obstacle);
       else if (obstacle.x < -60) obstacle.destroy();
     }
+    for (const coin of this.coins.getChildren().slice()) if (coin.x < -20) coin.destroy();
   }
 }

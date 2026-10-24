@@ -4,6 +4,9 @@ import Phaser from 'phaser';
 export const TILE = {
   heartFull: 44,
   heartEmpty: 46,
+  coin: 151,
+  coinSide: 152,
+  digit0: 160, // digits 0-9 are 160-169
 };
 
 // Size of one frame in assets/dragons.png (5 rows, one per dragon, 3 flying frames each).
@@ -36,6 +39,7 @@ export class PreloadScene extends Phaser.Scene {
     this.load.image('ground', 'ground.png');
     this.load.image('pillar-top', 'pillar-top.png');
     this.load.image('pillar-bottom', 'pillar-bottom.png');
+    this.load.image('rainbow', 'rainbow.png');
   }
 
   create() {
@@ -55,6 +59,13 @@ export class PreloadScene extends Phaser.Scene {
       key: 'bee-fly',
       frames: this.anims.generateFrameNumbers('bee', { start: 0, end: 1 }),
       frameRate: 12,
+      repeat: -1,
+    });
+
+    this.anims.create({
+      key: 'coin-spin',
+      frames: this.anims.generateFrameNumbers('tiles', { frames: [TILE.coin, TILE.coinSide] }),
+      frameRate: 5,
       repeat: -1,
     });
 
