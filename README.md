@@ -18,7 +18,9 @@ https://matf.github.io/browser-game/
 
 ## Controls
 
-- Main menu (first screen): Weiterspielen, Neues Spiel (asks first, then starts over) and Hilfe.
+- Main menu (first screen): Weiterspielen, Neues Spiel (asks first, then starts over), Drachen-Galerie
+  (all dragons, the ones you don't have yet as shadows), Einstellungen (music and sound effect volume),
+  Hilfe and Mitwirkende. Esc or Enter goes back from a page.
   Arrows or WASD choose, Enter or Space picks; tapping works too. The house icon on the world map
   (or Esc there) goes back to it.
 - World map: tap a level (or the shop house) and the dragon flies there and goes in. With the
@@ -52,7 +54,8 @@ islands drawn on the map.
 ## Layout
 
 - `src/main.js`: Phaser config
-- `src/scenes/`: Preload, Title (main menu), Map (world map), Game, UI (level HUD), Shop and Help scenes
+- `src/scenes/`: Preload, Title (main menu), Map (world map), Game, UI (level HUD), Shop and Help scenes,
+  plus the menu pages Settings, Gallery and Credits (sharing `MenuPage.js`)
 - `src/world.js`: islands, themes and map positions; `src/levels.js`: level settings
 - `src/objects/`: one class per game object
 - `public/assets/`: images, maps and sounds loaded at runtime

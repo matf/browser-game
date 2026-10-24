@@ -7,12 +7,13 @@ import { addMuteButton, play, startMusic } from '../sound.js';
 import { THEMES } from '../world.js';
 
 const SCROLL_SPEED = 30; // how fast the ground moves past behind the menu, in pixels per second
-const BUTTON = { x: 340, y: 120, width: 150, height: 28, gap: 8 }; // the menu buttons, top one at y
+const BUTTON = { x: 340, y: 92, width: 150, height: 23, gap: 5 }; // the menu buttons, top one at y
+const DIALOG_BUTTON_HEIGHT = 28;
 const COLORS = { button: 0x4a3a6e, main: 0x5fd068, danger: 0xff7a7a, selected: 0xffd84a };
 
 const TEXT = { fontFamily: FONT, fontStyle: 'bold', color: '#ffffff', stroke: '#1b1630', strokeThickness: 4 };
 
-// The main menu: Weiterspielen, Neues Spiel, Hilfe.
+// The main menu: Weiterspielen, Neues Spiel, Drachen-Galerie, Einstellungen, Hilfe, Mitwirkende.
 export class TitleScene extends Phaser.Scene {
   constructor() {
     super('title');
@@ -83,7 +84,10 @@ export class TitleScene extends Phaser.Scene {
     } else {
       items.push({ label: 'Neues Spiel', color: COLORS.main, action: () => this.startNewGame() });
     }
-    items.push({ label: 'Hilfe', action: () => this.showHelp() });
+    items.push({ label: 'Drachen-Galerie', action: () => this.openPage('gallery') });
+    items.push({ label: 'Einstellungen', action: () => this.openPage('settings') });
+    items.push({ label: 'Hilfe', action: () => this.openPage('help', { from: 'title' }) });
+    items.push({ label: 'Mitwirkende', action: () => this.openPage('credits') });
     this.setButtons(items.map((item, i) => ({ ...item, x: BUTTON.x, y: BUTTON.y + i * (BUTTON.height + BUTTON.gap) })));
   }
 
@@ -92,7 +96,7 @@ export class TitleScene extends Phaser.Scene {
     for (const b of this.buttons) b.box.destroy();
     this.buttons = list.map((b, i) => {
       const bg = this.add
-        .rectangle(0, 0, b.width ?? BUTTON.width, BUTTON.height, b.color ?? COLORS.button)
+        .rectangle(0, 0, b.width ?? BUTTON.width, b.height ?? BUTTON.height, b.color ?? COLORS.button)
         .setInteractive({ useHandCursor: true })
         .on('pointerover', () => this.select(i))
         .on('pointerdown', () => this.canAct() && b.action());
@@ -140,8 +144,8 @@ export class TitleScene extends Phaser.Scene {
       .setResolution(4);
     this.dialog = this.add.container(0, 0, [panel, question, info]).setDepth(10);
     this.setButtons([
-      { label: 'Nein', x: WIDTH / 2 - 66, y: 180, width: 110, color: COLORS.main, depth: 11, action: () => this.closeDialog() },
-      { label: 'Ja, neu!', x: WIDTH / 2 + 66, y: 180, width: 110, color: COLORS.danger, depth: 11, action: () => this.startNewGame() },
+      { label: 'Nein', x: WIDTH / 2 - 66, y: 180, width: 110, height: DIALOG_BUTTON_HEIGHT, color: COLORS.main, depth: 11, action: () => this.closeDialog() },
+      { label: 'Ja, neu!', x: WIDTH / 2 + 66, y: 180, width: 110, height: DIALOG_BUTTON_HEIGHT, color: COLORS.danger, depth: 11, action: () => this.startNewGame() },
     ]);
   }
 
@@ -157,10 +161,11 @@ export class TitleScene extends Phaser.Scene {
     this.go('map');
   }
 
-  showHelp() {
+  // Hilfe, Einstellungen, Drachen-Galerie, Mitwirkende: shown on top while the menu waits.
+  openPage(key, data) {
     play(this, 'click');
     this.scene.pause();
-    this.scene.launch('help', { from: 'title' });
+    this.scene.launch(key, data);
   }
 
   go(scene) {

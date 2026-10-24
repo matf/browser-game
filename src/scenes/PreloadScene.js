@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { SOUNDS, loadMuted } from '../sound.js';
+import { SOUNDS, loadSoundSettings } from '../sound.js';
 import { THEMES } from '../world.js';
 
 // Frame indices in the Kenney tilesheet (assets/tiles.png, 18x18, 20 columns).
@@ -113,7 +113,7 @@ export class PreloadScene extends Phaser.Scene {
     };
     speaker('speaker', false);
     speaker('speaker-off', true);
-    loadMuted(this.game);
+    loadSoundSettings(this.game);
     this.makeMapTextures();
 
     this.scene.start('title');
