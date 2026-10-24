@@ -105,6 +105,8 @@ browser-game/
 import { defineConfig } from 'vite';
 
 export default defineConfig({
+  // Relative asset URLs so the build works under any sub-path (GitHub Pages serves it at /browser-game/).
+  base: './',
   // Phaser alone is ~1.4 MB minified; that's expected for a game bundle.
   build: { chunkSizeWarningLimit: 2000 },
 });
@@ -148,8 +150,10 @@ because the Unicorn Dash project may already be running on 5173. If 5174 is busy
 `lsof -i :5174` whether it's an old dev server of this project before picking another port.
 
 `dist/` can't be opened by double-clicking `index.html` (browsers block module scripts on
-`file://`). To share the game, use `npm run preview` or upload `dist/` to any static host
-(GitHub Pages, Netlify, itch.io as an HTML game).
+`file://`). The game is published online with GitHub Pages at
+https://matf.github.io/browser-game/ (see "Git" below). Because it's served under `/browser-game/`,
+`vite.config.js` sets `base: './'`. Keep every runtime path relative (`this.load.setPath('assets')`,
+never `'/assets'`), or the online version breaks while the local one still works.
 
 ## Architecture conventions
 
@@ -333,13 +337,23 @@ browser_console_messages`).
 - `rm` is aliased to interactive mode: use `command rm -f ...` (only for files you created).
 - `noclobber` is on: `>` won't overwrite an existing file. Delete it first, or use the Write tool.
 
-## Git: commit automatically
+## Git: commit and push automatically
 
-The project is a git repo (branch `main`, no remote). **The parent has authorized automatic
-commits.** Commit on your own, without asking, every time a feature is built or a change is done.
+The project is a git repo (branch `main`) with a public GitHub remote, `origin` =
+https://github.com/matf/browser-game. **The parent has authorized automatic commits and pushes.**
+Commit and push on your own, without asking, every time a feature is built or a change is done.
 This applies to new mechanics, new levels, new art or sound, tuning, bug fixes and refactors.
 
-- **Commit directly on `main`.** No feature branches, no pull requests, no remote, no pushing.
+- **Commit directly on `main`.** No feature branches, no pull requests.
+- **Push after every commit** with a plain `git push`. Each push to `main` triggers
+  `.github/workflows/pages.yml`, which builds the game and publishes it to
+  https://matf.github.io/browser-game/ (live a minute or two later). **Don't watch or wait for
+  the GitHub Actions run**; just push and carry on. If the parent reports that the online version is
+  broken or out of date, check the run then (`GH_TOKEN=$(gh auth token --user matf) gh run list -R matf/browser-game`).
+- **Auth:** the active `gh` account on this machine is a different one. The repo has a local git
+  credential helper (`git config --local credential.https://github.com.helper`) that always pushes
+  as `matf`, so `git push` just works. For `gh` commands on this repo, prefix them with
+  `GH_TOKEN=$(gh auth token --user matf)`. Don't run `gh auth switch`.
 - **One commit per finished step**, after the change has been verified (it builds, and the game
   runs in the browser without console errors). Don't commit a broken game. If a step is
   half-finished when the conversation moves on, commit what works and say what's left.
