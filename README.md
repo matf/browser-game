@@ -18,6 +18,9 @@ https://matf.github.io/browser-game/
 
 ## Controls
 
+- Main menu (first screen): Weiterspielen, Neues Spiel (asks first, then starts over) and Hilfe.
+  Arrows or WASD choose, Enter or Space picks; tapping works too. The house icon on the world map
+  (or Esc there) goes back to it.
 - World map: tap a level (or the shop house) and the dragon flies there and goes in. With the
   keyboard, arrows or WASD fly to the previous/next spot (the shop comes before level 1) and Space or
   Enter goes in.
@@ -49,7 +52,7 @@ islands drawn on the map.
 ## Layout
 
 - `src/main.js`: Phaser config
-- `src/scenes/`: Preload, Map (world map), Game, UI (level HUD), Shop and Help scenes
+- `src/scenes/`: Preload, Title (main menu), Map (world map), Game, UI (level HUD), Shop and Help scenes
 - `src/world.js`: islands, themes and map positions; `src/levels.js`: level settings
 - `src/objects/`: one class per game object
 - `public/assets/`: images, maps and sounds loaded at runtime

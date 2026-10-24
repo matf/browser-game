@@ -116,7 +116,7 @@ export class PreloadScene extends Phaser.Scene {
     loadMuted(this.game);
     this.makeMapTextures();
 
-    this.scene.start('map');
+    this.scene.start('title');
   }
 
   // Pictures for the world map, drawn here instead of loaded.
@@ -154,6 +154,14 @@ export class PreloadScene extends Phaser.Scene {
       for (const [x, y, r] of [[16, 22, 12], [32, 18, 16], [48, 22, 12], [26, 26, 10], [40, 26, 10]]) g.fillCircle(x, y + 2, r);
       g.fillStyle(0xffffff);
       for (const [x, y, r] of [[16, 22, 12], [32, 18, 16], [48, 22, 12], [26, 26, 10], [40, 26, 10]]) g.fillCircle(x, y, r);
+    });
+
+    // Button on the map that goes back to the main menu: a little house.
+    draw('menu-icon', 16, 14, (g) => {
+      g.fillStyle(0x1b1630).fillTriangle(8, 0, -1, 7, 17, 7).fillRect(1, 5, 14, 9);
+      g.fillStyle(0xe84537).fillTriangle(8, 2, 2, 6, 14, 6);
+      g.fillStyle(0xffffff).fillRect(3, 7, 10, 6);
+      g.fillStyle(0x8a4b2a).fillRect(7, 9, 3, 4);
     });
 
     // Button that leaves a level and goes back to the map: a little folded map with a red path.

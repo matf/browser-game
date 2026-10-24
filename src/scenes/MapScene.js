@@ -70,6 +70,11 @@ export class MapScene extends Phaser.Scene {
     addHearts(this)(this.save.hearts);
     addCoins(this)(this.save.coins);
     addMuteButton(this, 466, 14);
+    this.add
+      .image(372, 14, 'menu-icon')
+      .setDepth(10)
+      .setInteractive({ useHandCursor: true })
+      .on('pointerdown', () => this.toMenu());
     const hint = IS_TOUCH ? 'Tippe auf ein Level!' : 'Pfeiltasten: wählen   Leertaste: los!';
     this.add.text(WIDTH / 2, 14, hint, { ...TEXT, fontSize: '10px' }).setOrigin(0.5).setResolution(4).setDepth(10);
 
@@ -79,6 +84,7 @@ export class MapScene extends Phaser.Scene {
     onKeys(['LEFT', 'UP', 'A', 'W'], () => this.step(-1));
     onKeys(['RIGHT', 'DOWN', 'D', 'S'], () => this.step(1));
     onKeys(['SPACE', 'ENTER'], () => !this.flight && this.enter(this.save.at));
+    onKeys(['ESC'], () => this.toMenu());
 
     this.refresh();
     if (fresh !== null) this.time.delayedCall(REVEAL_DELAY_MS, () => this.reveal(fresh));
@@ -367,6 +373,14 @@ export class MapScene extends Phaser.Scene {
     this.cameras.main.once('camerafadeoutcomplete', () =>
       spot === SHOP_SPOT ? this.scene.start('shop') : this.scene.start('game', { level: spot }),
     );
+  }
+
+  toMenu() {
+    if (this.leaving) return;
+    this.leaving = true;
+    play(this, 'click');
+    this.cameras.main.fadeOut(250);
+    this.cameras.main.once('camerafadeoutcomplete', () => this.scene.start('title'));
   }
 
   // Tapped a level that isn't open yet: the stone wiggles and says why.

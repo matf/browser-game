@@ -32,6 +32,18 @@ export function loadSave() {
   return structuredClone({ ...DEFAULTS, ...saved });
 }
 
+// True once there is something to lose: finished levels, coins, or things bought in the shop.
+export function hasProgress(save) {
+  return save.done.length > 0 || save.coins > 0 || save.dragons.length > 1 || save.items.length > 0;
+}
+
+// Start over. Only "So geht's!" stays seen.
+export function resetSave() {
+  const fresh = structuredClone({ ...DEFAULTS, seenHelp: loadSave().seenHelp });
+  writeSave(fresh);
+  return fresh;
+}
+
 export function writeSave(save) {
   try {
     localStorage.setItem(KEY, JSON.stringify(save));

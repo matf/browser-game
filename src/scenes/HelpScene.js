@@ -8,15 +8,18 @@ import { play } from '../sound.js';
 
 const TEXT = { fontFamily: FONT, fontStyle: 'bold', color: '#ffffff', stroke: '#1b1630', strokeThickness: 3 };
 
-// "So geht's!": shown over the paused game the very first time someone plays.
+// "So geht's!": shown over the paused game the very first time someone plays, and from the main
+// menu's "Hilfe" button.
 export class HelpScene extends Phaser.Scene {
   constructor() {
     super('help');
   }
 
-  create() {
+  // data.from: the scene underneath, which is paused while the help shows ('game' or 'title').
+  create(data) {
     setupCamera(this);
     this.started = false;
+    this.from = data?.from ?? 'game';
     this.add.rectangle(0, 0, WIDTH, HEIGHT, 0x1b1630, 0.94).setOrigin(0);
 
     // On phones the text sits on the right, so the joystick on the left stays visible.
@@ -29,9 +32,10 @@ export class HelpScene extends Phaser.Scene {
       [this.add.image(0, 0, 'tiles', TILE.coin), 'Sammle Münzen für den Shop.'],
       [this.add.image(0, 0, 'bee', 0), 'Weiche Säulen, Bienen\nund Regentropfen aus.'],
       [this.add.image(0, 0, 'rainbow').setScale(0.13), 'Flieg durch den Regenbogen!'],
+      [this.add.image(0, 0, 'station-done').setScale(1.5), 'Schaff alle 3 Level einer Insel,\ndann geht die nächste auf.'],
     ];
     rows.forEach(([icon, text], i) => {
-      const y = 70 + i * 40;
+      const y = 62 + i * 36;
       icon.setPosition(left + 18, y);
       this.add.text(left + 44, y, text, { ...TEXT, fontSize: '12px' }).setOrigin(0, 0.5).setResolution(4);
     });
@@ -54,7 +58,7 @@ export class HelpScene extends Phaser.Scene {
     }
 
     const go = this.add
-      .text(centre, 246, IS_TOUCH ? 'Tippe, um loszufliegen!' : 'Leertaste: loslegen!', {
+      .text(centre, 250, this.goText(), {
         ...TEXT,
         fontSize: '14px',
         color: '#ffe066',
@@ -71,15 +75,20 @@ export class HelpScene extends Phaser.Scene {
     });
   }
 
+  goText() {
+    if (this.from === 'title') return IS_TOUCH ? 'Tippe, um zurückzugehen' : 'Leertaste: zurück';
+    return IS_TOUCH ? 'Tippe, um loszufliegen!' : 'Leertaste: loslegen!';
+  }
+
   start() {
     if (this.started) return;
     this.started = true;
-    play(this, 'start');
-    // The game scene keeps its own copy of the save and writes it later, so mark it there too.
-    const game = this.scene.get('game');
-    game.save.seenHelp = true;
-    writeSave(game.save);
+    play(this, this.from === 'title' ? 'click' : 'start');
+    // The scene underneath keeps its own copy of the save and writes it later, so mark it there too.
+    const below = this.scene.get(this.from);
+    below.save.seenHelp = true;
+    writeSave(below.save);
     this.scene.stop();
-    this.scene.resume('game');
+    this.scene.resume(this.from);
   }
 }
