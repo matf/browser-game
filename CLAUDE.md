@@ -52,7 +52,7 @@ content (unicorn, gems, level) unless the daughter wants it.
 | Game library | **Phaser 4** (`phaser@^4.2.1`, tested with 4.2.1), **Arcade physics**. |
 | Rendering | `pixelArt: true`, base resolution **480×270** (16:9), `Phaser.Scale.FIT` + `CENTER_BOTH`. |
 | Levels | **Tiled** map editor (free, mapeditor.org), saved as **JSON**, loaded with `tilemapTiledJSON`. |
-| Art | **Kenney** asset packs first; OpenGameArt/itch.io when Kenney has nothing fitting. Private project, so any free asset is OK (see Assets). |
+| Art | **Kenney** asset packs first; OpenGameArt/itch.io when Kenney has nothing fitting. Public project, so only assets whose license allows public sharing (see Assets). |
 | Sound | Kenney audio packs, `.ogg` files, Phaser's built-in sound manager. |
 | Persistence | `localStorage` only (high scores, settings, unlocked levels), always wrapped in try/catch. |
 | Node | Node 24 / npm 11 are installed on this machine. |
@@ -247,10 +247,12 @@ never `'/assets'`), or the online version breaks while the local one still works
 ## Assets
 
 ### Rules
-The game is **private: it only runs locally for the family and won't be published.** So licenses
-don't limit which assets you pick. Any asset that is freely offered for download is fine,
-including CC-BY, CC-BY-SA, "free for personal use" and "non-commercial" ones. Don't spend time
-checking licenses or ask the parent about them.
+The game is **published publicly** (public GitHub repo and GitHub Pages), but it's a
+non-commercial family project. So **only use assets whose license allows sharing them publicly**:
+CC0 (all Kenney packs), CC-BY, CC-BY-SA, and "free, non-commercial use" licenses are fine.
+**Don't use** "personal use only" assets, assets that forbid redistribution, or assets with no
+stated license. Check the license on the asset page before downloading. When it's clearly
+allowed, just go ahead without asking the parent; only ask when it's unclear.
 
 1. **Kenney first** (https://kenney.nl/assets), because the packs are large, well organised and
    share one style, so the game looks coherent. Mirrors with direct zip downloads are on
@@ -259,9 +261,9 @@ checking licenses or ask the parent about them.
    (free assets) for the best match in style and pixel size.
 3. Only download from well-known asset sites (kenney.nl, opengameart.org, itch.io, craftpix.net free
    section, and similar). Avoid random file hosts.
-4. Still **list every asset in the README's Credits section** (name, author, URL, license as stated
-   on the page). It costs one line, credits the artists, and means the licenses can be checked
-   quickly if the game is ever shared after all.
+4. **List every asset in the README's Credits section** (name, author, URL, license as stated
+   on the page). CC-BY and CC-BY-SA require this attribution now that the game is public, and it
+   credits the artists either way.
 5. Stay within one visual style. Pixel art in a matching scale: **Kenney pixel packs use 16×16 or
    18×18 tiles**, and those fit the 480×270 resolution well (about 26×15 tiles visible).
 
