@@ -22,7 +22,7 @@ https://matf.github.io/browser-game/
 - Space or Enter: fly again after "Oh nein!", or start the next level
 
 Fly through the rainbow at the end of each level. The level settings (length, speed, pillar gap,
-bees, raindrops) are in `src/levels.js`. Collected coins are saved in `localStorage`.
+bees, raindrops) are in `src/levels.js`. Collected coins and the level you reached are saved in `localStorage`.
 
 ## Layout
 

@@ -19,13 +19,14 @@ export class GameScene extends Phaser.Scene {
 
   create(data) {
     const { width, height } = this.scale;
-    this.levelIndex = Phaser.Math.Clamp(data?.level ?? 0, 0, LEVELS.length - 1);
+    this.save = loadSave();
+    // Without a level from a restart (after loading the page), continue where you left off.
+    this.levelIndex = Phaser.Math.Clamp(data?.level ?? this.save.level, 0, LEVELS.length - 1);
     this.level = LEVELS[this.levelIndex];
     this.groundY = height - GROUND_HEIGHT;
     this.finished = false;
     this.elapsed = 0;
     this.rainbow = null;
-    this.save = loadSave();
 
     this.hills = this.add.tileSprite(0, height - 30, width, 48, 'hills').setOrigin(0, 1);
     this.ground = this.add.tileSprite(0, height, width, 54, 'ground').setOrigin(0, 1).setDepth(2);
@@ -184,7 +185,10 @@ export class GameScene extends Phaser.Scene {
     if (this.rainbow && this.player.x >= this.rainbow.x) {
       this.sparkle.explode(40, this.player.x, this.player.y);
       // After the last level, start again at level 1.
-      this.finish('levelwon', (this.levelIndex + 1) % LEVELS.length);
+      const next = (this.levelIndex + 1) % LEVELS.length;
+      this.save.level = next;
+      writeSave(this.save);
+      this.finish('levelwon', next);
       return;
     }
 
