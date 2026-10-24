@@ -90,6 +90,12 @@ LEVEL_SWAP = {
         '#345551': '#3b2d7a', '#434a5f': '#1f1a3a', '#dd442c': '#5fe3ff', '#fc683b': '#a8f2ff',
         '#8cd17e': '#4a3d8f', '#ffffff': '#6d5fb5',
     },
+    'fire': {
+        '#cb815e': '#5a3a3e', '#9f5a52': '#40282e', '#f4ac66': '#ff9a3c', '#7e3125': '#2a1a20',
+        '#fcc782': '#ffd27a', '#e29f7b': '#7a4a44', '#2eb082': '#6b4658', '#36e377': '#8f6274',
+        '#345551': '#3a2433', '#434a5f': '#24161f', '#dd442c': '#ff6a1a', '#fc683b': '#ffb347',
+        '#8cd17e': '#7a3a4a', '#ffffff': '#c98a7a',
+    },
 }
 PILLAR_SWAP = {
     'candy': {'#cb815e': '#ffb3d9', '#9f5a52': '#e07fb3', '#f4ac66': '#ffe6f3', '#434a5f': '#7a3a62',
@@ -97,6 +103,7 @@ PILLAR_SWAP = {
     'snow': {'#cb815e': '#a8dcf5', '#9f5a52': '#78b6e0', '#f4ac66': '#e8f8ff', '#434a5f': '#3f5f86',
              '#2eb082': '#cfe3f2', '#36e377': '#ffffff'},
     'stars': LEVEL_SWAP['stars'],
+    'fire': LEVEL_SWAP['fire'],
 }
 MAP_SWAP = {
     'flowers': {},
@@ -106,6 +113,8 @@ MAP_SWAP = {
     'snow': {'#84c669': '#f2f7fc', '#65a556': '#d3e3f1', '#8bd87d': '#ffffff', '#479f4a': '#3f8f6a',
              '#f3d58f': '#e6f1f9', '#d9b46e': '#bcd3e6', '#b98b52': '#93aac4', '#5a6988': '#7b8fb0',
              '#8b9bb4': '#e8f0f8', '#52607c': '#b9c8da'},
+    'fire': {'#84c669': '#6b4b5e', '#65a556': '#57394c', '#8bd87d': '#80596f', '#479f4a': '#3f2838',
+             '#f3d58f': '#8a6a5e', '#d9b46e': '#6e5249', '#b98b52': '#4e3832'},
     'stars': {'#84c669': '#6a5bc0', '#65a556': '#5547a6', '#8bd87d': '#8070d6', '#479f4a': '#3e3488',
               '#e38628': '#ffd84a', '#fdbe53': '#fff0a0', '#5a6988': '#6b4fb0', '#8b9bb4': '#9c7fe0',
               '#52607c': '#4f3c8f', '#e84537': '#5fe3ff', '#ff706d': '#a8f2ff', '#f3d58f': '#d8cff2', '#d9b46e': '#b3a6e0', '#b98b52': '#8d7fc4'},
@@ -120,12 +129,12 @@ def orig(name):  # the green original, before or after it was renamed to *-flowe
 for name in ['ground', 'hills', 'pillar-top', 'pillar-bottom']:
     src = Image.open(orig(name)).convert('RGBA')
     src.save(f'{OUT}/{name}-flowers.png')
-    for theme in ['candy', 'snow', 'stars']:
+    for theme in ['candy', 'snow', 'stars', 'fire']:
         swap = PILLAR_SWAP[theme] if name.startswith('pillar') else LEVEL_SWAP[theme]
         out = recolor(src, swap)
         if name == 'ground':
             # A few theme things standing on the grass (decor row is the top 18 px).
-            extra = {'candy': [(food, 2, 18)], 'snow': [(tiles, 145, 18)], 'stars': []}[theme]
+            extra = {'candy': [(food, 2, 18)], 'snow': [(tiles, 145, 18)], 'stars': [], 'fire': []}[theme]
             for sheet, frame, size in extra:
                 cols = sheet.width // size
                 img = sheet.crop(((frame % cols) * size, (frame // cols) * size,
@@ -139,6 +148,9 @@ drop = Image.open(orig('drop')).convert('RGBA')
 drop.save(f'{OUT}/drop-flowers.png')
 recolor(drop, {'#7ec8f5': '#ff9ed2', '#2b5d9b': '#b3407f', '#d6f1ff': '#ffe3f2', '#ff9fc0': '#ff5f9f'}).save(
     f'{OUT}/drop-candy.png')
+# A little ember for the fire theme.
+recolor(drop, {'#7ec8f5': '#ff8a2a', '#2b5d9b': '#a8321a', '#d6f1ff': '#ffe08a', '#ff9fc0': '#ff5a3a'}).save(
+    f'{OUT}/drop-fire.png')
 
 flake = Image.new('RGBA', (12, 16))
 d = ImageDraw.Draw(flake)
@@ -179,6 +191,9 @@ ISLANDS = [
      'stations': [(286, 198), (322, 216), (364, 206)]},
     {'theme': 'stars', 'blobs': [(414, 100, 58, 42), (440, 86, 32, 28), (388, 116, 34, 24)],
      'stations': [(384, 122), (416, 128), (456, 118)]},
+    # The volcano island, where the fire dragon waits after all the others.
+    {'theme': 'fire', 'blobs': [(446, 214, 30, 22), (430, 226, 18, 12)],
+     'stations': [(452, 226)]},
 ]
 SHOP = {'island': 0, 'x': 84, 'y': 186}  # bottom-centre of the shop house (Phaser places the sprite)
 
@@ -193,6 +208,22 @@ HIVE, WELL, SIGN = tt(94), tt(92), tt(83)
 SNOWMAN = pt(145)
 CAKE, MARSHMALLOW = (food.crop((36, 0, 54, 18)), food.crop((54, 0, 72, 18)))
 
+
+def volcano():
+    im = Image.new('RGBA', (40, 30))
+    d = ImageDraw.Draw(im)
+    d.polygon([(1, 29), (14, 5), (26, 5), (39, 29)], fill=hexc('#5e4450'))
+    d.polygon([(21, 5), (26, 5), (39, 29), (25, 29)], fill=hexc('#4a3440'))
+    d.rectangle([14, 4, 26, 6], fill=hexc('#ff7a2a'))
+    d.rectangle([16, 3, 24, 4], fill=hexc('#ffd84a'))
+    d.line([(17, 7), (15, 13), (16, 18)], fill=hexc('#ff7a2a'))
+    d.line([(23, 7), (25, 14), (24, 17)], fill=hexc('#ff9a3c'))
+    return outline(im, '#2a1a20')
+
+
+VOLCANO = volcano()
+ROCK = outline(Image.new('RGBA', (5, 4), hexc('#4a3440')), '#2a1a20')
+
 DECOR = [
     [(TALL_PINE, 30, 206), (SMALL_PINE, 58, 200), (TREE, 128, 178), (BUSH, 158, 198), (HIVE, 22, 234),
      (MUSHROOMS, 114, 242), (SPROUT, 162, 214), (SPROUT, 60, 244)],
@@ -201,6 +232,7 @@ DECOR = [
     [(HOUSE_BLUE, 338, 180), (TALL_PINE, 266, 180), (TALL_PINE, 300, 172), (SNOWMAN, 298, 232),
      (SMALL_PINE, 382, 192), (SMALL_PINE, 258, 202), (SNOWMAN, 384, 222)],
     [(HOUSE_STONE, 430, 90), (TREE, 394, 96), (TALL_PINE, 466, 98), (MUSHROOMS, 404, 138), (BUSH, 372, 108)],
+    [(VOLCANO, 440, 214), (ROCK, 468, 214), (ROCK, 424, 230)],
 ]
 
 
@@ -259,6 +291,24 @@ for idx, (isl, m) in enumerate(zip(ISLANDS, masks)):
 
 sea.save(f'{OUT}/map.png')
 recolor(SHOP_HOUSE, {}).save(f'{OUT}/shop-house.png')
+
+# --- The fire dragon ----------------------------------------------------------------------------
+# Chili (row 1 of dragons.png) in dark purple with glowing orange, 3 flying frames of 67x52.
+dragons = Image.open(f'{OUT}/dragons.png').convert('RGBA')
+chili = dragons.crop((0, 52, 201, 104))
+BOSS_SWAP = {
+    '#911f1b': '#4a3560', '#350907': '#140a1c', '#621412': '#33244a', '#ad2622': '#62477c',
+    '#c43028': '#ff8a2a', '#6a120f': '#2e2042', '#501512': '#24183a', '#541210': '#24183a',
+    '#7d1b18': '#3e2c56', '#90201b': '#4a3560', '#621712': '#33244a', '#4f160e': '#24183a',
+}
+boss = recolor(chili, BOSS_SWAP)
+px = boss.load()
+for y in range(boss.height):  # whatever reddish pixels are left become dark purple too
+    for x in range(boss.width):
+        r, g, b, a = px[x, y]
+        if a and r > g + 30 and r > b + 30 and (r, g, b) not in [hexc('#ff8a2a')[:3]]:
+            px[x, y] = (r // 3 + 30, g // 3 + 20, b // 3 + 50, a)
+boss.save(f'{OUT}/boss-dragon.png')
 
 print(json.dumps({'stations': [i['stations'] for i in ISLANDS], 'shop': SHOP}))
 

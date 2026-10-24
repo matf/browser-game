@@ -42,6 +42,10 @@ and raindrops, sugar drops, snowflakes or shooting stars). Islands, themes and m
 `src/world.js`; the level settings (length, speed, pillar gap, bees, falling things) are in
 `src/levels.js`.
 
+After all four islands, the volcano island opens: the fire dragon breathes fireballs at you for a
+minute (`BOSS_FIGHT` in `src/levels.js`, `src/objects/FireDragon.js`). Once it gives up and you fly
+through the rainbow, the game ends with a big fireworks show (`src/scenes/FinaleScene.js`).
+
 The dragon has 5 hearts that only come back by feeding it in the shop; with no hearts left it naps,
 loses the coins collected in that level and restarts it with 3 hearts. Coins, hearts, finished
 levels, the dragon's spot on the map, owned dragons and accessories are saved in `localStorage`.
@@ -70,7 +74,8 @@ islands drawn on the map.
 - Dragons: [Free Pixel Art Dragons](https://magicae-games.itch.io/free-pixel-art-dragons) by
   Magicae! Games. License as stated on the page: "Can be used in any project commercial and
   non-commercial. You may modify or adapt however you want. You cannot resell these assets, even if
-  modified." The pink dragon (Marshmallow) is a recolour of the Air dragon.
+  modified." The pink dragon (Marshmallow) is a recolour of the Air dragon, and the fire dragon
+  (`boss-dragon.png`) is a dark recolour of the red one.
 - Background, ground, rock pillars, snowman, hearts, coins and digits: [Pixel Platformer](https://opengameart.org/content/pixel-platformer-0)
   by Kenney ([kenney.nl](https://kenney.nl)), CC0. `hills-*.png` are recoloured strips of its
   background sheet; `ground-*.png` and the `pillar-*.png` images are assembled from its tiles and
@@ -80,11 +85,13 @@ islands drawn on the map.
   shapes were drawn for this game.
 - Cupcake and marshmallow: [Pixel Platformer Food Expansion](https://opengameart.org/content/pixel-platformer-food-expansion)
   by Kenney ([kenney.nl](https://kenney.nl)), CC0.
-- Bee, raindrop, snowflake, shooting star, rainbow, apple, strawberry, piggy bank and accessories: drawn for this game.
+- Bee, raindrop, snowflake, shooting star, ember, volcano, fireball, rainbow, apple, strawberry, piggy bank and accessories: drawn for this game.
 - Sounds: [Interface Sounds](https://opengameart.org/content/interface-sounds),
   [85 Short music jingles](https://opengameart.org/content/85-short-music-jingles),
   [63 Digital sound effects](https://opengameart.org/content/63-digital-sound-effects-lasers-phasers-space-etc) and
-  [50 RPG sound effects](https://opengameart.org/content/50-rpg-sound-effects) by Kenney, CC0 (converted to mp3).
+  [50 RPG sound effects](https://opengameart.org/content/50-rpg-sound-effects) and
+  [Sci-fi Sounds](https://opengameart.org/content/sci-fi-sounds) (fireball and firework) by Kenney, CC0
+  (converted to mp3, the fireball shortened).
 - Music: [Flowerbed Fields [Loop]](https://opengameart.org/content/flowerbed-fields-loop) by Zane Little Music, CC0
   (converted to mp3).
 - Font: [Fredoka](https://fonts.google.com/specimen/Fredoka) by The Fredoka Project Authors,

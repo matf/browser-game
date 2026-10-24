@@ -44,7 +44,15 @@ through a rainbow at the end. The README has the player-facing description and t
 
 - `src/world.js`: 4 islands (Blumeninsel/flowers, Zuckerinsel/candy, Schneeinsel/snow,
   Sterneninsel/stars), 3 levels each, station positions on the map, `THEMES` (sky colour, splash
-  colours, night stars). A level is open when the previous one is done (`isOpen`).
+  colours, night stars, embers). A level is open when the previous one is done (`isOpen`).
+  After them comes `BOSS_ISLAND` (Vulkaninsel, theme fire) with one station, `BOSS_LEVEL` = 12;
+  `ALL_ISLANDS` includes it and `islandOf(12)` returns it.
+- Boss fight (level index 12, same `GameScene` with `isBoss`): no pillars/bees/drops/coins; the
+  `FireDragon` (`src/objects/FireDragon.js`) hovers right, follows your height and breathes
+  fireballs (mouth glows first) in phases from `BOSS_FIGHT` (`src/levels.js`); a power-up always comes
+  at 30 s. After 60 s it says "Uff!" and flies away, the rainbow comes, and the win goes to
+  `finale` (`FinaleScene`: fireworks, then "Zur Weltkarte"). Obstacles with `pops` (drops, fireballs)
+  go puff on the ground, on a hit and on star power.
 - `src/levels.js`: 12 levels (length, scroll speed, pillar spacing and gap, bees, falling things),
   gently harder each level.
 - `src/scenes/GameScene.js`: level rules. Pillars with a coin in the gap, coin rows between them,
@@ -91,6 +99,8 @@ through a rainbow at the end. The README has the player-facing description and t
 - Planned (Anna's idea, not started): buy decorations in the shop and place them on the world map.
 - Power-ups: Anna asked for more ideas beyond star and heart. Offer options and let her pick.
 - Not yet tested on a real iPhone (only Chrome with touch emulation).
+- Once, in a long SwiftShader test run, the finale title rendered partly cut off; it didn't happen
+  again in later runs. Worth a look on a real device.
 
 ## Working with the daughter
 

@@ -9,9 +9,11 @@ import { FOODS } from '../shop.js';
 import { TILE } from './PreloadScene.js';
 import { addButton } from './MenuPage.js';
 import {
+  ALL_ISLANDS,
+  BOSS_ISLAND,
+  BOSS_LEVEL,
   ISLANDS,
   LEVELS_PER_ISLAND,
-  LEVEL_COUNT,
   SHOP,
   SHOP_SPOT,
   isOpen,
@@ -62,7 +64,8 @@ export class MapScene extends Phaser.Scene {
     this.addDriftingClouds();
     this.addIslandClouds();
     this.addTwinkles();
-    for (const island of ISLANDS) {
+    this.addVolcanoSmoke();
+    for (const island of ALL_ISLANDS) {
       this.add.text(island.label[0], island.label[1], island.name, { ...TEXT, fontSize: '10px' })
         .setOrigin(0.5)
         .setResolution(4)
@@ -114,14 +117,18 @@ export class MapScene extends Phaser.Scene {
 
   addStations() {
     this.stations = [];
-    for (let level = 0; level < LEVEL_COUNT; level++) {
+    for (let level = 0; level <= BOSS_LEVEL; level++) {
       const [x, y] = spotPosition(level);
       const pad = this.add.image(x, y, 'station-locked').setDepth(3);
-      const number = this.add
-        .text(x, y - 1, String((level % LEVELS_PER_ISLAND) + 1), { ...TEXT, fontSize: '8px', strokeThickness: 2 })
-        .setOrigin(0.5)
-        .setResolution(4)
-        .setDepth(3);
+      // The fire dragon's station has a little flame instead of a number.
+      const number =
+        level === BOSS_LEVEL
+          ? this.add.image(x, y - 1, 'map-flame').setDepth(3)
+          : this.add
+              .text(x, y - 1, String((level % LEVELS_PER_ISLAND) + 1), { ...TEXT, fontSize: '8px', strokeThickness: 2 })
+              .setOrigin(0.5)
+              .setResolution(4)
+              .setDepth(3);
       const star = this.add.image(x, y - 11, 'map-star').setDepth(4);
       // Bigger than the stone, so it's easy to hit with a finger.
       this.add
@@ -151,7 +158,7 @@ export class MapScene extends Phaser.Scene {
   drawPaths() {
     const g = this.add.graphics().setDepth(1);
     this.bridges = [];
-    for (let level = 0; level < LEVEL_COUNT - 1; level++) {
+    for (let level = 0; level < BOSS_LEVEL; level++) {
       const dots = this.dotsBetween(spotPosition(level), spotPosition(level + 1));
       if ((level + 1) % LEVELS_PER_ISLAND) {
         for (const [x, y] of dots) {
@@ -176,9 +183,10 @@ export class MapScene extends Phaser.Scene {
   }
 
   addIslandClouds() {
-    this.islandClouds = ISLANDS.map((island) => {
-      const cx = island.stations.reduce((sum, [x]) => sum + x, 0) / LEVELS_PER_ISLAND;
-      const cy = island.stations.reduce((sum, [, y]) => sum + y, 0) / LEVELS_PER_ISLAND - 6;
+    this.islandClouds = ALL_ISLANDS.map((island) => {
+      const n = island.stations.length;
+      const cx = island.stations.reduce((sum, [x]) => sum + x, 0) / n;
+      const cy = island.stations.reduce((sum, [, y]) => sum + y, 0) / n - (island === BOSS_ISLAND ? 18 : 6);
       return CLOUD_SPOTS.map(([dx, dy], i) => {
         const cloud = this.add.image(cx + dx, cy + dy, 'map-cloud').setScale(1.1).setDepth(5);
         this.tweens.add({ targets: cloud, x: cloud.x + 3, duration: 1400 + i * 230, yoyo: true, repeat: -1, ease: 'Sine.InOut' });
@@ -221,6 +229,32 @@ export class MapScene extends Phaser.Scene {
     }
   }
 
+  // Smoke puffs and a few sparks rising from the volcano.
+  addVolcanoSmoke() {
+    const [x, y] = BOSS_ISLAND.volcano;
+    this.add
+      .particles(x, y, 'map-cloud', {
+        lifespan: 2600,
+        speedY: { min: -12, max: -7 },
+        speedX: { min: 1, max: 5 },
+        scale: { start: 0.06, end: 0.22 },
+        alpha: { start: 0.7, end: 0 },
+        tint: 0x8a7a8a,
+        frequency: 500,
+      })
+      .setDepth(6);
+    this.add
+      .particles(x, y, 'pixel', {
+        lifespan: 900,
+        speedY: { min: -30, max: -14 },
+        speedX: { min: -10, max: 10 },
+        scale: { start: 1, end: 0 },
+        tint: [0xff7a2a, 0xffd84a],
+        frequency: 300,
+      })
+      .setDepth(6);
+  }
+
   // Little stars blinking over the star island.
   addTwinkles() {
     const island = ISLANDS.find((i) => i.theme === 'stars');
@@ -247,7 +281,7 @@ export class MapScene extends Phaser.Scene {
       star.setVisible(done);
       if (open && !done && next === null) next = level;
     });
-    ISLANDS.forEach((_, i) => {
+    ALL_ISLANDS.forEach((_, i) => {
       const open = isOpen(shown, i * LEVELS_PER_ISLAND);
       for (const cloud of this.islandClouds[i]) cloud.setVisible(!open);
       for (const dot of this.bridges[i * LEVELS_PER_ISLAND] ?? []) dot.setVisible(open);
@@ -271,10 +305,15 @@ export class MapScene extends Phaser.Scene {
     this.tweens.add({ targets: star, scale: 1, duration: 400, ease: 'Back.Out' });
 
     const next = level + 1;
-    if (next === LEVEL_COUNT) {
+    if (level === BOSS_LEVEL) return;
+    if (next === BOSS_LEVEL) {
       play(this, 'win');
       this.sparkle(WIDTH / 2, HEIGHT / 2, 60);
-      this.banner('Alle Inseln geschafft!', 'Du bist ein Drachen-Profi!');
+      this.banner('Alle Inseln geschafft!', 'Doch auf der Vulkaninsel wartet der Feuerdrache...');
+      // The volcano island stays hidden until the first banner is gone.
+      for (const cloud of this.islandClouds.at(-1)) cloud.setVisible(true);
+      for (const dot of this.bridges[BOSS_LEVEL]) dot.setVisible(false);
+      this.time.delayedCall(3300, () => this.openIsland(ALL_ISLANDS.length - 1, 'Der Feuerdrache!', 'Traust du dich?'));
     } else if (next % LEVELS_PER_ISLAND === 0) {
       this.openIsland(next / LEVELS_PER_ISLAND);
     } else {
@@ -285,8 +324,8 @@ export class MapScene extends Phaser.Scene {
   }
 
   // A new island: the clouds blow away and dots appear over the water.
-  openIsland(index) {
-    const island = ISLANDS[index];
+  openIsland(index, title = 'Neue Insel!', subtitle = `Flieg zur ${ALL_ISLANDS[index].name}!`) {
+    const island = ALL_ISLANDS[index];
     for (const cloud of this.islandClouds[index]) {
       cloud.setVisible(true);
       const [cx] = island.label;
@@ -302,13 +341,13 @@ export class MapScene extends Phaser.Scene {
       });
     }
     this.bridges[index * LEVELS_PER_ISLAND].forEach((dot, i) => {
-      dot.setScale(0);
+      dot.setVisible(true).setScale(0);
       this.tweens.add({ targets: dot, scale: 1, duration: 200, delay: 300 + i * 60 });
     });
     play(this, 'newdragon');
     const [x, y] = spotPosition(index * LEVELS_PER_ISLAND);
     this.sparkle(x, y, 40);
-    this.banner('Neue Insel!', `Flieg zur ${island.name}!`);
+    this.banner(title, subtitle);
   }
 
   sparkle(x, y, count) {
@@ -346,7 +385,7 @@ export class MapScene extends Phaser.Scene {
   step(dir) {
     const from = this.target ?? this.save.at;
     const to = from + dir;
-    if (to < SHOP_SPOT || to >= LEVEL_COUNT) return;
+    if (to < SHOP_SPOT || to > BOSS_LEVEL) return;
     if (to !== SHOP_SPOT && !isOpen(this.save, to)) return this.locked(to);
     this.flyTo(to, false);
   }
@@ -467,7 +506,9 @@ export class MapScene extends Phaser.Scene {
     const { pad } = this.stations[level];
     this.tweens.add({ targets: pad, x: pad.x + 2, duration: 50, yoyo: true, repeat: 3 });
     const first = level % LEVELS_PER_ISLAND === 0;
-    const text = first
+    const text = level === BOSS_LEVEL
+      ? 'Schaff zuerst\nalle Inseln!'
+      : first
       ? `Schaff zuerst alle Level\nder ${islandOf(level - 1).name}!`
       : `Schaff zuerst Level ${level % LEVELS_PER_ISLAND}!`;
     this.say?.destroy();

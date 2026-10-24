@@ -51,9 +51,10 @@ export class UIScene extends Phaser.Scene {
 
     const intro = this.showMessage(
       this.registry.get('levelName'),
-      !this.registry.get('firstLevel') ? "Los geht's!" : IS_TOUCH ? 'Joystick: fliegen' : 'Pfeiltasten: fliegen',
+      this.registry.get('levelHint') ??
+        (!this.registry.get('firstLevel') ? "Los geht's!" : IS_TOUCH ? 'Joystick: fliegen' : 'Pfeiltasten: fliegen'),
     );
-    this.time.delayedCall(2000, () =>
+    this.time.delayedCall(this.registry.get('levelHint') ? 3000 : 2000, () =>
       this.tweens.add({ targets: intro, alpha: 0, duration: 500, onComplete: () => intro.destroy() }),
     );
 
@@ -62,8 +63,9 @@ export class UIScene extends Phaser.Scene {
         'Oh nein!',
         `${this.registry.get('dragonName')} macht ein Nickerchen...\nDie Münzen aus diesem Level sind weg!`,
       );
-    const onLevelWon = ({ firstTime, islandDone, last }) => {
-      if (firstTime && last) this.showMessage('Alle Inseln geschafft!', 'Zurück zur Weltkarte...');
+    const onLevelWon = ({ firstTime, islandDone, last, boss }) => {
+      if (boss) this.showMessage('Du hast es geschafft!', 'Der Feuerdrache ist weg!');
+      else if (firstTime && last) this.showMessage('Alle Inseln geschafft!', 'Doch jemand wartet noch auf dich...');
       else if (firstTime && islandDone) this.showMessage('Insel geschafft!', 'Eine neue Insel wartet auf dich!');
       else this.showMessage('Level geschafft!', 'Zurück zur Weltkarte...');
     };

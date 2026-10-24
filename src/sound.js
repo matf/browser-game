@@ -18,6 +18,8 @@ export const SOUNDS = {
   nope: 0.7,
   wear: 0.7,
   click: 0.8,
+  fireball: 0.5,
+  firework: 0.6,
 };
 
 const MUTE_KEY = 'dragonFlight.muted';

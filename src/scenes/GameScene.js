@@ -3,10 +3,11 @@ import { Dragon } from '../objects/Dragon.js';
 import { Bee } from '../objects/Bee.js';
 import { Accessories } from '../objects/Accessories.js';
 import { PowerUp } from '../objects/PowerUp.js';
+import { FireDragon } from '../objects/FireDragon.js';
 import { MAX_HEARTS } from '../shop.js';
 import { DRAGONS, TILE } from './PreloadScene.js';
-import { LEVELS } from '../levels.js';
-import { LEVELS_PER_ISLAND, LEVEL_COUNT, THEMES, islandOf } from '../world.js';
+import { BOSS_FIGHT, LEVELS } from '../levels.js';
+import { BOSS_LEVEL, LEVELS_PER_ISLAND, LEVEL_COUNT, THEMES, islandOf } from '../world.js';
 import { loadSave, writeSave } from '../save.js';
 import { FONT, HEIGHT, WIDTH, setupCamera } from '../view.js';
 import { play, startMusic } from '../sound.js';
@@ -24,6 +25,7 @@ const POWERUP_CHANCE = 0.5; // how likely a level has a power-up (0 = never, 1 =
 const POWERUP_FROM = 0.25; // the power-up comes somewhere between this part of the level...
 const POWERUP_TO = 0.75; // ...and this part (0 = start, 1 = end)
 const HEART_POWERUP_CHANCE = 0.5; // when a heart is missing, how likely the power-up is a heart instead of a star
+const RAINBOW_AFTER_BOSS_MS = 2500; // after the fire dragon gives up, the rainbow comes this much later
 
 export class GameScene extends Phaser.Scene {
   constructor() {
@@ -36,9 +38,10 @@ export class GameScene extends Phaser.Scene {
     const height = HEIGHT;
     this.save = loadSave();
     this.coinsAtStart = this.save.coins; // a nap takes away the coins collected in this level
-    // The world map says which level to fly.
-    this.levelIndex = Phaser.Math.Clamp(data?.level ?? 0, 0, LEVELS.length - 1);
-    this.level = LEVELS[this.levelIndex];
+    // The world map says which level to fly. The one after the last level is the fire dragon.
+    this.levelIndex = Phaser.Math.Clamp(data?.level ?? 0, 0, BOSS_LEVEL);
+    this.isBoss = this.levelIndex === BOSS_LEVEL;
+    this.level = this.isBoss ? BOSS_FIGHT : LEVELS[this.levelIndex];
     this.island = islandOf(this.levelIndex);
     this.theme = this.island.theme;
     this.cameras.main.setBackgroundColor(THEMES[this.theme].sky);
@@ -47,11 +50,15 @@ export class GameScene extends Phaser.Scene {
     this.napping = false;
     this.elapsed = 0;
     this.rainbow = null;
+    this.ending = false; // the time is up: the rainbow (or the fire dragon giving up) is on its way
     // Some levels hide one power-up: when it comes, it takes the place of a row of coins.
+    // The fire dragon fight always has one.
     const seconds = this.level.seconds * 1000;
-    this.powerUpAt = Math.random() < POWERUP_CHANCE ? Phaser.Math.FloatBetween(POWERUP_FROM, POWERUP_TO) * seconds : Infinity;
+    if (this.isBoss) this.powerUpAt = BOSS_FIGHT.powerUpAt * 1000;
+    else this.powerUpAt = Math.random() < POWERUP_CHANCE ? Phaser.Math.FloatBetween(POWERUP_FROM, POWERUP_TO) * seconds : Infinity;
 
     if (THEMES[this.theme].twinkle) this.addNightStars();
+    if (THEMES[this.theme].embers) this.addEmbers();
     this.hills = this.add.tileSprite(0, height - 30, width, 48, `hills-${this.theme}`).setOrigin(0, 1);
     this.ground = this.add.tileSprite(0, height, width, 54, `ground-${this.theme}`).setOrigin(0, 1).setDepth(2);
 
@@ -109,7 +116,8 @@ export class GameScene extends Phaser.Scene {
       emitting: false,
     }).setDepth(2.9);
 
-    this.registry.set('levelName', `${this.island.name} ${(this.levelIndex % LEVELS_PER_ISLAND) + 1}`);
+    this.registry.set('levelName', this.isBoss ? 'Der Feuerdrache!' : `${this.island.name} ${(this.levelIndex % LEVELS_PER_ISLAND) + 1}`);
+    this.registry.set('levelHint', this.isBoss ? 'Weiche eine Minute lang\nseinen Feuerbällen aus!' : null);
     this.registry.set('firstLevel', this.levelIndex === 0);
     this.registry.set('hearts', this.save.hearts);
     this.registry.set('coins', this.save.coins);
@@ -117,9 +125,14 @@ export class GameScene extends Phaser.Scene {
 
     const every = (delay, callback) =>
       this.time.addEvent({ delay, callback, callbackScope: this, loop: true, startAt: -START_CALM_MS });
-    every(this.level.pillarEvery, this.spawnPillars);
-    every(this.level.beeEvery, this.spawnBee);
-    every(this.level.dropEvery, this.spawnDrop);
+    if (this.isBoss) {
+      this.fireDragon = new FireDragon(this, BOSS_FIGHT, this.obstacles, this.player, 50, this.groundY - 40).setDepth(3);
+      this.obstacles.add(this.fireDragon); // flying into it hurts too
+    } else {
+      every(this.level.pillarEvery, this.spawnPillars);
+      every(this.level.beeEvery, this.spawnBee);
+      every(this.level.dropEvery, this.spawnDrop);
+    }
 
     this.scene.launch('ui');
     startMusic(this);
@@ -148,6 +161,20 @@ export class GameScene extends Phaser.Scene {
         delay: Phaser.Math.Between(0, 2000),
       });
     }
+  }
+
+  // Glowing sparks floating up from the ground on the volcano island.
+  addEmbers() {
+    this.add.particles(0, this.groundY, 'pixel', {
+      x: { min: 0, max: WIDTH },
+      lifespan: 4000,
+      speedY: { min: -30, max: -12 },
+      speedX: { min: -25, max: 5 },
+      scale: { start: 1.2, end: 0 },
+      alpha: { start: 0.9, end: 0 },
+      tint: [0xff7a2a, 0xffd84a, 0xff4a1a],
+      frequency: 120,
+    });
   }
 
   // Back to the world map (the map button in the HUD, or Esc). Coins collected so far are kept.
@@ -218,7 +245,7 @@ export class GameScene extends Phaser.Scene {
   spawnDrop() {
     if (this.atEnd || this.napping) return;
     const drop = this.obstacles.create(Phaser.Math.Between(60, WIDTH + 60), -10, `drop-${this.theme}`);
-    drop.isDrop = true;
+    drop.pops = true;
     drop.setDepth(3);
     drop.body.setSize(8, 10).setOffset(2, 5);
     drop.body.setVelocity(-this.level.scroll * 0.3, DROP_SPEED);
@@ -274,9 +301,9 @@ export class GameScene extends Phaser.Scene {
     this.tweens.add({ targets: text, y: text.y - 26, alpha: 0, duration: 1400, ease: 'Sine.In', onComplete: () => text.destroy() });
   }
 
-  // With star power, bees and raindrops just bounce off (pillars stay where they are).
+  // With star power, bees, raindrops and fireballs just bounce off (pillars and the fire dragon stay).
   bonk(obstacle) {
-    if (obstacle.isDrop) return this.popDrop(obstacle);
+    if (obstacle.pops) return this.popDrop(obstacle);
     if (!(obstacle instanceof Bee)) return;
     play(this, 'wear');
     this.sparkle.explode(12, obstacle.x, obstacle.y);
@@ -296,7 +323,7 @@ export class GameScene extends Phaser.Scene {
   onHit(player, obstacle) {
     if (player.starPower && !this.finished && !this.napping) return this.bonk(obstacle);
     if (this.finished || this.napping || player.invulnerable) return;
-    if (obstacle.isDrop) this.popDrop(obstacle);
+    if (obstacle.pops) this.popDrop(obstacle);
 
     const hearts = this.save.hearts - 1;
     this.registry.set('hearts', hearts);
@@ -340,7 +367,30 @@ export class GameScene extends Phaser.Scene {
     this.time.delayedCall(NAP_MS, () => this.scene.restart({ level: this.levelIndex }));
   }
 
-  // The rainbow is reached: remember it, cheer, then back to the world map.
+  // The fight is over: all fireballs go puff, the fire dragon flies away, then the rainbow comes.
+  bossGivesUp() {
+    this.fireDragon.giveUp();
+    for (const obstacle of this.obstacles.getChildren().slice()) if (obstacle.pops) this.popDrop(obstacle);
+    play(this, 'nope');
+    const say = this.add
+      .text(this.fireDragon.x - 20, this.fireDragon.y - 50, 'Uff! Du bist zu flink\nfür mich!', {
+        fontFamily: FONT,
+        fontSize: '12px',
+        fontStyle: 'bold',
+        color: '#ffe066',
+        stroke: '#1b1630',
+        strokeThickness: 4,
+        align: 'center',
+      })
+      .setOrigin(0.5)
+      .setResolution(4)
+      .setDepth(6);
+    this.tweens.add({ targets: say, alpha: 0, delay: 2000, duration: 500, onComplete: () => say.destroy() });
+    this.time.delayedCall(RAINBOW_AFTER_BOSS_MS, () => this.spawnRainbow());
+  }
+
+  // The rainbow is reached: remember it, cheer, then back to the world map (or, after the fire
+  // dragon, to the big fireworks).
   win() {
     this.finished = true;
     this.physics.pause();
@@ -357,8 +407,16 @@ export class GameScene extends Phaser.Scene {
       firstTime,
       islandDone,
       last: this.levelIndex === LEVEL_COUNT - 1,
+      boss: this.isBoss,
     });
-    this.time.delayedCall(MAP_DELAY_MS, () => this.toMap(firstTime ? { firstWin: this.levelIndex } : {}));
+    if (this.isBoss) this.time.delayedCall(MAP_DELAY_MS, () => this.toFinale());
+    else this.time.delayedCall(MAP_DELAY_MS, () => this.toMap(firstTime ? { firstWin: this.levelIndex } : {}));
+  }
+
+  toFinale() {
+    this.scene.stop('ui');
+    this.cameras.main.fadeOut(400);
+    this.cameras.main.once('camerafadeoutcomplete', () => this.scene.start('finale', {}));
   }
 
   popDrop(drop) {
@@ -376,7 +434,16 @@ export class GameScene extends Phaser.Scene {
     this.player.update(time);
     this.starTrail.emitting = this.player.starPower;
 
-    if (this.atEnd && !this.rainbow) this.spawnRainbow();
+    if (this.isBoss) this.fireDragon.update(this.elapsed);
+    if (this.isBoss && this.elapsed >= this.powerUpAt) {
+      this.powerUpAt = Infinity;
+      this.spawnPowerUp(Phaser.Math.Between(60, this.groundY - 50));
+    }
+    if (this.atEnd && !this.ending) {
+      this.ending = true;
+      if (this.isBoss) this.bossGivesUp();
+      else this.spawnRainbow();
+    }
     if (this.rainbow && this.player.x >= this.rainbow.x) {
       this.sparkle.explode(40, this.player.x, this.player.y);
       this.win();
@@ -384,8 +451,8 @@ export class GameScene extends Phaser.Scene {
     }
 
     for (const obstacle of this.obstacles.getChildren().slice()) {
-      if (obstacle.isDrop && obstacle.y > this.groundY - 4) this.popDrop(obstacle);
-      else if (obstacle.x < -60) obstacle.destroy();
+      if (obstacle.pops && obstacle.y > this.groundY - 4) this.popDrop(obstacle);
+      else if (obstacle.x < -60 || obstacle.y < -60) obstacle.destroy();
     }
     for (const coin of this.coins.getChildren().slice()) if (coin.x < -20) coin.destroy();
     for (const powerUp of this.powerUps.getChildren().slice()) if (powerUp.x < -20) powerUp.destroy();

@@ -50,6 +50,10 @@ export class PreloadScene extends Phaser.Scene {
       frameWidth: DRAGON_FRAME.width,
       frameHeight: DRAGON_FRAME.height,
     });
+    this.load.spritesheet('boss-dragon', 'boss-dragon.png', {
+      frameWidth: DRAGON_FRAME.width,
+      frameHeight: DRAGON_FRAME.height,
+    });
     this.load.spritesheet('tiles', 'tiles.png', { frameWidth: 18, frameHeight: 18 });
     this.load.spritesheet('bee', 'bee.png', { frameWidth: 24, frameHeight: 20 });
     // Each island theme has its own hills, ground, pillars and falling thing (ground-candy.png, ...).
@@ -84,6 +88,12 @@ export class PreloadScene extends Phaser.Scene {
       });
     }
     this.anims.create({
+      key: 'boss-fly',
+      frames: this.anims.generateFrameNumbers('boss-dragon', { frames: [0, 1, 2, 1] }),
+      frameRate: 7,
+      repeat: -1,
+    });
+    this.anims.create({
       key: 'bee-fly',
       frames: this.anims.generateFrameNumbers('bee', { start: 0, end: 1 }),
       frameRate: 12,
@@ -116,6 +126,7 @@ export class PreloadScene extends Phaser.Scene {
     loadSoundSettings(this.game);
     this.makeMapTextures();
     this.makeStar();
+    this.makeFireTextures();
 
     this.scene.start('title');
   }
@@ -134,6 +145,21 @@ export class PreloadScene extends Phaser.Scene {
     g.fillStyle(0xffd84a).fillPoints(points(6.2, 2.8), true);
     g.fillStyle(0xffffff).fillRect(6, 5, 2, 2);
     g.generateTexture('powerup-star', 16, 16).destroy();
+  }
+
+  // A fireball (12x12) for the fire dragon, and a little flame (7x9) for its station on the map.
+  makeFireTextures() {
+    const ball = this.add.graphics();
+    ball.fillStyle(0xff4a1a).fillCircle(6, 6, 6);
+    ball.fillStyle(0xff9a2a).fillCircle(6, 6, 4.5);
+    ball.fillStyle(0xffe066).fillCircle(6, 6, 2.5);
+    ball.fillStyle(0xffffff).fillRect(4, 4, 2, 2);
+    ball.generateTexture('fireball', 12, 12).destroy();
+
+    const flame = this.add.graphics();
+    flame.fillStyle(0xff4a1a).fillTriangle(3.5, 0, 0, 6, 7, 6).fillCircle(3.5, 6, 3.5);
+    flame.fillStyle(0xffd84a).fillTriangle(3.5, 3, 1.5, 7, 5.5, 7).fillCircle(3.5, 7, 1.5);
+    flame.generateTexture('map-flame', 7, 10).destroy();
   }
 
   makeMapTextures() {

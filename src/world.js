@@ -8,6 +8,7 @@ export const THEMES = {
   candy: { sky: '#ffd6ec', splash: [0xff9ed2, 0xffe3f2] },
   snow: { sky: '#cfe6f5', splash: [0xffffff, 0xbcd8f0] },
   stars: { sky: '#2a2350', splash: [0xffd84a, 0xfff3b0], twinkle: true },
+  fire: { sky: '#3a1e33', splash: [0xff7a2a, 0xffd84a], embers: true }, // embers: glowing sparks float up
 };
 
 // Three levels per island. stations: the spot of each level on the map (x, y in pixels).
@@ -40,14 +41,27 @@ export const ISLANDS = [
 ];
 
 export const LEVELS_PER_ISLAND = 3;
-export const LEVEL_COUNT = ISLANDS.length * LEVELS_PER_ISLAND;
+export const LEVEL_COUNT = ISLANDS.length * LEVELS_PER_ISLAND; // the normal levels, without the fire dragon
+
+// After all islands: the volcano island with one station, the fight against the fire dragon.
+// volcano: the top of the volcano drawn on the map, where smoke comes out.
+export const BOSS_LEVEL = LEVEL_COUNT;
+export const BOSS_ISLAND = {
+  name: 'Vulkaninsel',
+  theme: 'fire',
+  label: [444, 254],
+  stations: [[452, 226]],
+  volcano: [440, 187],
+};
+// All islands on the map, the volcano island last.
+export const ALL_ISLANDS = [...ISLANDS, BOSS_ISLAND];
 
 // The shop house: x, y is the bottom middle of the house; the dragon lands at its door.
 export const SHOP = { x: 84, y: 186 };
 export const SHOP_SPOT = -1; // "where the dragon is" when it's at the shop (levels are 0, 1, 2, ...)
 
 export function islandOf(level) {
-  return ISLANDS[Math.floor(level / LEVELS_PER_ISLAND)];
+  return ALL_ISLANDS[Math.floor(level / LEVELS_PER_ISLAND)];
 }
 
 // Spot of a level (or SHOP_SPOT) on the map.
