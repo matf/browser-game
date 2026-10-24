@@ -2,10 +2,11 @@ import Phaser from 'phaser';
 import { HEIGHT, WIDTH } from '../view.js';
 import { IS_TOUCH } from '../touch.js';
 
-const RADIUS = 38; // size of the joystick ring, in pixels (the knob moves this far)
-const KNOB = 16; // size of the knob you push around
-const DEAD_ZONE = 0.15; // tiny thumb movements near the middle are ignored
-export const STICK_HOME = { x: 72, y: 180 }; // where the joystick waits when no thumb is on it
+const RADIUS = 46; // size of the joystick ring, in pixels (the knob moves this far)
+const KNOB = 19; // size of the knob you push around
+const DEAD_ZONE = 0.1; // tiny thumb movements near the middle are ignored
+const FULL_SPEED_AT = 0.6; // full speed once the thumb is this far out (0.6 = 60% of the ring)
+export const STICK_HOME = { x: 78, y: 176 }; // where the joystick waits when no thumb is on it
 const MARGIN = 6; // the ring always stays this far inside the screen
 
 // A joystick for phones. It always shows at STICK_HOME. Put your thumb anywhere on the left half
@@ -48,6 +49,11 @@ export class TouchStick {
     };
   }
 
+  // True while a thumb is on the joystick.
+  get active() {
+    return this.touchId !== null;
+  }
+
   goHome() {
     this.base.setPosition(STICK_HOME.x, STICK_HOME.y).setAlpha(0.7);
     this.knob.setPosition(STICK_HOME.x, STICK_HOME.y).setAlpha(0.7);
@@ -78,7 +84,8 @@ export class TouchStick {
     const len = Math.min(Math.hypot(dx, dy), RADIUS);
     const angle = Math.atan2(dy, dx);
     this.knob.setPosition(this.base.x + Math.cos(angle) * len, this.base.y + Math.sin(angle) * len);
-    const strength = len / RADIUS < DEAD_ZONE ? 0 : len / RADIUS;
+    const push = len / RADIUS;
+    const strength = push < DEAD_ZONE ? 0 : Math.min(1, push / FULL_SPEED_AT);
     this.x = Math.cos(angle) * strength;
     this.y = Math.sin(angle) * strength;
   }

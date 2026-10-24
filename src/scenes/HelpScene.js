@@ -37,12 +37,12 @@ export class HelpScene extends Phaser.Scene {
 
     if (IS_TOUCH) {
       // A copy of the joystick on top of the dark layer, with a pulsing ring around it.
-      this.add.circle(STICK_HOME.x, STICK_HOME.y, 38, 0xffffff, 0.15).setStrokeStyle(3, 0xffffff, 0.8);
-      this.add.circle(STICK_HOME.x, STICK_HOME.y, 16, 0xffffff, 0.7);
-      const ring = this.add.circle(STICK_HOME.x, STICK_HOME.y, 44).setStrokeStyle(3, 0xffe066);
+      this.add.circle(STICK_HOME.x, STICK_HOME.y, 46, 0xffffff, 0.15).setStrokeStyle(3, 0xffffff, 0.8);
+      this.add.circle(STICK_HOME.x, STICK_HOME.y, 19, 0xffffff, 0.7);
+      const ring = this.add.circle(STICK_HOME.x, STICK_HOME.y, 52).setStrokeStyle(3, 0xffe066);
       this.tweens.add({ targets: ring, scale: 1.2, alpha: 0.3, duration: 700, yoyo: true, repeat: -1 });
       this.add
-        .text(STICK_HOME.x, STICK_HOME.y - 64, 'Daumen hier\nhin und schieben!', {
+        .text(STICK_HOME.x, STICK_HOME.y - 72, 'Daumen hier\nhin und schieben!', {
           ...TEXT,
           fontSize: '11px',
           color: '#ffe066',
