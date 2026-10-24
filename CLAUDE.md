@@ -11,15 +11,81 @@ reference implementation:** when unsure how to structure a scene, an object clas
 loading, particles or restart logic, read its `src/` and copy the pattern. Don't copy its game
 content (unicorn, gems, level) unless the daughter wants it.
 
-## First session: what to do
+## Starting a session
 
-1. Scaffold the project as described below, `npm install`, start the dev server, and check that an
-   empty scene renders with no console errors.
-2. Then ask the daughter (in German) what game she wants to make. Help her narrow it down with a few
-   questions: what kind of game (jumping, flying, exploring, puzzle...), who the hero is, what
-   you collect or avoid, how you win. Keep it to a playable first version.
-3. Pick the matching Kenney pack(s), download them, and get the hero moving on screen as quickly as
-   possible. Build the rest step by step from there.
+The scaffold and first version are done (see "Current state of the game" below). In a new session:
+`npm ci` if `node_modules` is missing, start the dev server (see "Project scaffold"), read the
+current-state section and `README.md`, then ask the daughter what she wants next. Keep the
+current-state section up to date when a feature lands (in the same commit).
+
+## Current state of the game
+
+**Dragon Flight** (German UI) is made by Anna (the daughter, 10–13) and her father Matthias. You fly
+a cute dragon from left to right through a scrolling level, dodge things, collect coins and fly
+through a rainbow at the end. The README has the player-facing description and the asset credits.
+
+### Scene flow (`src/main.js` lists all scenes)
+
+- `preload` → `title` (main menu). The title shows Weiterspielen (only when `hasProgress`),
+  Neues Spiel (asks "Wirklich neu anfangen?" when there is progress), Drachen-Galerie, Einstellungen,
+  Hilfe, Mitwirkende. The pages `gallery`, `settings`, `credits` and `help` run over the paused title
+  (`TitleScene.openPage`); gallery, settings and credits extend `MenuPage` (`src/scenes/MenuPage.js`:
+  background, page title, back button, Esc/Enter/Space/Backspace closes, `addButton` helper).
+- `map` (world map) ↔ `game` (+ `ui` HUD overlay, + `help` on the very first level) and `shop`.
+  The map starts a level with `scene.start('game', { level })`; after a first-time win the game
+  returns with `{ firstWin }` and the map plays the reveal (star, next station, or a new island with
+  clouds blowing away). The house icon / Esc on the map goes to `title`; Esc / the map icon in a level
+  goes to `map`. The shop is the little house on the flower island (map spot `SHOP_SPOT = -1`).
+
+### Where things live
+
+- `src/world.js`: 4 islands (Blumeninsel/flowers, Zuckerinsel/candy, Schneeinsel/snow,
+  Sterneninsel/stars), 3 levels each, station positions on the map, `THEMES` (sky colour, splash
+  colours, night stars). A level is open when the previous one is done (`isOpen`).
+- `src/levels.js`: 12 levels (length, scroll speed, pillar spacing and gap, bees, falling things),
+  gently harder each level.
+- `src/scenes/GameScene.js`: level rules. Pillars with a coin in the gap, coin rows between them,
+  bees, falling things (raindrop/sugar drop/snowflake/shooting star by theme), rainbow at the end.
+  Hit = lose a heart (hearts only come back by food in the shop or a heart power-up); 0 hearts =
+  the dragon naps 5 s, loses this level's coins and restarts the level with 3 hearts.
+  Power-ups: with `POWERUP_CHANCE` (0.5) a level has one, replacing a coin row between 25 % and 75 %
+  of the level: heart (+1 heart, only when one is missing) or star (`src/objects/PowerUp.js`; star
+  power in `Dragon.startStar`: 6 s invulnerable, rainbow tint, bees and drops bounce off).
+- `src/objects/`: `Dragon` (flying, joystick, hurt/star), `Bee`, `PowerUp`, `Accessories` (worn items
+  drawn on the dragon per animation frame, also flipped and rotated), `TouchStick`.
+- `src/shop.js`: foods, accessories, dragon price; `src/scenes/ShopScene.js`: shop with tabs Futter /
+  Drachen / Accessoires. 5 dragons (`DRAGONS` in PreloadScene: Marshmallow, Chili, Blubb, Wolke,
+  Kiesel; rows of `dragons.png`).
+- `src/save.js`: `localStorage['dragonFlight.save']` = `{ coins, done: [level indices], at (map spot),
+  hearts, dragon, dragons, items, wear, seenHelp }`; old saves with `level` are migrated.
+  `resetSave()` keeps only `seenHelp`. Sound settings are separate keys (`dragonFlight.muted`,
+  `dragonFlight.volume`), so Neues Spiel keeps them.
+- `src/sound.js`: always play effects with `play(scene, key)` (respects mute and the Einstellungen
+  volume); `startMusic`, `addMuteButton`, `getVolume/setVolume` (steps 0–5, 3 = normal).
+- `src/hud.js` (hearts and coin digits, used by HUD and map), `src/view.js` (480×270 × `ZOOM` 4,
+  `FONT`), `src/touch.js` (`IS_TOUCH`, rotate-your-phone pause, refit), `src/update.js` (update
+  banner for iPhone home-screen apps).
+- Generated textures (station markers, map icons, speaker, power-up star) are drawn in
+  `PreloadScene`. `public/assets/map.png`, `shop-house.png` and the themed `*-candy/snow/stars.png`
+  pictures come from `tools/make_assets.py` (see its docstring; it needs the Kenney Tiny Town zip,
+  downloaded outside the project). Moving a station means changing it in both `world.js` and the
+  script, then re-running the script.
+
+### Conventions used in this game
+
+- Menus, the map and pages use `keyboard.on('keydown-X')` instead of `JustDown`: Playwright presses a
+  key down and up within one frame, and `JustDown` misses it. The level and the shop still use keys.
+- Text: `{ fontFamily: FONT, fontStyle: 'bold', stroke: '#1b1630' }` plus `.setResolution(4)`.
+  Colours used: dark `0x1b1630`/`0x2b2140`, card purple `0x4a3a6e`, green buttons `0x5fd068`,
+  yellow highlight `0xffd84a`/`#ffe066`, pink `#ff9fc8`.
+- Scene changes fade (`cameras.main.fadeOut` → `start`); overlay pages pause the scene below and
+  resume it on close.
+
+### Ideas and open work
+
+- Planned (Anna's idea, not started): buy decorations in the shop and place them on the world map.
+- Power-ups: Anna asked for more ideas beyond star and heart. Offer options and let her pick.
+- Not yet tested on a real iPhone (only Chrome with touch emulation).
 
 ## Working with the daughter
 
@@ -334,10 +400,26 @@ browser_console_messages`).
    can't write to the scratchpad), then viewed with Read.
 5. Report what was verified and what wasn't.
 
+**When the Playwright MCP tools aren't there** (as on the exe.dev Linux VM): install
+`playwright-core` into an empty folder in the scratchpad (`npm i playwright-core`, no browser
+download) and launch the system Chrome with
+`chromium.launch({ executablePath: '/usr/bin/google-chrome', args: ['--autoplay-policy=no-user-gesture-required', '--enable-unsafe-swiftshader', '--use-gl=angle', '--use-angle=swiftshader'] })`.
+For touch, use `newPage({ hasTouch: true, isMobile: true })`. Log `console` errors/warnings and `pageerror`.
+Screenshots can go to the scratchpad in this setup. Pitfalls:
+- `page.evaluate(() => scene.scene.start(...))` returns a Phaser object, and serialising it hangs
+  the test and eats gigabytes of memory. Always use a block body: `() => { ...; }`, and return only
+  plain values.
+- SwiftShader is slow: give scene changes ~1 s, and hold keys for ~80 ms in scenes that use `JustDown`.
+- Start a level directly with `game.scene.getScene('map').scene.start('game', { level: n })`, and win
+  it quickly by setting `g.elapsed = g.level.seconds * 1000` and then moving `g.rainbow.x` to the player.
+
 ## Shell notes for this machine (macOS, zsh)
 
 - `rm` is aliased to interactive mode: use `command rm -f ...` (only for files you created).
 - `noclobber` is on: `>` won't overwrite an existing file. Delete it first, or use the Write tool.
+- The project is also worked on in an exe.dev Linux VM (`/home/exedev/browser-game`, bash). There,
+  `python3 -I` has no Pillow; make a venv in the scratchpad (`python3 -m venv venv && venv/bin/pip
+  install pillow`) and run `venv/bin/python -I ...`.
 
 ## Git: commit and push automatically
 

@@ -52,8 +52,8 @@ in place of a coin row: a heart gives one heart back (only when one is missing),
 dragon shine in rainbow colours for 6 seconds so nothing can hurt it and bees and raindrops bounce
 off. Power-ups are in `src/objects/PowerUp.js`.
 
-`public/assets/map.png` and the themed level pictures (`ground-candy.png`, ...) were generated with a
-small Pillow script from the Kenney art below; the station positions in `src/world.js` match the
+`public/assets/map.png` and the themed level pictures (`ground-candy.png`, ...) were generated with
+`tools/make_assets.py` (Pillow) from the Kenney art below; the station positions in `src/world.js` match the
 islands drawn on the map.
 
 ## Layout
