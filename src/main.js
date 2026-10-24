@@ -26,6 +26,9 @@ function startGame() {
 
   watchOrientation(game);
 
+  // When Safari's bars slide in or out, the visible area changes size: fit the game again.
+  window.visualViewport?.addEventListener('resize', () => game.scale.refresh());
+
   // Handy for poking at the game from the browser console (and for automated testing).
   if (import.meta.env.DEV) window.game = game;
 }

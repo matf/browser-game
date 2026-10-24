@@ -54,5 +54,7 @@ in `localStorage`. Shop items and prices are in `src/shop.js`.
   [85 Short music jingles](https://opengameart.org/content/85-short-music-jingles),
   [63 Digital sound effects](https://opengameart.org/content/63-digital-sound-effects-lasers-phasers-space-etc) and
   [50 RPG sound effects](https://opengameart.org/content/50-rpg-sound-effects) by Kenney, CC0 (converted to mp3).
+- Music: [Flowerbed Fields [Loop]](https://opengameart.org/content/flowerbed-fields-loop) by Zane Little Music, CC0
+  (converted to mp3).
 - Font: [Fredoka](https://fonts.google.com/specimen/Fredoka) by The Fredoka Project Authors,
   [SIL Open Font License 1.1](public/assets/fonts/OFL.txt).

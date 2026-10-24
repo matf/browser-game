@@ -6,7 +6,7 @@ import { DRAGONS, TILE } from './PreloadScene.js';
 import { LEVELS } from '../levels.js';
 import { loadSave, writeSave } from '../save.js';
 import { FONT, HEIGHT, WIDTH, setupCamera } from '../view.js';
-import { play } from '../sound.js';
+import { play, startMusic } from '../sound.js';
 
 // The numbers that change from level to level are in src/levels.js.
 const START_CALM_MS = 2000; // quiet time at the start before obstacles come
@@ -94,6 +94,7 @@ export class GameScene extends Phaser.Scene {
     every(this.level.dropEvery, this.spawnDrop);
 
     this.scene.launch('ui');
+    startMusic(this);
 
     // The very first time: explain how to play before anything moves.
     if (!this.save.seenHelp) {

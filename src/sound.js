@@ -1,7 +1,10 @@
 // Sound effects (Kenney, CC0) and the mute button. Files are mp3 because the iPhone can't play ogg.
 
+const MUSIC_VOLUME = 0.25; // background music, 0 to 1
+
 // key -> volume (0 to 1)
 export const SOUNDS = {
+  music: MUSIC_VOLUME,
   coin: 0.35,
   hit: 0.6,
   nap: 0.6,
@@ -23,6 +26,16 @@ let muted = false;
 export function play(scene, key) {
   if (muted) return;
   scene.sound.play(key, { volume: SOUNDS[key] });
+}
+
+// Background music ("Flowerbed Fields"), looping for the whole game. Safe to call again: it only
+// starts once. Browsers only allow sound after the first tap or key press, so it may wait for that.
+let music = null;
+export function startMusic(scene) {
+  if (music) return;
+  music = scene.sound.add('music', { loop: true, volume: MUSIC_VOLUME });
+  if (scene.sound.locked) scene.sound.once('unlocked', () => music.play());
+  else music.play();
 }
 
 // Remember mute between visits (in its own key, so it never fights with the save game).
