@@ -1,4 +1,4 @@
-# Drachenspiel
+# Dragon Flight
 
 A 2D browser game built with Phaser 4 and Vite: fly cute dragons, dodge obstacles, collect coins.
 
