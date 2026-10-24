@@ -20,9 +20,12 @@ https://matf.github.io/browser-game/
 
 - Arrow keys or WASD: fly
 - Space or Enter: fly again after "Oh nein!", or start the next level
+- E: open the shop (arrows choose, Space buys, Tab switches page, Esc goes back; mouse works too)
 
 Fly through the rainbow at the end of each level. The level settings (length, speed, pillar gap,
-bees, raindrops) are in `src/levels.js`. Collected coins and the level you reached are saved in `localStorage`.
+bees, raindrops) are in `src/levels.js`. The dragon has 5 hearts that only come back by feeding it in the shop; with no hearts left it
+naps and wakes with 1. Coins, hearts, the reached level, owned dragons and accessories are saved
+in `localStorage`. Shop items and prices are in `src/shop.js`.
 
 ## Layout
 
@@ -40,4 +43,6 @@ bees, raindrops) are in `src/levels.js`. Collected coins and the level you reach
 - Background, ground, rock pillars, hearts, coins and digits: [Pixel Platformer](https://opengameart.org/content/pixel-platformer-0)
   by Kenney ([kenney.nl](https://kenney.nl)), CC0. `hills.png` is a recoloured strip of its
   background sheet; `ground.png` and the `pillar-*.png` images are assembled from its tiles.
-- Bee, raindrop and rainbow: drawn for this game.
+- Cupcake and marshmallow: [Pixel Platformer Food Expansion](https://opengameart.org/content/pixel-platformer-food-expansion)
+  by Kenney ([kenney.nl](https://kenney.nl)), CC0.
+- Bee, raindrop, rainbow, apple, strawberry and accessories: drawn for this game.

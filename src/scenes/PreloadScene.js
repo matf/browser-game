@@ -9,6 +9,22 @@ export const TILE = {
   digit0: 160, // digits 0-9 are 160-169
 };
 
+// Accessory pictures in assets/accessories.png (12x10 cells). ax/ay is the pixel that sits on the
+// dragon's anchor point (see src/objects/Accessories.js).
+export const ACCESSORY_ART = {
+  bow: { frame: 0, ax: 5, ay: 5 },
+  crown: { frame: 1, ax: 5, ay: 5 },
+  glasses: { frame: 2, ax: 7, ay: 2 },
+  necklace: { frame: 3, ax: 4, ay: 3 },
+  pawchain: { frame: 4, ax: 2, ay: 1 },
+  'gem-pink': { frame: 5, ax: 2, ay: 2 },
+  'gem-blue': { frame: 6, ax: 2, ay: 2 },
+  'gem-green': { frame: 7, ax: 2, ay: 2 },
+  'gem-purple': { frame: 8, ax: 2, ay: 2 },
+  glitter: { frame: 9, ax: 4, ay: 4 },
+};
+export const ACCESSORY_CELL = { width: 12, height: 10 };
+
 // Size of one frame in assets/dragons.png (5 rows, one per dragon, 3 flying frames each).
 export const DRAGON_FRAME = { width: 67, height: 52 };
 
@@ -40,6 +56,11 @@ export class PreloadScene extends Phaser.Scene {
     this.load.image('pillar-top', 'pillar-top.png');
     this.load.image('pillar-bottom', 'pillar-bottom.png');
     this.load.image('rainbow', 'rainbow.png');
+    this.load.spritesheet('accessories', 'accessories.png', {
+      frameWidth: ACCESSORY_CELL.width,
+      frameHeight: ACCESSORY_CELL.height,
+    });
+    this.load.spritesheet('food', 'food.png', { frameWidth: 18, frameHeight: 18 });
   }
 
   create() {

@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { PreloadScene } from './scenes/PreloadScene.js';
 import { GameScene } from './scenes/GameScene.js';
 import { UIScene } from './scenes/UIScene.js';
+import { ShopScene } from './scenes/ShopScene.js';
 
 const game = new Phaser.Game({
   type: Phaser.AUTO,
@@ -15,7 +16,7 @@ const game = new Phaser.Game({
     default: 'arcade',
     arcade: { gravity: { x: 0, y: 0 }, debug: false }, // no gravity: the dragons fly freely
   },
-  scene: [PreloadScene, GameScene, UIScene],
+  scene: [PreloadScene, GameScene, UIScene, ShopScene],
 });
 
 // Handy for poking at the game from the browser console (and for automated testing).
