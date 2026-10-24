@@ -57,6 +57,7 @@ export class PreloadScene extends Phaser.Scene {
     this.load.image('pillar-top', 'pillar-top.png');
     this.load.image('pillar-bottom', 'pillar-bottom.png');
     this.load.image('rainbow', 'rainbow.png');
+    this.load.image('piggy', 'piggy.png');
     this.load.spritesheet('accessories', 'accessories.png', {
       frameWidth: ACCESSORY_CELL.width,
       frameHeight: ACCESSORY_CELL.height,

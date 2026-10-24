@@ -49,7 +49,7 @@ in `localStorage`. Shop items and prices are in `src/shop.js`.
   background sheet; `ground.png` and the `pillar-*.png` images are assembled from its tiles.
 - Cupcake and marshmallow: [Pixel Platformer Food Expansion](https://opengameart.org/content/pixel-platformer-food-expansion)
   by Kenney ([kenney.nl](https://kenney.nl)), CC0.
-- Bee, raindrop, rainbow, apple, strawberry and accessories: drawn for this game.
+- Bee, raindrop, rainbow, apple, strawberry, piggy bank and accessories: drawn for this game.
 - Sounds: [Interface Sounds](https://opengameart.org/content/interface-sounds),
   [85 Short music jingles](https://opengameart.org/content/85-short-music-jingles),
   [63 Digital sound effects](https://opengameart.org/content/63-digital-sound-effects-lasers-phasers-space-etc) and

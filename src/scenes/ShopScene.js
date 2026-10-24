@@ -23,13 +23,15 @@ const COLORS = {
   border: 0x1b1630,
 };
 
-// Card layout for each page of the shop: columns, card size, how big the picture is drawn.
+// The pages of the shop. tab: picture on the page button. cols/w/h: card layout, iconScale: how big
+// the picture on each card is drawn.
 const TABS = [
-  { key: 'food', label: 'Futter', cols: 4, w: 72, h: 80, iconScale: 2 },
-  { key: 'dragons', label: 'Drachen', cols: 3, w: 98, h: 92, iconScale: 1 },
-  { key: 'accessories', label: 'Accessoires', cols: 4, w: 72, h: 62, iconScale: 2 },
+  { key: 'food', label: 'Futter', tab: ['food', 0, 1], cols: 4, w: 72, h: 80, iconScale: 2 },
+  { key: 'dragons', label: 'Drachen', tab: ['dragons', 0, 0.3], cols: 3, w: 98, h: 84, iconScale: 1 },
+  { key: 'accessories', label: 'Accessoires', tab: ['accessories', 1, 1.5], cols: 4, w: 72, h: 54, iconScale: 2 },
 ];
-const GRID = { x: 168, y: 50, gap: 4 };
+const TAB_BUTTON = { x: 168, y: 30, w: 100, h: 22, gap: 3 };
+const GRID = { x: 168, y: 57, gap: 4 };
 const PREVIEW = { x: 84, y: 105, scale: 2 };
 
 export class ShopScene extends Phaser.Scene {
@@ -54,7 +56,7 @@ export class ShopScene extends Phaser.Scene {
     this.coinText = this.add.text(410, 6, '', { ...TEXT, fontSize: '14px' }).setResolution(4);
     addMuteButton(this, 466, 15, { mKey: false }); // the HUD underneath handles the M key
 
-    this.add.rectangle(8, 30, 152, 222, COLORS.panel).setOrigin(0);
+    this.add.rectangle(8, 30, 152, 200, COLORS.panel).setOrigin(0);
     this.preview = this.add.sprite(PREVIEW.x, PREVIEW.y, 'dragons').setScale(PREVIEW.scale).setDepth(5);
     this.previewName = this.add
       .text(PREVIEW.x, 165, '', { ...TEXT, fontSize: '12px' })
@@ -73,31 +75,46 @@ export class ShopScene extends Phaser.Scene {
       emitting: false,
     }).setDepth(6);
 
-    const help = IS_TOUCH ? 'Antippen: kaufen' : 'Pfeile: wählen   Leertaste: kaufen   Tab: Seite';
-    this.add.text(168, 261, help, { ...TEXT, fontSize: '8px' }).setOrigin(0, 0.5).setResolution(4);
-    const next = this.add
-      .text(0, 0, `${IS_TOUCH ? '' : 'Enter: '}weiter zu Level ${this.nextLevel + 1} ▶`, {
+    const help = IS_TOUCH
+      ? 'Antippen: kaufen'
+      : 'Pfeile + Leertaste: kaufen   Tab: Seite   Enter: weiter';
+    this.add.text(12, 250, help, { ...TEXT, fontSize: '8px' }).setOrigin(0, 0.5).setResolution(4);
+
+    // Big green "go on" button, gently pulsing so it's easy to find.
+    const nextLabel = this.add
+      .text(0, 0, `Weiter zu Level ${this.nextLevel + 1}  ▶`, {
         ...TEXT,
-        fontSize: '10px',
-        color: '#ffe066',
+        fontSize: '13px',
+        color: '#1b1630',
+        strokeThickness: 0,
       })
-      .setOrigin(1, 0.5)
+      .setOrigin(0.5)
       .setResolution(4);
-    const button = this.add
-      .rectangle(0, 0, next.width + 12, 16, COLORS.card)
-      .setStrokeStyle(1, COLORS.selected)
-      .setOrigin(1, 0.5)
+    const nextBg = this.add
+      .rectangle(0, 0, 176, 28, 0x5fd068)
+      .setStrokeStyle(2, 0xffffff)
       .setInteractive({ useHandCursor: true })
       .on('pointerdown', () => this.close());
-    this.add.container(474, 260, [button, next.setX(-6)]);
+    const nextButton = this.add.container(380, 250, [nextBg, nextLabel]);
+    this.tweens.add({ targets: nextButton, scale: 1.05, duration: 700, yoyo: true, repeat: -1, ease: 'Sine.InOut' });
 
-    this.tabTexts = TABS.map((t, i) =>
-      this.add
-        .text(GRID.x + i * 90, 32, t.label, { ...TEXT, fontSize: '11px' })
-        .setResolution(4)
+    // Page buttons: Futter / Drachen / Accessoires.
+    this.tabButtons = TABS.map((t, i) => {
+      const x = TAB_BUTTON.x + i * (TAB_BUTTON.w + TAB_BUTTON.gap);
+      const bg = this.add
+        .rectangle(0, 0, TAB_BUTTON.w, TAB_BUTTON.h, COLORS.card)
+        .setOrigin(0)
         .setInteractive({ useHandCursor: true })
-        .on('pointerdown', () => this.showTab(i)),
-    );
+        .on('pointerdown', () => this.showTab(i));
+      const [key, frame, scale] = t.tab;
+      const icon = this.add.image(14, TAB_BUTTON.h / 2, key, frame).setScale(scale);
+      const label = this.add
+        .text(28, TAB_BUTTON.h / 2, t.label, { ...TEXT, fontSize: '11px' })
+        .setOrigin(0, 0.5)
+        .setResolution(4);
+      this.add.container(x, TAB_BUTTON.y, [bg, icon, label]);
+      return { bg, label };
+    });
 
     this.keys = this.input.keyboard.addKeys('LEFT,RIGHT,UP,DOWN,SPACE,ENTER,TAB,ESC');
 
@@ -168,7 +185,11 @@ export class ShopScene extends Phaser.Scene {
     if (this.cards.length && index !== this.tab) play(this, 'click');
     if (index !== this.tab) this.selected = 0;
     this.tab = index;
-    this.tabTexts.forEach((t, i) => t.setColor(i === index ? '#ffd84a' : '#ffffff'));
+    this.tabButtons.forEach(({ bg, label }, i) => {
+      const active = i === index;
+      bg.setFillStyle(active ? COLORS.selected : COLORS.card).setStrokeStyle(2, active ? 0xffffff : 0x8a78b8);
+      label.setColor(active ? '#1b1630' : '#ffffff').setStroke('#1b1630', active ? 0 : 3);
+    });
     this.drawCards();
   }
 
@@ -186,7 +207,7 @@ export class ShopScene extends Phaser.Scene {
           this.select(i);
           item.act();
         });
-      const iconY = layout.key === 'dragons' ? 30 : layout.key === 'food' ? 24 : 18;
+      const iconY = layout.key === 'dragons' ? 28 : layout.key === 'food' ? 24 : 14;
       const icon = this.add
         .image(layout.w / 2, iconY, item.icon[0], item.icon[1])
         .setScale(layout.iconScale);
@@ -242,13 +263,36 @@ export class ShopScene extends Phaser.Scene {
   // Pay `price` coins. Returns false (and says so) when there aren't enough.
   pay(price) {
     if (this.save.coins < price) {
-      this.say('Zu wenig Münzen!\nSammle noch mehr.');
+      this.showEmptyPiggy();
       play(this, 'nope');
-      this.cameras.main.shake(120, 0.005);
       return false;
     }
     this.save.coins -= price;
     return true;
+  }
+
+  // Not enough coins: an empty piggy bank pops up for a moment.
+  showEmptyPiggy() {
+    this.piggy?.destroy();
+    const panel = this.add.rectangle(0, 0, 210, 104, COLORS.background, 0.95).setStrokeStyle(3, 0xff9fc8);
+    const pig = this.add.image(0, -18, 'piggy').setScale(3);
+    const text = this.add
+      .text(0, 30, 'Deine Spardose ist leer!\nSammle mehr Münzen.', {
+        ...TEXT,
+        fontSize: '12px',
+        align: 'center',
+      })
+      .setOrigin(0.5)
+      .setResolution(4);
+    const box = this.add.container(240, 140, [panel, pig, text]).setDepth(40).setScale(0);
+    this.piggy = box;
+    this.tweens.add({ targets: box, scale: 1, duration: 300, ease: 'Back.Out' });
+    this.tweens.add({ targets: pig, angle: { from: -10, to: 10 }, duration: 160, yoyo: true, repeat: 3 });
+    this.time.delayedCall(1800, () => {
+      if (this.piggy !== box) return;
+      this.tweens.add({ targets: box, scale: 0, duration: 200, onComplete: () => box.destroy() });
+      this.piggy = null;
+    });
   }
 
   feed(food) {
