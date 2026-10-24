@@ -34,7 +34,8 @@ export class ShopScene extends Phaser.Scene {
     super('shop');
   }
 
-  create() {
+  create(data) {
+    this.nextLevel = data?.nextLevel ?? 0; // the level that starts when you leave the shop
     this.save = loadSave();
     this.tab = 0;
     this.selected = 0;
@@ -68,12 +69,22 @@ export class ShopScene extends Phaser.Scene {
     }).setDepth(6);
 
     this.add
-      .text(240, 262, 'Pfeile: wählen   Leertaste: kaufen   Tab: Seite   Esc: zurück', {
+      .text(168, 262, 'Pfeile: wählen   Leertaste: kaufen   Tab: Seite', {
         ...TEXT,
         fontSize: '8px',
       })
-      .setOrigin(0.5)
+      .setOrigin(0, 0.5)
       .setResolution(4);
+    this.add
+      .text(472, 262, `Enter: weiter zu Level ${this.nextLevel + 1} ▶`, {
+        ...TEXT,
+        fontSize: '9px',
+        color: '#ffe066',
+      })
+      .setOrigin(1, 0.5)
+      .setResolution(4)
+      .setInteractive({ useHandCursor: true })
+      .on('pointerdown', () => this.close());
 
     this.tabTexts = TABS.map((t, i) =>
       this.add
@@ -83,7 +94,7 @@ export class ShopScene extends Phaser.Scene {
         .on('pointerdown', () => this.showTab(i)),
     );
 
-    this.keys = this.input.keyboard.addKeys('LEFT,RIGHT,UP,DOWN,SPACE,ENTER,TAB,ESC,E');
+    this.keys = this.input.keyboard.addKeys('LEFT,RIGHT,UP,DOWN,SPACE,ENTER,TAB,ESC');
 
     this.refresh();
     this.showTab(0);
@@ -95,19 +106,19 @@ export class ShopScene extends Phaser.Scene {
     const k = this.keys;
     const pressed = (key) => Phaser.Input.Keyboard.JustDown(key);
     const cols = TABS[this.tab].cols;
-    if (pressed(k.ESC) || pressed(k.E)) return this.close();
+    if (pressed(k.ENTER) || pressed(k.ESC)) return this.close();
     if (pressed(k.TAB)) return this.showTab((this.tab + 1) % TABS.length);
     if (pressed(k.LEFT)) this.select(this.selected - 1);
     if (pressed(k.RIGHT)) this.select(this.selected + 1);
     if (pressed(k.UP)) this.select(this.selected - cols);
     if (pressed(k.DOWN)) this.select(this.selected + cols);
-    if (pressed(k.SPACE) || pressed(k.ENTER)) this.cards[this.selected]?.item.act();
+    if (pressed(k.SPACE)) this.cards[this.selected]?.item.act();
   }
 
+  // Leave the shop and fly the next level (this also stops the shop scene).
   close() {
     writeSave(this.save);
-    this.scene.stop();
-    this.scene.resume('game');
+    this.scene.start('game', { level: this.nextLevel });
   }
 
   // The things on the current page, with what to show on their card and what happens on buy.

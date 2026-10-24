@@ -25,7 +25,6 @@ export class UIScene extends Phaser.Scene {
     this.add.image(400, 14, 'tiles', TILE.coin);
     this.coinDigits = [];
     this.drawCoins();
-    this.add.text(412, 26, 'E: Shop', { ...TEXT_STYLE, fontSize: '8px', strokeThickness: 3 }).setResolution(4);
 
     this.add
       .rectangle(BAR.x - 1, BAR.y - 1, BAR.width + 2, BAR.height + 2, 0x1b1630)
@@ -48,12 +47,12 @@ export class UIScene extends Phaser.Scene {
     const onGameOver = () =>
       this.showMessage(
         'Oh nein!',
-        `${this.registry.get('dragonName')} macht ein Nickerchen\nund wacht mit 1 Herz auf.\n\nLeertaste: weiter   E: Shop`,
+        `${this.registry.get('dragonName')} macht ein Nickerchen\nund wacht mit 1 Herz auf.\n\nGleich geht's in den Shop...`,
       );
     const onLevelWon = ({ last }) =>
       last
-        ? this.showMessage('Alle Level geschafft!', 'Leertaste: von vorne anfangen   E: Shop')
-        : this.showMessage('Level geschafft!', 'Leertaste: nächstes Level   E: Shop');
+        ? this.showMessage('Alle Level geschafft!', "Gleich geht's in den Shop...")
+        : this.showMessage('Level geschafft!', "Gleich geht's in den Shop...");
     this.gameScene.events.on('gameover', onGameOver);
     this.gameScene.events.on('levelwon', onLevelWon);
 

@@ -12,6 +12,7 @@ const DROP_SPEED = 110; // how fast raindrops fall, in pixels per second
 const COINS_PER_ROW = 4; // coins in each row between the pillars
 const COIN_SPACING = 18; // pixels between coins in a row
 const GROUND_HEIGHT = 36; // height of the grass and dirt at the bottom
+const SHOP_DELAY_MS = 2000; // after a level ends, how long until the shop opens
 
 export class GameScene extends Phaser.Scene {
   constructor() {
@@ -38,11 +39,7 @@ export class GameScene extends Phaser.Scene {
     // After the physics step, so the accessories sit exactly on the dragon.
     const follow = () => this.accessories.update();
     this.events.on('postupdate', follow);
-    this.events.on('resume', this.applySave, this);
-    this.events.once('shutdown', () => {
-      this.events.off('postupdate', follow);
-      this.events.off('resume', this.applySave, this);
-    });
+    this.events.once('shutdown', () => this.events.off('postupdate', follow));
 
     this.obstacles = this.physics.add.group({ allowGravity: false });
     this.coins = this.physics.add.group({ allowGravity: false });
@@ -76,26 +73,7 @@ export class GameScene extends Phaser.Scene {
     every(this.level.beeEvery, this.spawnBee);
     every(this.level.dropEvery, this.spawnDrop);
 
-    this.input.keyboard.on('keydown-E', this.openShop, this);
-
     this.scene.launch('ui');
-  }
-
-  openShop() {
-    this.scene.pause();
-    this.scene.launch('shop');
-  }
-
-  // Back from the shop: coins, hearts, dragon and accessories may have changed.
-  applySave() {
-    this.save = loadSave();
-    this.registry.set('coins', this.save.coins);
-    this.registry.set('hearts', this.save.hearts);
-    this.registry.set('dragonName', DRAGONS.find((d) => d.key === this.save.dragon).name);
-    this.player.play(`${this.save.dragon}-fly`);
-    if (this.finished) this.player.anims.pause();
-    this.accessories.destroy();
-    this.accessories = new Accessories(this, this.player, this.save.wear);
   }
 
   // True once the level's time is up: no new obstacles, only the rainbow.
@@ -191,19 +169,17 @@ export class GameScene extends Phaser.Scene {
     }
   }
 
-  // Stop the level, tell the UI, and start `nextLevel` when Space or Enter is pressed.
+  // Stop the level, tell the UI, then open the shop. The shop starts `nextLevel` when you leave it.
   finish(event, nextLevel) {
     this.finished = true;
     this.physics.pause();
-    this.time.paused = true;
+    this.time.removeAllEvents(); // no more pillars, bees or raindrops
     this.player.anims.pause();
     this.events.emit(event, { level: this.levelIndex + 1, last: this.levelIndex === LEVELS.length - 1 });
-    const restart = () => {
-      this.time.paused = false;
-      this.scene.restart({ level: nextLevel });
-    };
-    this.input.keyboard.once('keydown-SPACE', restart);
-    this.input.keyboard.once('keydown-ENTER', restart);
+    this.time.delayedCall(SHOP_DELAY_MS, () => {
+      this.scene.pause();
+      this.scene.launch('shop', { nextLevel });
+    });
   }
 
   popDrop(drop) {

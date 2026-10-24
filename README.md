@@ -19,8 +19,8 @@ https://matf.github.io/browser-game/
 ## Controls
 
 - Arrow keys or WASD: fly
-- Space or Enter: fly again after "Oh nein!", or start the next level
-- E: open the shop (arrows choose, Space buys, Tab switches page, Esc goes back; mouse works too)
+- Shop (opens by itself after every level, won or lost): arrows choose, Space buys, Tab switches
+  page, Enter or Esc starts the next level; the mouse works too
 
 Fly through the rainbow at the end of each level. The level settings (length, speed, pillar gap,
 bees, raindrops) are in `src/levels.js`. The dragon has 5 hearts that only come back by feeding it in the shop; with no hearts left it
