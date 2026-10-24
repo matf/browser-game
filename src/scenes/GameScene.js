@@ -13,8 +13,8 @@ const COINS_PER_ROW = 4; // coins in each row between the pillars
 const COIN_SPACING = 18; // pixels between coins in a row
 const GROUND_HEIGHT = 36; // height of the grass and dirt at the bottom
 const SHOP_DELAY_MS = 2000; // after a level ends, how long until the shop opens
-const NAP_MS = 3000; // how long the dragon sleeps when it runs out of hearts
-const WAKE_HEARTS = 2; // hearts after the nap
+const NAP_MS = 5000; // how long the dragon sleeps when it runs out of hearts
+const WAKE_HEARTS = 3; // hearts after the nap
 
 export class GameScene extends Phaser.Scene {
   constructor() {
@@ -24,6 +24,7 @@ export class GameScene extends Phaser.Scene {
   create(data) {
     const { width, height } = this.scale;
     this.save = loadSave();
+    this.coinsAtStart = this.save.coins; // a nap takes away the coins collected in this level
     // Without a level from a restart (after loading the page), continue where you left off.
     this.levelIndex = Phaser.Math.Clamp(data?.level ?? this.save.level, 0, LEVELS.length - 1);
     this.level = LEVELS[this.levelIndex];
@@ -165,16 +166,16 @@ export class GameScene extends Phaser.Scene {
     }
   }
 
-  // Out of hearts: the dragon falls asleep, loses all its coins, and wakes up with WAKE_HEARTS
+  // Out of hearts: the dragon falls asleep, loses the coins from this level, and wakes up with WAKE_HEARTS
   // hearts at the start of the same level (no shop).
   nap() {
     this.napping = true;
     this.physics.pause();
     this.player.anims.pause();
     this.save.hearts = WAKE_HEARTS;
-    this.save.coins = 0;
+    this.save.coins = this.coinsAtStart;
     writeSave(this.save);
-    this.registry.set('coins', 0);
+    this.registry.set('coins', this.coinsAtStart);
     this.events.emit('nap');
 
     const zzz = this.add

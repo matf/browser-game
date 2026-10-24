@@ -24,7 +24,7 @@ https://matf.github.io/browser-game/
 
 Fly through the rainbow at the end of each level. The level settings (length, speed, pillar gap,
 bees, raindrops) are in `src/levels.js`. The dragon has 5 hearts that only come back by feeding it in the shop; with no hearts left it
-naps, loses all its coins and restarts the level with 2 hearts (no shop). Coins, hearts, the reached level, owned dragons and accessories are saved
+naps, loses the coins collected in that level and restarts it with 3 hearts (no shop). Coins, hearts, the reached level, owned dragons and accessories are saved
 in `localStorage`. Shop items and prices are in `src/shop.js`.
 
 ## Layout

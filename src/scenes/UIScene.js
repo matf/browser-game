@@ -47,7 +47,7 @@ export class UIScene extends Phaser.Scene {
     const onNap = () =>
       this.showMessage(
         'Oh nein!',
-        `${this.registry.get('dragonName')} macht ein Nickerchen...\nDie Münzen sind weg!`,
+        `${this.registry.get('dragonName')} macht ein Nickerchen...\nDie Münzen aus diesem Level sind weg!`,
       );
     const onLevelWon = ({ last }) =>
       last
