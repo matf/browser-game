@@ -4,8 +4,8 @@ import { IS_TOUCH } from '../touch.js';
 
 const RADIUS = 46; // size of the joystick ring, in pixels (the knob moves this far)
 const KNOB = 19; // size of the knob you push around
-const DEAD_ZONE = 0.1; // tiny thumb movements near the middle are ignored
-const FULL_SPEED_AT = 0.6; // full speed once the thumb is this far out (0.6 = 60% of the ring)
+const DEAD_ZONE = 0.08; // tiny thumb movements near the middle are ignored
+const FULL_SPEED_AT = 0.45; // full speed once the thumb is this far out (0.6 = 60% of the ring)
 export const STICK_HOME = { x: 78, y: 176 }; // where the joystick waits when no thumb is on it
 const MARGIN = 6; // the ring always stays this far inside the screen
 

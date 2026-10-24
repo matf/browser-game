@@ -5,7 +5,7 @@ const SCALE = 0.75; // size of the dragon (1 = full picture size)
 const FLY_SPEED = 170; // top speed in pixels per second
 const ACCEL = 900; // how quickly the dragon speeds up
 const DRAG = 700; // how quickly it slows down when you let go
-const STICK_RESPONSE = 0.4; // with the joystick: how quickly the dragon follows your thumb (0-1)
+const STICK_RESPONSE = 0.75; // with the joystick: how quickly the dragon follows your thumb (0-1)
 const TILT = 0.15; // how far the dragon tips up/down when flying up/down (radians)
 const INVULNERABLE_MS = 1200; // after a hit, how long nothing can hurt the dragon
 const KNOCKBACK_MS = 300; // after a hit, how long you can't steer
