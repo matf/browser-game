@@ -8,7 +8,7 @@ const START_CALM_MS = 2000; // quiet time at the start before obstacles come
 const PILLAR_EVERY_MS = 3500; // a new pair of rock pillars this often
 const PILLAR_GAP = 100; // height of the hole between the two pillars, in pixels
 const BEE_EVERY_MS = 2800; // a new bee this often
-const DROP_EVERY_MS = 600; // a new raindrop this often
+const DROP_EVERY_MS = 1000; // a new raindrop this often
 const DROP_SPEED = 110; // how fast raindrops fall, in pixels per second
 const GROUND_HEIGHT = 36; // height of the grass and dirt at the bottom
 
