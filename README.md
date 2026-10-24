@@ -18,23 +18,39 @@ https://matf.github.io/browser-game/
 
 ## Controls
 
-- Arrow keys or WASD: fly
+- World map: tap a level (or the shop house) and the dragon flies there and goes in. With the
+  keyboard, arrows or WASD fly to the previous/next spot (the shop comes before level 1) and Space or
+  Enter goes in.
+- In a level: arrow keys or WASD fly; Esc or the little map icon goes back to the world map
 - M or the speaker icon: sound on/off
 - Phone (landscape): the joystick waits bottom left; put your thumb anywhere on the left half
   (or the dark border) and slide it. A "So geht's!" screen explains this on the first start.
   Held upright, the game pauses and asks you to turn the phone.
-- Shop (opens by itself after every finished level): arrows choose, Space buys, Tab switches
-  page, Enter or Esc starts the next level; the mouse works too
+- Shop (the house on the flower island): arrows choose, Space buys, Tab switches page, Enter or Esc
+  goes back to the world map; the mouse works too
 
-Fly through the rainbow at the end of each level. The level settings (length, speed, pillar gap,
-bees, raindrops) are in `src/levels.js`. The dragon has 5 hearts that only come back by feeding it in the shop; with no hearts left it
-naps, loses the coins collected in that level and restarts it with 3 hearts (no shop). Coins, hearts, the reached level, owned dragons and accessories are saved
-in `localStorage`. Shop items and prices are in `src/shop.js`.
+Fly through the rainbow at the end of each level. After a level you land on the world map: four
+islands (Blumeninsel, Zuckerinsel, Schneeinsel, Sterneninsel) with three levels each, played in
+order. Finishing all three levels of an island blows the clouds off the next one, and you can always
+fly back to islands you have opened. Each level looks like its island (sky, hills, ground, pillars,
+and raindrops, sugar drops, snowflakes or shooting stars). Islands, themes and map positions are in
+`src/world.js`; the level settings (length, speed, pillar gap, bees, falling things) are in
+`src/levels.js`.
+
+The dragon has 5 hearts that only come back by feeding it in the shop; with no hearts left it naps,
+loses the coins collected in that level and restarts it with 3 hearts. Coins, hearts, finished
+levels, the dragon's spot on the map, owned dragons and accessories are saved in `localStorage`.
+Shop items and prices are in `src/shop.js`.
+
+`public/assets/map.png` and the themed level pictures (`ground-candy.png`, ...) were generated with a
+small Pillow script from the Kenney art below; the station positions in `src/world.js` match the
+islands drawn on the map.
 
 ## Layout
 
 - `src/main.js`: Phaser config
-- `src/scenes/`: Preload, Game and UI scenes
+- `src/scenes/`: Preload, Map (world map), Game, UI (level HUD), Shop and Help scenes
+- `src/world.js`: islands, themes and map positions; `src/levels.js`: level settings
 - `src/objects/`: one class per game object
 - `public/assets/`: images, maps and sounds loaded at runtime
 
@@ -44,12 +60,16 @@ in `localStorage`. Shop items and prices are in `src/shop.js`.
   Magicae! Games. License as stated on the page: "Can be used in any project commercial and
   non-commercial. You may modify or adapt however you want. You cannot resell these assets, even if
   modified." The pink dragon (Marshmallow) is a recolour of the Air dragon.
-- Background, ground, rock pillars, hearts, coins and digits: [Pixel Platformer](https://opengameart.org/content/pixel-platformer-0)
-  by Kenney ([kenney.nl](https://kenney.nl)), CC0. `hills.png` is a recoloured strip of its
-  background sheet; `ground.png` and the `pillar-*.png` images are assembled from its tiles.
+- Background, ground, rock pillars, snowman, hearts, coins and digits: [Pixel Platformer](https://opengameart.org/content/pixel-platformer-0)
+  by Kenney ([kenney.nl](https://kenney.nl)), CC0. `hills-*.png` are recoloured strips of its
+  background sheet; `ground-*.png` and the `pillar-*.png` images are assembled from its tiles and
+  recoloured for each island.
+- World map houses, trees, bushes, mushrooms and beehive: [Tiny Town](https://opengameart.org/content/tiny-town)
+  by Kenney ([kenney.nl](https://kenney.nl)), CC0, recoloured for each island. The sea and island
+  shapes were drawn for this game.
 - Cupcake and marshmallow: [Pixel Platformer Food Expansion](https://opengameart.org/content/pixel-platformer-food-expansion)
   by Kenney ([kenney.nl](https://kenney.nl)), CC0.
-- Bee, raindrop, rainbow, apple, strawberry, piggy bank and accessories: drawn for this game.
+- Bee, raindrop, snowflake, shooting star, rainbow, apple, strawberry, piggy bank and accessories: drawn for this game.
 - Sounds: [Interface Sounds](https://opengameart.org/content/interface-sounds),
   [85 Short music jingles](https://opengameart.org/content/85-short-music-jingles),
   [63 Digital sound effects](https://opengameart.org/content/63-digital-sound-effects-lasers-phasers-space-etc) and

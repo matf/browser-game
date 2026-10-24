@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { SOUNDS, loadMuted } from '../sound.js';
+import { THEMES } from '../world.js';
 
 // Frame indices in the Kenney tilesheet (assets/tiles.png, 18x18, 20 columns).
 export const TILE = {
@@ -51,11 +52,14 @@ export class PreloadScene extends Phaser.Scene {
     });
     this.load.spritesheet('tiles', 'tiles.png', { frameWidth: 18, frameHeight: 18 });
     this.load.spritesheet('bee', 'bee.png', { frameWidth: 24, frameHeight: 20 });
-    this.load.image('drop', 'drop.png');
-    this.load.image('hills', 'hills.png');
-    this.load.image('ground', 'ground.png');
-    this.load.image('pillar-top', 'pillar-top.png');
-    this.load.image('pillar-bottom', 'pillar-bottom.png');
+    // Each island theme has its own hills, ground, pillars and falling thing (ground-candy.png, ...).
+    for (const theme of Object.keys(THEMES)) {
+      for (const name of ['drop', 'hills', 'ground', 'pillar-top', 'pillar-bottom']) {
+        this.load.image(`${name}-${theme}`, `${name}-${theme}.png`);
+      }
+    }
+    this.load.image('map', 'map.png');
+    this.load.image('shop-house', 'shop-house.png');
     this.load.image('rainbow', 'rainbow.png');
     this.load.image('piggy', 'piggy.png');
     this.load.spritesheet('accessories', 'accessories.png', {
@@ -110,7 +114,55 @@ export class PreloadScene extends Phaser.Scene {
     speaker('speaker', false);
     speaker('speaker-off', true);
     loadMuted(this.game);
+    this.makeMapTextures();
 
-    this.scene.start('game');
+    this.scene.start('map');
+  }
+
+  // Pictures for the world map, drawn here instead of loaded.
+  makeMapTextures() {
+    const draw = (key, width, height, paint) => {
+      const g = this.add.graphics();
+      paint(g);
+      g.generateTexture(key, width, height).destroy();
+    };
+    // Level stations: a flat round stone, grey when locked, pink when open, gold when done.
+    const station = (key, top, side) =>
+      draw(key, 18, 12, (g) => {
+        g.fillStyle(0x1b1630).fillEllipse(9, 6.5, 18, 11);
+        g.fillStyle(side).fillEllipse(9, 6.5, 16, 9);
+        g.fillStyle(top).fillEllipse(9, 5, 16, 7);
+      });
+    station('station-locked', 0xa7a3b8, 0x6f6a85);
+    station('station-open', 0xff8cc6, 0xc2508f);
+    station('station-done', 0xffd84a, 0xd08a1e);
+
+    // A small star that sits above a finished station.
+    draw('map-star', 11, 11, (g) => {
+      const points = [];
+      for (let i = 0; i < 10; i++) {
+        const r = i % 2 ? 2.4 : 5.4;
+        const a = -Math.PI / 2 + (i * Math.PI) / 5;
+        points.push({ x: 5.5 + Math.cos(a) * r, y: 5.8 + Math.sin(a) * r });
+      }
+      g.fillStyle(0xffd84a).fillPoints(points, true).lineStyle(1, 0x8a4b14).strokePoints(points, true);
+    });
+
+    // A fluffy cloud that hides the islands you can't visit yet.
+    draw('map-cloud', 64, 36, (g) => {
+      g.fillStyle(0xc9d9ee);
+      for (const [x, y, r] of [[16, 22, 12], [32, 18, 16], [48, 22, 12], [26, 26, 10], [40, 26, 10]]) g.fillCircle(x, y + 2, r);
+      g.fillStyle(0xffffff);
+      for (const [x, y, r] of [[16, 22, 12], [32, 18, 16], [48, 22, 12], [26, 26, 10], [40, 26, 10]]) g.fillCircle(x, y, r);
+    });
+
+    // Button that leaves a level and goes back to the map: a little folded map with a red path.
+    draw('map-icon', 16, 14, (g) => {
+      g.fillStyle(0x1b1630).fillRect(0, 0, 16, 14);
+      g.fillStyle(0xf3e3b5).fillRect(1, 1, 14, 12);
+      g.fillStyle(0xd9c48e).fillRect(5, 1, 1, 12).fillRect(10, 1, 1, 12);
+      g.fillStyle(0x7ccf6b).fillRect(2, 7, 4, 4).fillRect(9, 3, 4, 3);
+      g.fillStyle(0xe84537).fillRect(3, 5, 2, 1).fillRect(6, 5, 2, 1).fillRect(8, 8, 2, 1).fillRect(12, 8, 2, 2);
+    });
   }
 }

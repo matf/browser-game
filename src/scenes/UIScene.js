@@ -1,9 +1,8 @@
 import Phaser from 'phaser';
 import { FONT, setupCamera } from '../view.js';
-import { TILE } from './PreloadScene.js';
-import { MAX_HEARTS } from '../shop.js';
 import { IS_TOUCH } from '../touch.js';
-import { addMuteButton } from '../sound.js';
+import { addMuteButton, play } from '../sound.js';
+import { addCoins, addHearts } from '../hud.js';
 
 const TEXT_STYLE = {
   fontFamily: FONT,
@@ -23,13 +22,20 @@ export class UIScene extends Phaser.Scene {
     setupCamera(this);
     this.gameScene = this.scene.get('game');
 
-    this.hearts = [];
-    this.drawHearts();
-
-    this.add.image(400, 14, 'tiles', TILE.coin);
-    this.coinDigits = [];
-    this.drawCoins();
+    const showHearts = addHearts(this);
+    const showCoins = addCoins(this);
+    showHearts(this.registry.get('hearts'));
+    showCoins(this.registry.get('coins'));
     addMuteButton(this, 466, 14);
+
+    // Back to the world map.
+    this.add
+      .image(362, 14, 'map-icon')
+      .setInteractive({ useHandCursor: true })
+      .on('pointerdown', () => {
+        play(this, 'click');
+        this.gameScene.toMap();
+      });
 
     this.add
       .rectangle(BAR.x - 1, BAR.y - 1, BAR.width + 2, BAR.height + 2, 0x1b1630)
@@ -38,13 +44,15 @@ export class UIScene extends Phaser.Scene {
     this.add.image(BAR.x + BAR.width + 8, BAR.y + BAR.height / 2, 'rainbow').setScale(0.08);
 
     const onChange = (parent, key) => {
-      if (key === 'hearts') this.drawHearts();
-      if (key === 'coins') this.drawCoins();
+      if (key === 'hearts') showHearts(this.registry.get('hearts'));
+      if (key === 'coins') showCoins(this.registry.get('coins'));
     };
     this.registry.events.on('changedata', onChange);
 
-    const level = this.registry.get('level');
-    const intro = this.showMessage(`Level ${level}`, level !== 1 ? "Los geht's!" : IS_TOUCH ? 'Joystick: fliegen' : 'Pfeiltasten: fliegen');
+    const intro = this.showMessage(
+      this.registry.get('levelName'),
+      !this.registry.get('firstLevel') ? "Los geht's!" : IS_TOUCH ? 'Joystick: fliegen' : 'Pfeiltasten: fliegen',
+    );
     this.time.delayedCall(2000, () =>
       this.tweens.add({ targets: intro, alpha: 0, duration: 500, onComplete: () => intro.destroy() }),
     );
@@ -54,10 +62,11 @@ export class UIScene extends Phaser.Scene {
         'Oh nein!',
         `${this.registry.get('dragonName')} macht ein Nickerchen...\nDie Münzen aus diesem Level sind weg!`,
       );
-    const onLevelWon = ({ last }) =>
-      last
-        ? this.showMessage('Alle Level geschafft!', "Gleich geht's in den Shop...")
-        : this.showMessage('Level geschafft!', "Gleich geht's in den Shop...");
+    const onLevelWon = ({ firstTime, islandDone, last }) => {
+      if (firstTime && last) this.showMessage('Alle Inseln geschafft!', 'Zurück zur Weltkarte...');
+      else if (firstTime && islandDone) this.showMessage('Insel geschafft!', 'Eine neue Insel wartet auf dich!');
+      else this.showMessage('Level geschafft!', 'Zurück zur Weltkarte...');
+    };
     this.gameScene.events.on('nap', onNap);
     this.gameScene.events.on('levelwon', onLevelWon);
 
@@ -72,23 +81,6 @@ export class UIScene extends Phaser.Scene {
     const g = this.gameScene;
     const progress = Math.min(1, g.elapsed / (g.level.seconds * 1000));
     this.barFill.width = BAR.width * progress;
-  }
-
-  drawHearts() {
-    const hearts = this.registry.get('hearts') ?? 0;
-    for (let i = 0; i < MAX_HEARTS; i++) {
-      this.hearts[i] ??= this.add.image(14 + i * 20, 14, 'tiles');
-      this.hearts[i].setFrame(i < hearts ? TILE.heartFull : TILE.heartEmpty);
-    }
-  }
-
-  // Coin count drawn with the pixel digits from the Kenney tilesheet.
-  drawCoins() {
-    for (const d of this.coinDigits) d.destroy();
-    const text = String(this.registry.get('coins') ?? 0);
-    this.coinDigits = [...text].map((ch, i) =>
-      this.add.image(418 + i * 11, 14, 'tiles', TILE.digit0 + Number(ch)),
-    );
   }
 
   showMessage(title, subtitle) {

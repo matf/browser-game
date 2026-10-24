@@ -1,4 +1,5 @@
-// One entry per level. Each level is a bit harder than the one before.
+// One entry per level, three per island (see src/world.js). Each level is a bit harder than the one
+// before.
 //   seconds:     how long you fly before the rainbow comes
 //   scroll:      how fast the world moves past (pixels per second)
 //   pillarEvery: a new pair of rock pillars this often (milliseconds)
@@ -17,4 +18,6 @@ export const LEVELS = [
   { seconds: 65, scroll: 95, pillarEvery: 2750, gap: 94, beeEvery: 2500, beeSpeed: 150, dropEvery: 850 },
   { seconds: 65, scroll: 100, pillarEvery: 2550, gap: 90, beeEvery: 2200, beeSpeed: 160, dropEvery: 750 },
   { seconds: 70, scroll: 105, pillarEvery: 2400, gap: 86, beeEvery: 2000, beeSpeed: 170, dropEvery: 650 },
+  { seconds: 70, scroll: 110, pillarEvery: 2300, gap: 84, beeEvery: 1850, beeSpeed: 175, dropEvery: 600 },
+  { seconds: 75, scroll: 115, pillarEvery: 2200, gap: 82, beeEvery: 1700, beeSpeed: 180, dropEvery: 560 },
 ];

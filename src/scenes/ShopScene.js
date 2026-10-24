@@ -39,9 +39,8 @@ export class ShopScene extends Phaser.Scene {
     super('shop');
   }
 
-  create(data) {
+  create() {
     setupCamera(this);
-    this.nextLevel = data?.nextLevel ?? 0; // the level that starts when you leave the shop
     this.save = loadSave();
     this.tab = 0;
     this.selected = 0;
@@ -54,7 +53,7 @@ export class ShopScene extends Phaser.Scene {
     );
     this.add.image(398, 15, 'tiles', TILE.coin);
     this.coinText = this.add.text(410, 6, '', { ...TEXT, fontSize: '14px' }).setResolution(4);
-    addMuteButton(this, 466, 15, { mKey: false }); // the HUD underneath handles the M key
+    addMuteButton(this, 466, 15);
 
     this.add.rectangle(8, 30, 152, 200, COLORS.panel).setOrigin(0);
     this.preview = this.add.sprite(PREVIEW.x, PREVIEW.y, 'dragons').setScale(PREVIEW.scale).setDepth(5);
@@ -77,12 +76,12 @@ export class ShopScene extends Phaser.Scene {
 
     const help = IS_TOUCH
       ? 'Antippen: kaufen'
-      : 'Pfeile + Leertaste: kaufen   Tab: Seite   Enter: weiter';
+      : 'Pfeile + Leertaste: kaufen   Tab: Seite   Enter: zur Karte';
     this.add.text(12, 250, help, { ...TEXT, fontSize: '8px' }).setOrigin(0, 0.5).setResolution(4);
 
-    // Big green "go on" button, gently pulsing so it's easy to find.
+    // Big green "back to the map" button, gently pulsing so it's easy to find.
     const nextLabel = this.add
-      .text(0, 0, `Weiter zu Level ${this.nextLevel + 1}  ▶`, {
+      .text(0, 0, 'Zur Weltkarte  ▶', {
         ...TEXT,
         fontSize: '13px',
         color: '#1b1630',
@@ -137,10 +136,11 @@ export class ShopScene extends Phaser.Scene {
     if (pressed(k.SPACE)) this.cards[this.selected]?.item.act();
   }
 
-  // Leave the shop and fly the next level (this also stops the shop scene).
+  // Leave the shop, back to the world map (this also stops the shop scene).
   close() {
     writeSave(this.save);
-    this.scene.start('game', { level: this.nextLevel });
+    play(this, 'click');
+    this.scene.start('map');
   }
 
   // The things on the current page, with what to show on their card and what happens on buy.

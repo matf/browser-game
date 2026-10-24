@@ -4,6 +4,7 @@ import { Bee } from '../objects/Bee.js';
 import { Accessories } from '../objects/Accessories.js';
 import { DRAGONS, TILE } from './PreloadScene.js';
 import { LEVELS } from '../levels.js';
+import { LEVELS_PER_ISLAND, LEVEL_COUNT, THEMES, islandOf } from '../world.js';
 import { loadSave, writeSave } from '../save.js';
 import { FONT, HEIGHT, WIDTH, setupCamera } from '../view.js';
 import { play, startMusic } from '../sound.js';
@@ -14,7 +15,7 @@ const DROP_SPEED = 110; // how fast raindrops fall, in pixels per second
 const COINS_PER_ROW = 4; // coins in each row between the pillars
 const COIN_SPACING = 18; // pixels between coins in a row
 const GROUND_HEIGHT = 36; // height of the grass and dirt at the bottom
-const SHOP_DELAY_MS = 2000; // after a level ends, how long until the shop opens
+const MAP_DELAY_MS = 2000; // after a level is won, how long until the world map comes back
 const NAP_MS = 5000; // how long the dragon sleeps when it runs out of hearts
 const WAKE_HEARTS = 3; // hearts after the nap
 
@@ -29,17 +30,21 @@ export class GameScene extends Phaser.Scene {
     const height = HEIGHT;
     this.save = loadSave();
     this.coinsAtStart = this.save.coins; // a nap takes away the coins collected in this level
-    // Without a level from a restart (after loading the page), continue where you left off.
-    this.levelIndex = Phaser.Math.Clamp(data?.level ?? this.save.level, 0, LEVELS.length - 1);
+    // The world map says which level to fly.
+    this.levelIndex = Phaser.Math.Clamp(data?.level ?? 0, 0, LEVELS.length - 1);
     this.level = LEVELS[this.levelIndex];
+    this.island = islandOf(this.levelIndex);
+    this.theme = this.island.theme;
+    this.cameras.main.setBackgroundColor(THEMES[this.theme].sky);
     this.groundY = height - GROUND_HEIGHT;
     this.finished = false;
     this.napping = false;
     this.elapsed = 0;
     this.rainbow = null;
 
-    this.hills = this.add.tileSprite(0, height - 30, width, 48, 'hills').setOrigin(0, 1);
-    this.ground = this.add.tileSprite(0, height, width, 54, 'ground').setOrigin(0, 1).setDepth(2);
+    if (THEMES[this.theme].twinkle) this.addNightStars();
+    this.hills = this.add.tileSprite(0, height - 30, width, 48, `hills-${this.theme}`).setOrigin(0, 1);
+    this.ground = this.add.tileSprite(0, height, width, 54, `ground-${this.theme}`).setOrigin(0, 1).setDepth(2);
 
     this.physics.world.setBounds(0, 0, width, this.groundY);
     this.player = new Dragon(this, 100, height / 2, this.save.dragon).setDepth(3);
@@ -59,7 +64,7 @@ export class GameScene extends Phaser.Scene {
       speed: { min: 30, max: 80 },
       angle: { min: 200, max: 340 },
       gravityY: 300,
-      tint: [0x7ec8f5, 0xd6f1ff],
+      tint: THEMES[this.theme].splash,
       emitting: false,
     }).setDepth(4);
     // Little hearts that fly off the dragon when it loses one.
@@ -82,7 +87,8 @@ export class GameScene extends Phaser.Scene {
       emitting: false,
     }).setDepth(4);
 
-    this.registry.set('level', this.levelIndex + 1);
+    this.registry.set('levelName', `${this.island.name} ${(this.levelIndex % LEVELS_PER_ISLAND) + 1}`);
+    this.registry.set('firstLevel', this.levelIndex === 0);
     this.registry.set('hearts', this.save.hearts);
     this.registry.set('coins', this.save.coins);
     this.registry.set('dragonName', DRAGONS.find((d) => d.key === this.save.dragon).name);
@@ -95,12 +101,38 @@ export class GameScene extends Phaser.Scene {
 
     this.scene.launch('ui');
     startMusic(this);
+    this.input.keyboard.on('keydown-ESC', () => this.toMap());
 
     // The very first time: explain how to play before anything moves.
     if (!this.save.seenHelp) {
       this.scene.launch('help');
       this.scene.pause();
     }
+  }
+
+  // Tiny blinking stars in the night sky of the star island.
+  addNightStars() {
+    for (let i = 0; i < 40; i++) {
+      const star = this.add
+        .image(Phaser.Math.Between(0, WIDTH), Phaser.Math.Between(4, HEIGHT - 70), 'pixel')
+        .setTint(0xfff3b0)
+        .setAlpha(Phaser.Math.FloatBetween(0.2, 0.9));
+      this.tweens.add({
+        targets: star,
+        alpha: 0.1,
+        duration: Phaser.Math.Between(600, 1400),
+        yoyo: true,
+        repeat: -1,
+        delay: Phaser.Math.Between(0, 2000),
+      });
+    }
+  }
+
+  // Back to the world map (the map button in the HUD, or Esc). Coins collected so far are kept.
+  toMap(data) {
+    this.scene.stop('ui');
+    this.scene.stop('help');
+    this.scene.start('map', data);
   }
 
   // True once the level's time is up: no new obstacles, only the rainbow.
@@ -118,8 +150,8 @@ export class GameScene extends Phaser.Scene {
     const x = WIDTH + 10;
     const gap = this.level.gap;
     const gapTop = Phaser.Math.Between(40, this.groundY - gap - 30);
-    const top = this.obstacles.create(x, gapTop, 'pillar-top').setOrigin(0, 1).setDepth(1);
-    const bottom = this.obstacles.create(x, gapTop + gap, 'pillar-bottom').setOrigin(0, 0).setDepth(1);
+    const top = this.obstacles.create(x, gapTop, `pillar-top-${this.theme}`).setOrigin(0, 1).setDepth(1);
+    const bottom = this.obstacles.create(x, gapTop + gap, `pillar-bottom-${this.theme}`).setOrigin(0, 0).setDepth(1);
     for (const pillar of [top, bottom]) {
       pillar.body.setSize(30, pillar.height).setOffset(3, 0);
       this.moveLeft(pillar);
@@ -150,7 +182,7 @@ export class GameScene extends Phaser.Scene {
 
   spawnDrop() {
     if (this.atEnd || this.napping) return;
-    const drop = this.obstacles.create(Phaser.Math.Between(60, WIDTH + 60), -10, 'drop');
+    const drop = this.obstacles.create(Phaser.Math.Between(60, WIDTH + 60), -10, `drop-${this.theme}`);
     drop.isDrop = true;
     drop.setDepth(3);
     drop.body.setSize(8, 10).setOffset(2, 5);
@@ -219,17 +251,24 @@ export class GameScene extends Phaser.Scene {
     this.time.delayedCall(NAP_MS, () => this.scene.restart({ level: this.levelIndex }));
   }
 
-  // Stop the level, tell the UI, then open the shop. The shop starts `nextLevel` when you leave it.
-  finish(event, nextLevel) {
+  // The rainbow is reached: remember it, cheer, then back to the world map.
+  win() {
     this.finished = true;
     this.physics.pause();
     this.time.removeAllEvents(); // no more pillars, bees or raindrops
     this.player.anims.pause();
-    this.events.emit(event, { level: this.levelIndex + 1, last: this.levelIndex === LEVELS.length - 1 });
-    this.time.delayedCall(SHOP_DELAY_MS, () => {
-      this.scene.pause();
-      this.scene.launch('shop', { nextLevel });
+    const firstTime = !this.save.done.includes(this.levelIndex);
+    if (firstTime) this.save.done.push(this.levelIndex);
+    this.save.at = this.levelIndex;
+    writeSave(this.save);
+    play(this, 'win');
+    const islandDone = (this.levelIndex + 1) % LEVELS_PER_ISLAND === 0;
+    this.events.emit('levelwon', {
+      firstTime,
+      islandDone,
+      last: this.levelIndex === LEVEL_COUNT - 1,
     });
+    this.time.delayedCall(MAP_DELAY_MS, () => this.toMap(firstTime ? { firstWin: this.levelIndex } : {}));
   }
 
   popDrop(drop) {
@@ -249,12 +288,7 @@ export class GameScene extends Phaser.Scene {
     if (this.atEnd && !this.rainbow) this.spawnRainbow();
     if (this.rainbow && this.player.x >= this.rainbow.x) {
       this.sparkle.explode(40, this.player.x, this.player.y);
-      // After the last level, start again at level 1.
-      const next = (this.levelIndex + 1) % LEVELS.length;
-      this.save.level = next;
-      writeSave(this.save);
-      play(this, 'win');
-      this.finish('levelwon', next);
+      this.win();
       return;
     }
 

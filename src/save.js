@@ -6,7 +6,8 @@ const KEY = 'dragonFlight.save';
 
 const DEFAULTS = {
   coins: 0, // coins you have right now
-  level: 0, // the level to continue with (0 = level 1)
+  done: [], // levels you have finished (0 = the first level)
+  at: 0, // where the dragon sits on the world map: a level, or -1 for the shop
   hearts: MAX_HEARTS, // hearts only come back by feeding
   dragon: 'marshmallow', // the dragon you fly with
   dragons: ['marshmallow'], // dragons you own
@@ -22,6 +23,12 @@ export function loadSave() {
   } catch {
     // Use the defaults.
   }
+  // Saves from before the world map only knew the next level: everything before it counts as done.
+  if (!saved.done && saved.level) {
+    saved.done = Array.from({ length: saved.level }, (_, i) => i);
+    saved.at = saved.level;
+  }
+  delete saved.level;
   return structuredClone({ ...DEFAULTS, ...saved });
 }
 

@@ -4,6 +4,7 @@ import { GameScene } from './scenes/GameScene.js';
 import { UIScene } from './scenes/UIScene.js';
 import { ShopScene } from './scenes/ShopScene.js';
 import { HelpScene } from './scenes/HelpScene.js';
+import { MapScene } from './scenes/MapScene.js';
 import { keepFitted, watchOrientation } from './touch.js';
 import { HEIGHT, WIDTH, ZOOM } from './view.js';
 import { watchForUpdates } from './update.js';
@@ -22,7 +23,7 @@ function startGame() {
       default: 'arcade',
       arcade: { gravity: { x: 0, y: 0 }, debug: false }, // no gravity: the dragons fly freely
     },
-    scene: [PreloadScene, GameScene, UIScene, ShopScene, HelpScene],
+    scene: [PreloadScene, MapScene, GameScene, UIScene, ShopScene, HelpScene],
   });
 
   watchOrientation(game);

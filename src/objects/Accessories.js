@@ -55,18 +55,23 @@ export class Accessories {
     const points = anchors(Number(d.frame.name) % 3);
     const cos = Math.cos(d.rotation);
     const sin = Math.sin(d.rotation);
+    const flip = d.flipX ? -1 : 1; // the dragon looks left
     for (const { img, slot, i } of this.parts) {
       const [fx, fy] = points[slot][i];
-      const ox = (fx + 0.5 - d.width / 2) * d.scaleX;
+      const ox = (fx + 0.5 - d.width / 2) * d.scaleX * flip;
       const oy = (fy + 0.5 - d.height / 2) * d.scaleY;
       img
         .setPosition(d.x + ox * cos - oy * sin, d.y + ox * sin + oy * cos)
         .setScale(d.scaleX, d.scaleY)
         .setRotation(d.rotation)
+        .setFlipX(d.flipX)
         .setDepth(d.depth + 0.1)
         .setAlpha(d.alpha);
     }
-    if (this.trail) this.trail.setDepth(d.depth - 0.1);
+    if (this.trail) {
+      this.trail.setDepth(d.depth - 0.1);
+      this.trail.followOffset.x = -12 * d.scaleX * flip;
+    }
   }
 
   destroy() {
