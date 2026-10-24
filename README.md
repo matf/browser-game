@@ -19,6 +19,8 @@ https://matf.github.io/browser-game/
 ## Controls
 
 - Arrow keys or WASD: fly
+- Phone (landscape): put your thumb on the left half of the screen and slide it (joystick).
+  Held upright, the game pauses and asks you to turn the phone.
 - Shop (opens by itself after every finished level): arrows choose, Space buys, Tab switches
   page, Enter or Esc starts the next level; the mouse works too
 
@@ -46,3 +48,5 @@ in `localStorage`. Shop items and prices are in `src/shop.js`.
 - Cupcake and marshmallow: [Pixel Platformer Food Expansion](https://opengameart.org/content/pixel-platformer-food-expansion)
   by Kenney ([kenney.nl](https://kenney.nl)), CC0.
 - Bee, raindrop, rainbow, apple, strawberry and accessories: drawn for this game.
+- Font: [Fredoka](https://fonts.google.com/specimen/Fredoka) by The Fredoka Project Authors,
+  [SIL Open Font License 1.1](public/assets/fonts/OFL.txt).

@@ -1,11 +1,13 @@
 import Phaser from 'phaser';
+import { FONT, setupCamera } from '../view.js';
 import { ACCESSORY_ART, DRAGONS, TILE } from './PreloadScene.js';
 import { Accessories } from '../objects/Accessories.js';
 import { ACCESSORIES, DRAGON_PRICE, FOODS, MAX_HEARTS } from '../shop.js';
 import { loadSave, writeSave } from '../save.js';
+import { IS_TOUCH } from '../touch.js';
 
 const TEXT = {
-  fontFamily: 'monospace',
+  fontFamily: FONT,
   fontStyle: 'bold',
   color: '#ffffff',
   stroke: '#1b1630',
@@ -35,6 +37,7 @@ export class ShopScene extends Phaser.Scene {
   }
 
   create(data) {
+    setupCamera(this);
     this.nextLevel = data?.nextLevel ?? 0; // the level that starts when you leave the shop
     this.save = loadSave();
     this.tab = 0;
@@ -68,23 +71,23 @@ export class ShopScene extends Phaser.Scene {
       emitting: false,
     }).setDepth(6);
 
-    this.add
-      .text(168, 262, 'Pfeile: wählen   Leertaste: kaufen   Tab: Seite', {
+    const help = IS_TOUCH ? 'Antippen: kaufen' : 'Pfeile: wählen   Leertaste: kaufen   Tab: Seite';
+    this.add.text(168, 261, help, { ...TEXT, fontSize: '8px' }).setOrigin(0, 0.5).setResolution(4);
+    const next = this.add
+      .text(0, 0, `${IS_TOUCH ? '' : 'Enter: '}weiter zu Level ${this.nextLevel + 1} ▶`, {
         ...TEXT,
-        fontSize: '8px',
-      })
-      .setOrigin(0, 0.5)
-      .setResolution(4);
-    this.add
-      .text(472, 262, `Enter: weiter zu Level ${this.nextLevel + 1} ▶`, {
-        ...TEXT,
-        fontSize: '9px',
+        fontSize: '10px',
         color: '#ffe066',
       })
       .setOrigin(1, 0.5)
-      .setResolution(4)
+      .setResolution(4);
+    const button = this.add
+      .rectangle(0, 0, next.width + 12, 16, COLORS.card)
+      .setStrokeStyle(1, COLORS.selected)
+      .setOrigin(1, 0.5)
       .setInteractive({ useHandCursor: true })
       .on('pointerdown', () => this.close());
+    this.add.container(474, 260, [button, next.setX(-6)]);
 
     this.tabTexts = TABS.map((t, i) =>
       this.add

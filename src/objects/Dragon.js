@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { TouchStick } from './TouchStick.js';
 
 const SCALE = 0.75; // size of the dragon (1 = full picture size)
 const FLY_SPEED = 170; // top speed in pixels per second
@@ -23,6 +24,7 @@ export class Dragon extends Phaser.Physics.Arcade.Sprite {
     this.body.setSize(36, 26).setOffset(24, 18);
 
     this.keys = scene.input.keyboard.addKeys('LEFT,RIGHT,UP,DOWN,A,D,W,S');
+    this.stick = new TouchStick(scene);
     this.hurtUntil = 0;
     this.noControlUntil = 0;
   }
@@ -50,8 +52,8 @@ export class Dragon extends Phaser.Physics.Arcade.Sprite {
   update(time) {
     if (time < this.noControlUntil) return;
     const k = this.keys;
-    const dirX = (k.RIGHT.isDown || k.D.isDown) - (k.LEFT.isDown || k.A.isDown);
-    const dirY = (k.DOWN.isDown || k.S.isDown) - (k.UP.isDown || k.W.isDown);
+    const dirX = (k.RIGHT.isDown || k.D.isDown) - (k.LEFT.isDown || k.A.isDown) || this.stick.x;
+    const dirY = (k.DOWN.isDown || k.S.isDown) - (k.UP.isDown || k.W.isDown) || this.stick.y;
     this.setAcceleration(dirX * ACCEL, dirY * ACCEL);
     // Keep normal flying at FLY_SPEED; only a knockback may go faster.
     this.body.velocity.x = Phaser.Math.Clamp(this.body.velocity.x, -FLY_SPEED, FLY_SPEED);

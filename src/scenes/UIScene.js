@@ -1,9 +1,11 @@
 import Phaser from 'phaser';
+import { FONT, setupCamera } from '../view.js';
 import { TILE } from './PreloadScene.js';
 import { MAX_HEARTS } from '../shop.js';
+import { IS_TOUCH } from '../touch.js';
 
 const TEXT_STYLE = {
-  fontFamily: 'monospace',
+  fontFamily: FONT,
   fontStyle: 'bold',
   color: '#ffffff',
   stroke: '#1b1630',
@@ -17,6 +19,7 @@ export class UIScene extends Phaser.Scene {
   }
 
   create() {
+    setupCamera(this);
     this.gameScene = this.scene.get('game');
 
     this.hearts = [];
@@ -39,7 +42,7 @@ export class UIScene extends Phaser.Scene {
     this.registry.events.on('changedata', onChange);
 
     const level = this.registry.get('level');
-    const intro = this.showMessage(`Level ${level}`, level === 1 ? 'Pfeiltasten: fliegen' : 'Los geht\'s!');
+    const intro = this.showMessage(`Level ${level}`, level !== 1 ? "Los geht's!" : IS_TOUCH ? 'Daumen links aufs Bild: fliegen' : 'Pfeiltasten: fliegen');
     this.time.delayedCall(2000, () =>
       this.tweens.add({ targets: intro, alpha: 0, duration: 500, onComplete: () => intro.destroy() }),
     );

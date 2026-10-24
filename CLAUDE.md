@@ -50,7 +50,7 @@ content (unicorn, gems, level) unless the daughter wants it.
 | Build/dev | **Vite** (npm). `npm run dev` for hot reload, `npm run build` for a static `dist/`. |
 | Language | **Plain JavaScript, ES modules.** No TypeScript, no framework (no React etc.). |
 | Game library | **Phaser 4** (`phaser@^4.2.1`, tested with 4.2.1), **Arcade physics**. |
-| Rendering | `pixelArt: true`, base resolution **480×270** (16:9), `Phaser.Scale.FIT` + `CENTER_BOTH`. |
+| Rendering | `pixelArt: true`, base resolution **480×270** (16:9), `Phaser.Scale.FIT` + `CENTER_BOTH`. In this game the canvas is 4× bigger (`src/view.js`: `WIDTH`, `HEIGHT`, `ZOOM`) and every scene calls `setupCamera(this)`, so text is sharp. Use `WIDTH`/`HEIGHT` instead of `this.scale.width/height`, and divide raw `pointer.x/y` by `ZOOM`. Text uses the bundled Fredoka font (`FONT`). |
 | Levels | **Tiled** map editor (free, mapeditor.org), saved as **JSON**, loaded with `tilemapTiledJSON`. |
 | Art | **Kenney** asset packs first; OpenGameArt/itch.io when Kenney has nothing fitting. Public project, so only assets whose license allows public sharing (see Assets). |
 | Sound | Kenney audio packs, `.ogg` files, Phaser's built-in sound manager. |

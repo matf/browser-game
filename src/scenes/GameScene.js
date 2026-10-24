@@ -5,6 +5,7 @@ import { Accessories } from '../objects/Accessories.js';
 import { DRAGONS } from './PreloadScene.js';
 import { LEVELS } from '../levels.js';
 import { loadSave, writeSave } from '../save.js';
+import { FONT, HEIGHT, WIDTH, setupCamera } from '../view.js';
 
 // The numbers that change from level to level are in src/levels.js.
 const START_CALM_MS = 2000; // quiet time at the start before obstacles come
@@ -22,7 +23,9 @@ export class GameScene extends Phaser.Scene {
   }
 
   create(data) {
-    const { width, height } = this.scale;
+    setupCamera(this);
+    const width = WIDTH;
+    const height = HEIGHT;
     this.save = loadSave();
     this.coinsAtStart = this.save.coins; // a nap takes away the coins collected in this level
     // Without a level from a restart (after loading the page), continue where you left off.
@@ -92,7 +95,7 @@ export class GameScene extends Phaser.Scene {
 
   spawnPillars() {
     if (this.atEnd || this.napping) return;
-    const x = this.scale.width + 10;
+    const x = WIDTH + 10;
     const gap = this.level.gap;
     const gapTop = Phaser.Math.Between(40, this.groundY - gap - 30);
     const top = this.obstacles.create(x, gapTop, 'pillar-top').setOrigin(0, 1).setDepth(1);
@@ -109,7 +112,7 @@ export class GameScene extends Phaser.Scene {
   spawnCoinRow() {
     if (this.atEnd || this.napping) return;
     const y = Phaser.Math.Between(40, this.groundY - 30);
-    for (let i = 0; i < COINS_PER_ROW; i++) this.spawnCoin(this.scale.width + 10 + i * COIN_SPACING, y);
+    for (let i = 0; i < COINS_PER_ROW; i++) this.spawnCoin(WIDTH + 10 + i * COIN_SPACING, y);
   }
 
   spawnCoin(x, y) {
@@ -121,13 +124,13 @@ export class GameScene extends Phaser.Scene {
   spawnBee() {
     if (this.atEnd || this.napping) return;
     const y = Phaser.Math.Between(40, this.groundY - 40);
-    const bee = new Bee(this, this.scale.width + 20, y, this.level.beeSpeed).setDepth(3);
+    const bee = new Bee(this, WIDTH + 20, y, this.level.beeSpeed).setDepth(3);
     this.obstacles.add(bee);
   }
 
   spawnDrop() {
     if (this.atEnd || this.napping) return;
-    const drop = this.obstacles.create(Phaser.Math.Between(60, this.scale.width + 60), -10, 'drop');
+    const drop = this.obstacles.create(Phaser.Math.Between(60, WIDTH + 60), -10, 'drop');
     drop.isDrop = true;
     drop.setDepth(3);
     drop.body.setSize(8, 10).setOffset(2, 5);
@@ -136,7 +139,7 @@ export class GameScene extends Phaser.Scene {
 
   spawnRainbow() {
     this.rainbow = this.physics.add
-      .image(this.scale.width + 80, this.groundY + 4, 'rainbow')
+      .image(WIDTH + 80, this.groundY + 4, 'rainbow')
       .setOrigin(0.5, 1)
       .setDepth(1);
     this.moveLeft(this.rainbow);
@@ -180,7 +183,7 @@ export class GameScene extends Phaser.Scene {
 
     const zzz = this.add
       .text(this.player.x + 10, this.player.y - 20, 'Zzz', {
-        fontFamily: 'monospace',
+        fontFamily: FONT,
         fontSize: '14px',
         fontStyle: 'bold',
         color: '#ffffff',

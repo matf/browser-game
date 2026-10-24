@@ -1,12 +1,54 @@
+@font-face {
+  font-family: 'Fredoka';
+  src: url('/assets/fonts/Fredoka.ttf') format('truetype');
+  font-weight: 300 700;
+  font-display: block;
+}
+
 html,
 body {
   margin: 0;
   height: 100%;
   background: #1b1630;
   overflow: hidden;
+  /* No scrolling, zooming or text selection while playing with fingers. */
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
 }
 
 #game {
   width: 100%;
   height: 100%;
+  height: 100dvh;
+}
+
+/* Shown on phones held upright (see src/touch.js). */
+#rotate {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #2b2140;
+  color: #fff;
+  font: 600 24px Fredoka, sans-serif;
+  text-align: center;
+}
+
+#rotate.show {
+  display: flex;
+}
+
+#rotate .phone {
+  font-size: 64px;
+  animation: turn 2s ease-in-out infinite;
+}
+
+@keyframes turn {
+  0%, 30% { transform: rotate(0deg); }
+  60%, 100% { transform: rotate(-90deg); }
 }
