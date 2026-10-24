@@ -115,11 +115,27 @@ export class PreloadScene extends Phaser.Scene {
     speaker('speaker-off', true);
     loadSoundSettings(this.game);
     this.makeMapTextures();
+    this.makeStar();
 
     this.scene.start('title');
   }
 
   // Pictures for the world map, drawn here instead of loaded.
+  // The power-up star (16x16): yellow with a darker edge and a little shine.
+  makeStar() {
+    const points = (outer, inner) =>
+      Array.from({ length: 10 }, (_, i) => {
+        const r = i % 2 ? inner : outer;
+        const a = -Math.PI / 2 + (i * Math.PI) / 5;
+        return { x: 8 + r * Math.cos(a), y: 8.5 + r * Math.sin(a) };
+      });
+    const g = this.add.graphics();
+    g.fillStyle(0xd98a1c).fillPoints(points(8, 3.8), true);
+    g.fillStyle(0xffd84a).fillPoints(points(6.2, 2.8), true);
+    g.fillStyle(0xffffff).fillRect(6, 5, 2, 2);
+    g.generateTexture('powerup-star', 16, 16).destroy();
+  }
+
   makeMapTextures() {
     const draw = (key, width, height, paint) => {
       const g = this.add.graphics();

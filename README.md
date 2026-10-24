@@ -47,6 +47,11 @@ loses the coins collected in that level and restarts it with 3 hearts. Coins, he
 levels, the dragon's spot on the map, owned dragons and accessories are saved in `localStorage`.
 Shop items and prices are in `src/shop.js`.
 
+Half of the levels (by chance, `POWERUP_CHANCE` in `src/scenes/GameScene.js`) hide one shiny power-up
+in place of a coin row: a heart gives one heart back (only when one is missing), a star makes the
+dragon shine in rainbow colours for 6 seconds so nothing can hurt it and bees and raindrops bounce
+off. Power-ups are in `src/objects/PowerUp.js`.
+
 `public/assets/map.png` and the themed level pictures (`ground-candy.png`, ...) were generated with a
 small Pillow script from the Kenney art below; the station positions in `src/world.js` match the
 islands drawn on the map.

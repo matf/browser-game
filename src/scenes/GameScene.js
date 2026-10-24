@@ -2,6 +2,8 @@ import Phaser from 'phaser';
 import { Dragon } from '../objects/Dragon.js';
 import { Bee } from '../objects/Bee.js';
 import { Accessories } from '../objects/Accessories.js';
+import { PowerUp } from '../objects/PowerUp.js';
+import { MAX_HEARTS } from '../shop.js';
 import { DRAGONS, TILE } from './PreloadScene.js';
 import { LEVELS } from '../levels.js';
 import { LEVELS_PER_ISLAND, LEVEL_COUNT, THEMES, islandOf } from '../world.js';
@@ -18,6 +20,10 @@ const GROUND_HEIGHT = 36; // height of the grass and dirt at the bottom
 const MAP_DELAY_MS = 2000; // after a level is won, how long until the world map comes back
 const NAP_MS = 5000; // how long the dragon sleeps when it runs out of hearts
 const WAKE_HEARTS = 3; // hearts after the nap
+const POWERUP_CHANCE = 0.5; // how likely a level has a power-up (0 = never, 1 = always)
+const POWERUP_FROM = 0.25; // the power-up comes somewhere between this part of the level...
+const POWERUP_TO = 0.75; // ...and this part (0 = start, 1 = end)
+const HEART_POWERUP_CHANCE = 0.5; // when a heart is missing, how likely the power-up is a heart instead of a star
 
 export class GameScene extends Phaser.Scene {
   constructor() {
@@ -41,6 +47,9 @@ export class GameScene extends Phaser.Scene {
     this.napping = false;
     this.elapsed = 0;
     this.rainbow = null;
+    // Some levels hide one power-up: when it comes, it takes the place of a row of coins.
+    const seconds = this.level.seconds * 1000;
+    this.powerUpAt = Math.random() < POWERUP_CHANCE ? Phaser.Math.FloatBetween(POWERUP_FROM, POWERUP_TO) * seconds : Infinity;
 
     if (THEMES[this.theme].twinkle) this.addNightStars();
     this.hills = this.add.tileSprite(0, height - 30, width, 48, `hills-${this.theme}`).setOrigin(0, 1);
@@ -58,6 +67,8 @@ export class GameScene extends Phaser.Scene {
     this.coins = this.physics.add.group({ allowGravity: false });
     this.physics.add.overlap(this.player, this.obstacles, this.onHit, null, this);
     this.physics.add.overlap(this.player, this.coins, this.onCoin, null, this);
+    this.powerUps = this.physics.add.group({ allowGravity: false });
+    this.physics.add.overlap(this.player, this.powerUps, this.onPowerUp, null, this);
 
     this.splash = this.add.particles(0, 0, 'pixel', {
       lifespan: 400,
@@ -86,6 +97,17 @@ export class GameScene extends Phaser.Scene {
       tint: [0xffd84a, 0xffffff, 0xffb52e],
       emitting: false,
     }).setDepth(4);
+    // Rainbow sparkles behind the dragon while the star power lasts.
+    this.starTrail = this.add.particles(0, 0, 'pixel', {
+      follow: this.player,
+      lifespan: 500,
+      speedX: { min: -90, max: -40 },
+      speedY: { min: -25, max: 25 },
+      scale: { start: 1.6, end: 0 },
+      tint: [0xff9fc8, 0xffe066, 0x9ff0a8, 0x8fd3f4, 0xc9a7ff],
+      frequency: 25,
+      emitting: false,
+    }).setDepth(2.9);
 
     this.registry.set('levelName', `${this.island.name} ${(this.levelIndex % LEVELS_PER_ISLAND) + 1}`);
     this.registry.set('firstLevel', this.levelIndex === 0);
@@ -164,6 +186,11 @@ export class GameScene extends Phaser.Scene {
   spawnCoinRow() {
     if (this.atEnd || this.napping) return;
     const y = Phaser.Math.Between(40, this.groundY - 30);
+    if (this.elapsed >= this.powerUpAt) {
+      this.powerUpAt = Infinity;
+      this.spawnPowerUp(y);
+      return;
+    }
     for (let i = 0; i < COINS_PER_ROW; i++) this.spawnCoin(WIDTH + 10 + i * COIN_SPACING, y);
   }
 
@@ -171,6 +198,13 @@ export class GameScene extends Phaser.Scene {
     const coin = this.coins.create(x, y, 'tiles').play('coin-spin').setDepth(3);
     coin.body.setSize(12, 12).setOffset(3, 3);
     this.moveLeft(coin);
+  }
+
+  // A heart only when one is missing, otherwise a star.
+  spawnPowerUp(y) {
+    const heartMissing = this.save.hearts < MAX_HEARTS;
+    const kind = heartMissing && Math.random() < HEART_POWERUP_CHANCE ? 'heart' : 'star';
+    this.powerUps.add(new PowerUp(this, WIDTH + 20, y, kind, this.level.scroll).setDepth(3));
   }
 
   spawnBee() {
@@ -206,7 +240,60 @@ export class GameScene extends Phaser.Scene {
     this.registry.set('coins', this.save.coins);
   }
 
+  onPowerUp(player, powerUp) {
+    this.sparkle.explode(20, powerUp.x, powerUp.y);
+    powerUp.destroy();
+    if (powerUp.kind === 'star') {
+      player.startStar();
+      play(this, 'newdragon');
+      this.cheer('Sternenkraft!', '#ffe066');
+    } else {
+      this.save.hearts = Math.min(MAX_HEARTS, this.save.hearts + 1);
+      writeSave(this.save);
+      this.registry.set('hearts', this.save.hearts);
+      play(this, 'eat');
+      this.cheer('+1 Herz!', '#ff9fc8');
+    }
+  }
+
+  // A short word that floats up from the dragon.
+  cheer(words, color) {
+    const text = this.add
+      .text(this.player.x, this.player.y - 24, words, {
+        fontFamily: FONT,
+        fontSize: '14px',
+        fontStyle: 'bold',
+        color,
+        stroke: '#1b1630',
+        strokeThickness: 4,
+      })
+      .setOrigin(0.5)
+      .setResolution(4)
+      .setDepth(6);
+    this.tweens.add({ targets: text, y: text.y - 26, alpha: 0, duration: 1400, ease: 'Sine.In', onComplete: () => text.destroy() });
+  }
+
+  // With star power, bees and raindrops just bounce off (pillars stay where they are).
+  bonk(obstacle) {
+    if (obstacle.isDrop) return this.popDrop(obstacle);
+    if (!(obstacle instanceof Bee)) return;
+    play(this, 'wear');
+    this.sparkle.explode(12, obstacle.x, obstacle.y);
+    this.obstacles.remove(obstacle);
+    obstacle.body.enable = false;
+    this.tweens.add({
+      targets: obstacle,
+      x: obstacle.x + 60,
+      y: obstacle.y - 80,
+      angle: 720,
+      alpha: 0,
+      duration: 700,
+      onComplete: () => obstacle.destroy(),
+    });
+  }
+
   onHit(player, obstacle) {
+    if (player.starPower && !this.finished && !this.napping) return this.bonk(obstacle);
     if (this.finished || this.napping || player.invulnerable) return;
     if (obstacle.isDrop) this.popDrop(obstacle);
 
@@ -228,6 +315,7 @@ export class GameScene extends Phaser.Scene {
   nap() {
     this.napping = true;
     this.physics.pause();
+    this.starTrail.stop();
     this.player.anims.pause();
     this.save.hearts = WAKE_HEARTS;
     this.save.coins = this.coinsAtStart;
@@ -255,6 +343,7 @@ export class GameScene extends Phaser.Scene {
   win() {
     this.finished = true;
     this.physics.pause();
+    this.starTrail.stop();
     this.time.removeAllEvents(); // no more pillars, bees or raindrops
     this.player.anims.pause();
     const firstTime = !this.save.done.includes(this.levelIndex);
@@ -284,6 +373,7 @@ export class GameScene extends Phaser.Scene {
     this.ground.tilePositionX += dx;
     this.hills.tilePositionX += dx * 0.3;
     this.player.update(time);
+    this.starTrail.emitting = this.player.starPower;
 
     if (this.atEnd && !this.rainbow) this.spawnRainbow();
     if (this.rainbow && this.player.x >= this.rainbow.x) {
@@ -297,5 +387,6 @@ export class GameScene extends Phaser.Scene {
       else if (obstacle.x < -60) obstacle.destroy();
     }
     for (const coin of this.coins.getChildren().slice()) if (coin.x < -20) coin.destroy();
+    for (const powerUp of this.powerUps.getChildren().slice()) if (powerUp.x < -20) powerUp.destroy();
   }
 }
