@@ -13,7 +13,7 @@ const game = new Phaser.Game({
   scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },
   physics: {
     default: 'arcade',
-    arcade: { gravity: { x: 0, y: 900 }, debug: false }, // y: 0 for top-down games
+    arcade: { gravity: { x: 0, y: 0 }, debug: false }, // no gravity: the dragons fly freely
   },
   scene: [PreloadScene, GameScene, UIScene],
 });

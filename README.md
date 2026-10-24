@@ -1,6 +1,6 @@
-# Browser Game
+# Drachenspiel
 
-A 2D browser game built with Phaser 4 and Vite.
+A 2D browser game built with Phaser 4 and Vite: fly cute dragons, dodge obstacles, collect coins.
 
 ## Run locally
 
@@ -16,6 +16,10 @@ Then open the URL Vite prints (this project uses http://localhost:5174 by conven
 Every push to `main` is built and published to GitHub Pages by `.github/workflows/pages.yml`:
 https://matf.github.io/browser-game/
 
+## Controls
+
+- Arrow keys or WASD: fly
+
 ## Layout
 
 - `src/main.js`: Phaser config
@@ -25,4 +29,9 @@ https://matf.github.io/browser-game/
 
 ## Credits
 
-No third-party assets yet.
+- Dragons: [Free Pixel Art Dragons](https://magicae-games.itch.io/free-pixel-art-dragons) by
+  Magicae! Games. License as stated on the page: "Can be used in any project commercial and
+  non-commercial. You may modify or adapt however you want. You cannot resell these assets, even if
+  modified." The pink dragon (Marshmallow) is a recolour of the Air dragon.
+- Background: [Pixel Platformer](https://opengameart.org/content/pixel-platformer-0) by Kenney
+  ([kenney.nl](https://kenney.nl)), CC0.
