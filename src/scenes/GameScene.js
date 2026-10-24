@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 import { Dragon } from '../objects/Dragon.js';
 import { Bee } from '../objects/Bee.js';
 import { Accessories } from '../objects/Accessories.js';
-import { DRAGONS } from './PreloadScene.js';
+import { DRAGONS, TILE } from './PreloadScene.js';
 import { LEVELS } from '../levels.js';
 import { loadSave, writeSave } from '../save.js';
 import { FONT, HEIGHT, WIDTH, setupCamera } from '../view.js';
@@ -61,6 +61,18 @@ export class GameScene extends Phaser.Scene {
       tint: [0x7ec8f5, 0xd6f1ff],
       emitting: false,
     }).setDepth(4);
+    // Little hearts that fly off the dragon when it loses one.
+    this.lostHearts = this.add.particles(0, 0, 'tiles', {
+      frame: TILE.heartFull,
+      lifespan: 900,
+      speed: { min: 50, max: 110 },
+      angle: { min: 200, max: 340 },
+      gravityY: 160,
+      rotate: { min: -40, max: 40 },
+      scale: { start: 0.9, end: 0.4 },
+      alpha: { start: 1, end: 0 },
+      emitting: false,
+    }).setDepth(5);
     this.sparkle = this.add.particles(0, 0, 'pixel', {
       lifespan: 350,
       speed: { min: 40, max: 110 },
@@ -165,7 +177,7 @@ export class GameScene extends Phaser.Scene {
 
     const hearts = this.save.hearts - 1;
     this.registry.set('hearts', hearts);
-    this.cameras.main.shake(150, 0.01);
+    this.lostHearts.explode(6, player.x, player.y - 6);
     if (hearts > 0) {
       this.save.hearts = hearts;
       writeSave(this.save);
