@@ -1,5 +1,11 @@
 import Phaser from 'phaser';
 
+// Frame indices in the Kenney tilesheet (assets/tiles.png, 18x18, 20 columns).
+export const TILE = {
+  heartFull: 44,
+  heartEmpty: 46,
+};
+
 // Size of one frame in assets/dragons.png (5 rows, one per dragon, 3 flying frames each).
 export const DRAGON_FRAME = { width: 67, height: 52 };
 
@@ -23,7 +29,13 @@ export class PreloadScene extends Phaser.Scene {
       frameWidth: DRAGON_FRAME.width,
       frameHeight: DRAGON_FRAME.height,
     });
-    this.load.image('backgrounds', 'backgrounds.png');
+    this.load.spritesheet('tiles', 'tiles.png', { frameWidth: 18, frameHeight: 18 });
+    this.load.spritesheet('bee', 'bee.png', { frameWidth: 24, frameHeight: 20 });
+    this.load.image('drop', 'drop.png');
+    this.load.image('hills', 'hills.png');
+    this.load.image('ground', 'ground.png');
+    this.load.image('pillar-top', 'pillar-top.png');
+    this.load.image('pillar-bottom', 'pillar-bottom.png');
   }
 
   create() {
@@ -39,9 +51,16 @@ export class PreloadScene extends Phaser.Scene {
         repeat: -1,
       });
     }
+    this.anims.create({
+      key: 'bee-fly',
+      frames: this.anims.generateFrameNumbers('bee', { start: 0, end: 1 }),
+      frameRate: 12,
+      repeat: -1,
+    });
 
-    // The clouds-and-trees strip of the Kenney background sheet, used for the scrolling backdrop.
-    this.textures.get('backgrounds').add('hills', 0, 0, 24, 96, 48);
+    // Tiny square for splash particles.
+    const g = this.add.graphics();
+    g.fillStyle(0xffffff).fillRect(0, 0, 2, 2).generateTexture('pixel', 2, 2).destroy();
 
     this.scene.start('game');
   }

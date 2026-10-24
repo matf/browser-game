@@ -9,7 +9,7 @@ const game = new Phaser.Game({
   width: 480,
   height: 270,
   pixelArt: true,
-  backgroundColor: '#dff6f5',
+  backgroundColor: '#8fd3f4',
   scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },
   physics: {
     default: 'arcade',
