@@ -6,6 +6,7 @@ import { DRAGONS, TILE } from './PreloadScene.js';
 import { LEVELS } from '../levels.js';
 import { loadSave, writeSave } from '../save.js';
 import { FONT, HEIGHT, WIDTH, setupCamera } from '../view.js';
+import { play } from '../sound.js';
 
 // The numbers that change from level to level are in src/levels.js.
 const START_CALM_MS = 2000; // quiet time at the start before obstacles come
@@ -164,6 +165,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   onCoin(player, coin) {
+    play(this, 'coin');
     this.sparkle.explode(10, coin.x, coin.y);
     coin.destroy();
     this.save.coins += 1;
@@ -178,6 +180,7 @@ export class GameScene extends Phaser.Scene {
     const hearts = this.save.hearts - 1;
     this.registry.set('hearts', hearts);
     this.lostHearts.explode(6, player.x, player.y - 6);
+    play(this, hearts > 0 ? 'hit' : 'nap');
     if (hearts > 0) {
       this.save.hearts = hearts;
       writeSave(this.save);
@@ -249,6 +252,7 @@ export class GameScene extends Phaser.Scene {
       const next = (this.levelIndex + 1) % LEVELS.length;
       this.save.level = next;
       writeSave(this.save);
+      play(this, 'win');
       this.finish('levelwon', next);
       return;
     }

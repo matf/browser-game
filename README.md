@@ -19,6 +19,7 @@ https://matf.github.io/browser-game/
 ## Controls
 
 - Arrow keys or WASD: fly
+- M or the speaker icon: sound on/off
 - Phone (landscape): the joystick waits bottom left; put your thumb anywhere on the left half
   (or the dark border) and slide it. A "So geht's!" screen explains this on the first start.
   Held upright, the game pauses and asks you to turn the phone.
@@ -49,5 +50,9 @@ in `localStorage`. Shop items and prices are in `src/shop.js`.
 - Cupcake and marshmallow: [Pixel Platformer Food Expansion](https://opengameart.org/content/pixel-platformer-food-expansion)
   by Kenney ([kenney.nl](https://kenney.nl)), CC0.
 - Bee, raindrop, rainbow, apple, strawberry and accessories: drawn for this game.
+- Sounds: [Interface Sounds](https://opengameart.org/content/interface-sounds),
+  [85 Short music jingles](https://opengameart.org/content/85-short-music-jingles),
+  [63 Digital sound effects](https://opengameart.org/content/63-digital-sound-effects-lasers-phasers-space-etc) and
+  [50 RPG sound effects](https://opengameart.org/content/50-rpg-sound-effects) by Kenney, CC0 (converted to mp3).
 - Font: [Fredoka](https://fonts.google.com/specimen/Fredoka) by The Fredoka Project Authors,
   [SIL Open Font License 1.1](public/assets/fonts/OFL.txt).

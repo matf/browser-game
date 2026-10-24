@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { SOUNDS, loadMuted } from '../sound.js';
 
 // Frame indices in the Kenney tilesheet (assets/tiles.png, 18x18, 20 columns).
 export const TILE = {
@@ -61,6 +62,7 @@ export class PreloadScene extends Phaser.Scene {
       frameHeight: ACCESSORY_CELL.height,
     });
     this.load.spritesheet('food', 'food.png', { frameWidth: 18, frameHeight: 18 });
+    for (const key of Object.keys(SOUNDS)) this.load.audio(key, `audio/${key}.mp3`);
   }
 
   create() {
@@ -93,6 +95,20 @@ export class PreloadScene extends Phaser.Scene {
     // Tiny square for splash particles.
     const g = this.add.graphics();
     g.fillStyle(0xffffff).fillRect(0, 0, 2, 2).generateTexture('pixel', 2, 2).destroy();
+
+    // Speaker icons for the mute button (14x12): with sound waves, and with a cross.
+    const speaker = (key, off) => {
+      const s = this.add.graphics();
+      s.fillStyle(0x1b1630).fillRect(0, 3, 6, 6).fillTriangle(1, 6, 8, -1, 8, 13);
+      s.fillStyle(0xffffff).fillRect(1, 4, 4, 4).fillTriangle(2, 6, 7, 1, 7, 11);
+      s.lineStyle(2, off ? 0xff5a5f : 0xffffff);
+      if (off) s.lineBetween(9, 3, 13, 9).lineBetween(13, 3, 9, 9);
+      else s.lineBetween(10, 3, 12, 6).lineBetween(12, 6, 10, 9);
+      s.generateTexture(key, 14, 12).destroy();
+    };
+    speaker('speaker', false);
+    speaker('speaker-off', true);
+    loadMuted(this.game);
 
     this.scene.start('game');
   }

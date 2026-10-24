@@ -3,6 +3,7 @@ import { FONT, setupCamera } from '../view.js';
 import { TILE } from './PreloadScene.js';
 import { MAX_HEARTS } from '../shop.js';
 import { IS_TOUCH } from '../touch.js';
+import { addMuteButton } from '../sound.js';
 
 const TEXT_STYLE = {
   fontFamily: FONT,
@@ -28,6 +29,7 @@ export class UIScene extends Phaser.Scene {
     this.add.image(400, 14, 'tiles', TILE.coin);
     this.coinDigits = [];
     this.drawCoins();
+    addMuteButton(this, 466, 14);
 
     this.add
       .rectangle(BAR.x - 1, BAR.y - 1, BAR.width + 2, BAR.height + 2, 0x1b1630)

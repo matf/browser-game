@@ -53,7 +53,7 @@ content (unicorn, gems, level) unless the daughter wants it.
 | Rendering | `pixelArt: true`, base resolution **480×270** (16:9), `Phaser.Scale.FIT` + `CENTER_BOTH`. In this game the canvas is 4× bigger (`src/view.js`: `WIDTH`, `HEIGHT`, `ZOOM`) and every scene calls `setupCamera(this)`, so text is sharp. Use `WIDTH`/`HEIGHT` instead of `this.scale.width/height`, and divide raw `pointer.x/y` by `ZOOM`. Text uses the bundled Fredoka font (`FONT`). |
 | Levels | **Tiled** map editor (free, mapeditor.org), saved as **JSON**, loaded with `tilemapTiledJSON`. |
 | Art | **Kenney** asset packs first; OpenGameArt/itch.io when Kenney has nothing fitting. Public project, so only assets whose license allows public sharing (see Assets). |
-| Sound | Kenney audio packs, `.ogg` files, Phaser's built-in sound manager. |
+| Sound | Kenney audio packs, Phaser's built-in sound manager. This game uses **`.mp3`** (iPhone Safari can't play `.ogg`); convert with `ffmpeg -i in.ogg -ac 1 -c:a libmp3lame -q:a 5 out.mp3`. Sounds and the mute button live in `src/sound.js`. |
 | Persistence | `localStorage` only (high scores, settings, unlocked levels), always wrapped in try/catch. |
 | Node | Node 24 / npm 11 are installed on this machine. |
 

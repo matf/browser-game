@@ -5,6 +5,7 @@ import { Accessories } from '../objects/Accessories.js';
 import { ACCESSORIES, DRAGON_PRICE, FOODS, MAX_HEARTS } from '../shop.js';
 import { loadSave, writeSave } from '../save.js';
 import { IS_TOUCH } from '../touch.js';
+import { addMuteButton, play } from '../sound.js';
 
 const TEXT = {
   fontFamily: FONT,
@@ -51,6 +52,7 @@ export class ShopScene extends Phaser.Scene {
     );
     this.add.image(398, 15, 'tiles', TILE.coin);
     this.coinText = this.add.text(410, 6, '', { ...TEXT, fontSize: '14px' }).setResolution(4);
+    addMuteButton(this, 466, 15, { mKey: false }); // the HUD underneath handles the M key
 
     this.add.rectangle(8, 30, 152, 222, COLORS.panel).setOrigin(0);
     this.preview = this.add.sprite(PREVIEW.x, PREVIEW.y, 'dragons').setScale(PREVIEW.scale).setDepth(5);
@@ -163,6 +165,7 @@ export class ShopScene extends Phaser.Scene {
   }
 
   showTab(index) {
+    if (this.cards.length && index !== this.tab) play(this, 'click');
     if (index !== this.tab) this.selected = 0;
     this.tab = index;
     this.tabTexts.forEach((t, i) => t.setColor(i === index ? '#ffd84a' : '#ffffff'));
@@ -206,6 +209,7 @@ export class ShopScene extends Phaser.Scene {
 
   select(index) {
     if (index < 0 || index >= this.cards.length) return;
+    if (index !== this.selected) play(this, 'click');
     this.selected = index;
     this.cards.forEach((c, i) =>
       i === index
@@ -239,6 +243,7 @@ export class ShopScene extends Phaser.Scene {
   pay(price) {
     if (this.save.coins < price) {
       this.say('Zu wenig Münzen!\nSammle noch mehr.');
+      play(this, 'nope');
       this.cameras.main.shake(120, 0.005);
       return false;
     }
@@ -249,12 +254,16 @@ export class ShopScene extends Phaser.Scene {
   feed(food) {
     const s = this.save;
     const name = DRAGONS.find((d) => d.key === s.dragon).name;
-    if (s.hearts >= MAX_HEARTS) return this.say(`${name} ist schon satt!`);
+    if (s.hearts >= MAX_HEARTS) {
+      play(this, 'nope');
+      return this.say(`${name} ist schon satt!`);
+    }
     if (!this.pay(food.price)) return;
     s.hearts = Math.min(MAX_HEARTS, s.hearts + food.heal);
     this.hearts.explode(6, PREVIEW.x, PREVIEW.y - 20);
     this.tweens.add({ targets: this.preview, scale: PREVIEW.scale * 1.15, duration: 120, yoyo: true });
     this.say(`Mmmh, lecker!`);
+    play(this, 'eat');
     this.commit();
   }
 
@@ -264,8 +273,10 @@ export class ShopScene extends Phaser.Scene {
       if (!this.pay(DRAGON_PRICE)) return;
       s.dragons.push(dragon.key);
       this.say(`Hurra! ${dragon.name}\ngehört jetzt dir!`);
+      play(this, 'newdragon');
     } else {
       this.say(`${dragon.name} fliegt\njetzt mit dir!`);
+      play(this, 'wear');
     }
     s.dragon = dragon.key;
     this.commit();
@@ -277,12 +288,15 @@ export class ShopScene extends Phaser.Scene {
       if (!this.pay(item.price)) return;
       s.items.push(item.key);
       this.say(`${item.name} gekauft!`);
+      play(this, 'buy');
     } else if (s.wear.includes(item.key)) {
       s.wear = s.wear.filter((k) => k !== item.key);
       this.say(`${item.name} abgelegt.`);
+      play(this, 'wear');
       return this.commit();
     } else {
       this.say(`Schick!`);
+      play(this, 'wear');
     }
     // Only one thing per slot: putting on the crown takes off the bow.
     const sameSlot = ACCESSORIES.filter((a) => a.slot === item.slot).map((a) => a.key);

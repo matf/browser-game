@@ -4,6 +4,7 @@ import { IS_TOUCH } from '../touch.js';
 import { STICK_HOME } from '../objects/TouchStick.js';
 import { TILE } from './PreloadScene.js';
 import { writeSave } from '../save.js';
+import { play } from '../sound.js';
 
 const TEXT = { fontFamily: FONT, fontStyle: 'bold', color: '#ffffff', stroke: '#1b1630', strokeThickness: 3 };
 
@@ -73,6 +74,7 @@ export class HelpScene extends Phaser.Scene {
   start() {
     if (this.started) return;
     this.started = true;
+    play(this, 'start');
     // The game scene keeps its own copy of the save and writes it later, so mark it there too.
     const game = this.scene.get('game');
     game.save.seenHelp = true;
