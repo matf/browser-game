@@ -5,6 +5,9 @@ import { FONT, WIDTH, HEIGHT, setupCamera } from '../view.js';
 import { IS_TOUCH } from '../touch.js';
 import { addMuteButton, play, startMusic } from '../sound.js';
 import { addCoins, addHearts } from '../hud.js';
+import { FOODS } from '../shop.js';
+import { TILE } from './PreloadScene.js';
+import { addButton } from './MenuPage.js';
 import {
   ISLANDS,
   LEVELS_PER_ISLAND,
@@ -21,6 +24,7 @@ const DRAGON_SCALE = 0.4; // size of the dragon on the map (1 = as big as in the
 const HOVER = 14; // how high above a station the dragon hovers, in pixels
 const REVEAL_DELAY_MS = 700; // after a level, wait this long before showing what it opened
 const DOT_SPACING = 6; // pixels between the dots of a path
+const LOW_HEARTS = 2; // with this many hearts or fewer, the map asks whether to go to the shop first
 
 const TEXT = { fontFamily: FONT, fontStyle: 'bold', color: '#ffffff', stroke: '#1b1630', strokeThickness: 3 };
 
@@ -35,6 +39,7 @@ export class MapScene extends Phaser.Scene {
 
   // data.firstWin: a level that was just finished for the first time. What it opens (the next
   // station, or a whole new island) is shown with a little show after the map appears.
+  // data.fromShop: just back from the shop, so don't ask about the shop again.
   create(data) {
     setupCamera(this);
     startMusic(this);
@@ -42,6 +47,8 @@ export class MapScene extends Phaser.Scene {
     this.leaving = false;
     this.flight = null; // the flying tween while the dragon is on its way
     this.target = null; // where it's flying to
+    this.question = null; // the "go to the shop first?" box, while it shows
+    this.askedShop = Boolean(data?.fromShop); // ask only once per visit to the map
 
     const fresh = data?.firstWin ?? null;
     // What the map shows right now: before the show, the fresh level isn't done yet.
@@ -79,8 +86,15 @@ export class MapScene extends Phaser.Scene {
     this.add.text(WIDTH / 2, 14, hint, { ...TEXT, fontSize: '10px' }).setOrigin(0.5).setResolution(4).setDepth(10);
 
     // Key events instead of checking keys every frame, so even a very short tap counts.
+    // While the shop question shows, the keys answer it instead.
     const onKeys = (names, action) =>
-      names.forEach((name) => this.input.keyboard.on(`keydown-${name}`, () => !this.leaving && action()));
+      names.forEach((name) =>
+        this.input.keyboard.on(`keydown-${name}`, () => {
+          if (this.leaving) return;
+          if (this.question) this.question.key(name);
+          else action();
+        }),
+      );
     onKeys(['LEFT', 'UP', 'A', 'W'], () => this.step(-1));
     onKeys(['RIGHT', 'DOWN', 'D', 'S'], () => this.step(1));
     onKeys(['SPACE', 'ENTER'], () => !this.flight && this.enter(this.save.at));
@@ -323,7 +337,7 @@ export class MapScene extends Phaser.Scene {
   // --- Moving around ------------------------------------------------------------------------
 
   tapSpot(spot) {
-    if (this.leaving) return;
+    if (this.leaving || this.question) return;
     if (spot !== SHOP_SPOT && !isOpen(this.save, spot)) return this.locked(spot);
     this.flyTo(spot, true);
   }
@@ -367,12 +381,76 @@ export class MapScene extends Phaser.Scene {
 
   enter(spot) {
     if (this.leaving) return;
+    if (spot !== SHOP_SPOT && this.shouldAskShop()) return this.askShop(spot);
     this.leaving = true;
     play(this, 'start');
     this.cameras.main.fadeOut(250);
     this.cameras.main.once('camerafadeoutcomplete', () =>
       spot === SHOP_SPOT ? this.scene.start('shop') : this.scene.start('game', { level: spot }),
     );
+  }
+
+  // Few hearts left but enough coins for food: a good moment to visit the shop.
+  shouldAskShop() {
+    const cheapest = Math.min(...FOODS.map((f) => f.price));
+    return !this.askedShop && this.save.hearts <= LOW_HEARTS && this.save.coins >= cheapest;
+  }
+
+  // "Nur noch 1 Herz! Zuerst in den Shop?" with the buttons Zum Shop and Trotzdem los.
+  askShop(level) {
+    this.askedShop = true;
+    play(this, 'nope');
+    const hearts = this.save.hearts;
+    // Covers the map, so taps only reach the box.
+    const blocker = this.add.rectangle(0, 0, WIDTH, HEIGHT, 0x1b1630, 0.5).setOrigin(0).setInteractive();
+    const panel = this.add.rectangle(WIDTH / 2, 132, 280, 140, 0x2b2140, 0.96).setStrokeStyle(3, 0xff9fc8);
+    const heartIcons = Array.from({ length: hearts }, (_, i) =>
+      this.add.image(WIDTH / 2 + (i - (hearts - 1) / 2) * 20, 82, 'tiles', TILE.heartFull),
+    );
+    const title = this.add
+      .text(WIDTH / 2, 104, hearts === 1 ? 'Nur noch 1 Herz!' : `Nur noch ${hearts} Herzen!`, { ...TEXT, fontSize: '16px', strokeThickness: 4 })
+      .setOrigin(0.5)
+      .setResolution(4);
+    const info = this.add
+      .text(WIDTH / 2, 132, 'Willst du zuerst im Shop\nFutter für deinen Drachen kaufen?', { ...TEXT, fontSize: '11px', align: 'center' })
+      .setOrigin(0.5)
+      .setResolution(4);
+    const close = () => {
+      for (const part of parts) part.destroy();
+      this.question = null;
+    };
+    const answers = [
+      { label: 'Zum Shop', color: 0x5fd068, dark: true, x: WIDTH / 2 - 64, go: () => this.flyTo(SHOP_SPOT, true) },
+      { label: 'Trotzdem los!', color: 0x4a3a6e, dark: false, x: WIDTH / 2 + 64, go: () => this.enter(level) },
+    ];
+    for (const a of answers) {
+      a.action = () => {
+        close();
+        a.go();
+      };
+    }
+    const buttons = answers.map((a) =>
+      addButton(this, a.x, 178, a.label, () => a.action(), { width: 112, height: 26, color: a.color, dark: a.dark }),
+    );
+    const parts = [blocker, panel, ...heartIcons, title, info, ...buttons];
+    parts.forEach((part) => part.setDepth(20));
+    for (const heart of heartIcons) this.tweens.add({ targets: heart, scale: 1.25, duration: 400, yoyo: true, repeat: -1 });
+
+    let selected = 0;
+    const select = (i) => {
+      selected = i;
+      buttons.forEach((b, j) => b.bg.setStrokeStyle(j === i ? 3 : 2, j === i ? 0xffd84a : 0xffffff));
+    };
+    buttons.forEach((b, i) => b.bg.on('pointerover', () => select(i)));
+    select(0);
+    this.question = {
+      key: (name) => {
+        if (['LEFT', 'A', 'UP', 'W'].includes(name)) select(0);
+        else if (['RIGHT', 'D', 'DOWN', 'S'].includes(name)) select(1);
+        else if (name === 'ESC') close();
+        else answers[selected].action();
+      },
+    };
   }
 
   toMenu() {

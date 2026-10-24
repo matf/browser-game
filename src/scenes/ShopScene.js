@@ -140,7 +140,7 @@ export class ShopScene extends Phaser.Scene {
   close() {
     writeSave(this.save);
     play(this, 'click');
-    this.scene.start('map');
+    this.scene.start('map', { fromShop: true });
   }
 
   // The things on the current page, with what to show on their card and what happens on buy.

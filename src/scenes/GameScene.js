@@ -127,7 +127,7 @@ export class GameScene extends Phaser.Scene {
 
     // The very first time: explain how to play before anything moves.
     if (!this.save.seenHelp) {
-      this.scene.launch('help');
+      this.scene.launch('help', { from: 'game' });
       this.scene.pause();
     }
   }
@@ -151,7 +151,8 @@ export class GameScene extends Phaser.Scene {
   }
 
   // Back to the world map (the map button in the HUD, or Esc). Coins collected so far are kept.
-  toMap(data) {
+  // Always pass data: Phaser keeps the old data when a scene is started without any.
+  toMap(data = {}) {
     this.scene.stop('ui');
     this.scene.stop('help');
     this.scene.start('map', data);

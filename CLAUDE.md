@@ -36,6 +36,9 @@ through a rainbow at the end. The README has the player-facing description and t
   returns with `{ firstWin }` and the map plays the reveal (star, next station, or a new island with
   clouds blowing away). The house icon / Esc on the map goes to `title`; Esc / the map icon in a level
   goes to `map`. The shop is the little house on the flower island (map spot `SHOP_SPOT = -1`).
+- Before a level starts, the map asks "Nur noch N Herzen! Zuerst in den Shop?" when hearts ≤
+  `LOW_HEARTS` (2) and the coins buy the cheapest food (`MapScene.askShop`). It asks once per map
+  visit, and not right after coming back from the shop (`{ fromShop: true }`).
 
 ### Where things live
 
@@ -78,6 +81,8 @@ through a rainbow at the end. The README has the player-facing description and t
 - Text: `{ fontFamily: FONT, fontStyle: 'bold', stroke: '#1b1630' }` plus `.setResolution(4)`.
   Colours used: dark `0x1b1630`/`0x2b2140`, card purple `0x4a3a6e`, green buttons `0x5fd068`,
   yellow highlight `0xffd84a`/`#ffe066`, pink `#ff9fc8`.
+- **Always pass a data object** to `scene.start/launch` (`{}` when there is nothing): Phaser keeps the
+  previous data when a scene is started without any, so stale `firstWin`/`fromShop`/`from` came back.
 - Scene changes fade (`cameras.main.fadeOut` → `start`); overlay pages pause the scene below and
   resume it on close.
 

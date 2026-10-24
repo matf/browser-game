@@ -165,7 +165,7 @@ export class TitleScene extends Phaser.Scene {
   openPage(key, data) {
     play(this, 'click');
     this.scene.pause();
-    this.scene.launch(key, data);
+    this.scene.launch(key, data ?? {});
   }
 
   go(scene) {
@@ -174,6 +174,6 @@ export class TitleScene extends Phaser.Scene {
     play(this, 'start');
     writeSave(this.save);
     this.cameras.main.fadeOut(250);
-    this.cameras.main.once('camerafadeoutcomplete', () => this.scene.start(scene));
+    this.cameras.main.once('camerafadeoutcomplete', () => this.scene.start(scene, {}));
   }
 }
