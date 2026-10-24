@@ -1,21 +1,21 @@
 // Sound effects (Kenney, CC0) and the mute button. Files are mp3 because the iPhone can't play ogg.
 
-const MUSIC_VOLUME = 0.25; // background music, 0 to 1
+const MUSIC_VOLUME = 0.15; // background music, 0 to 1
 
 // key -> volume (0 to 1)
 export const SOUNDS = {
   music: MUSIC_VOLUME,
-  coin: 0.35,
-  hit: 0.6,
-  nap: 0.6,
-  win: 0.6,
-  start: 0.5,
-  eat: 0.5,
-  buy: 0.7,
-  newdragon: 0.6,
-  nope: 0.5,
-  wear: 0.5,
-  click: 0.6,
+  coin: 0.5,
+  hit: 0.8,
+  nap: 0.8,
+  win: 0.8,
+  start: 0.7,
+  eat: 0.7,
+  buy: 0.9,
+  newdragon: 0.8,
+  nope: 0.7,
+  wear: 0.7,
+  click: 0.8,
 };
 
 const MUTE_KEY = 'dragonFlight.muted';
