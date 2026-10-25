@@ -33,8 +33,9 @@ https://matf.github.io/browser-game/
 - Shop, Deko page: castle, wizard tower, tree house, mushroom house, lighthouse, dragon cave,
   gingerbread house, igloo, houses, well, tree, flower bed, fence, beehive, lantern, bench. They go into
   your bag until you place them on an island. Each house gets one of your other dragons (not the
-  one flying with you) as a resident: it strolls around near its house and sometimes goes in. Tap
-  it to see its name.
+  one flying with you) as a resident: it strolls around near its house and sometimes goes in. Your
+  dragons without a house fly around high over the islands, spread over all of them. Tap a dragon
+  to see its name.
 - Herbstinsel (small island bottom middle, no levels, free): just for living and building.
 - Brutinsel (the small island top left, no levels): every day there is a new dragon egg in the nest,
   and the next day a baby hatches out of it: a new dragon in a colour no other dragon has, with its

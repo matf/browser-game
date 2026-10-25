@@ -8,6 +8,9 @@ const EDGE = 12; // keep this far from the beach edge
 const HOME_CHANCE = 0.3; // after a walk, how likely the dragon goes into its house for a while
 const INSIDE_MS = [3000, 7000]; // how long it stays inside (shortest, longest)
 const REST_MS = [800, 2600]; // how long it stands still between walks
+const FLY_SPEED = 70; // dragons without a house fly around the whole island this fast
+const FLY_HEIGHT = 30; // how high above the ground they fly, in pixels
+const FLY_REST_MS = [300, 1500]; // how long a flying dragon hovers in one spot
 export const RESIDENT_SCALE = 0.45; // size of a dragon living on the island
 
 const TEXT = { fontFamily: FONT, fontStyle: 'bold', color: '#ffffff', stroke: '#1b1630', strokeThickness: 3 };
@@ -15,17 +18,19 @@ const TEXT = { fontFamily: FONT, fontStyle: 'bold', color: '#ffffff', stroke: '#
 // One of your dragons living in a house: it strolls around near its house and sometimes goes in.
 // look: { key, name, anim, tint, scale }; home: { x, y } of the house's door on its island; left: x
 // of that island in the world. With goesInside false (babies at the nest), it only strolls around.
+// With flying (dragons without a house), it flies high over the whole island instead.
 export class Resident {
-  constructor(scene, look, home, left, { goesInside = true } = {}) {
+  constructor(scene, look, home, left, { goesInside = true, flying = false } = {}) {
     this.scene = scene;
     this.look = look;
     this.scale = look.scale ?? RESIDENT_SCALE;
-    this.goesInside = goesInside;
+    this.goesInside = goesInside && !flying;
+    this.flying = flying;
     this.home = home;
     this.left = left;
     this.pos = { x: home.x, y: home.y + 4 };
     this.target = null;
-    this.shadow = scene.add.ellipse(0, 0, 40 * this.scale, 5, 0x1b1630, 0.25);
+    this.shadow = scene.add.ellipse(0, 0, 40 * this.scale, 5, 0x1b1630, flying ? 0.15 : 0.25);
     this.sprite = scene.add.sprite(0, 0, 'dragons').play(look.anim).setScale(this.scale);
     if (look.tint !== undefined) this.sprite.setTint(look.tint);
     this.sprite.anims.setProgress(Math.random());
@@ -39,7 +44,7 @@ export class Resident {
       const dx = this.target.x - this.pos.x;
       const dy = this.target.y - this.pos.y;
       const length = Math.hypot(dx, dy);
-      const step = (WALK_SPEED * delta) / 1000;
+      const step = ((this.flying ? FLY_SPEED : WALK_SPEED) * delta) / 1000;
       if (length <= step) {
         Object.assign(this.pos, this.target);
         this.target = null;
@@ -51,15 +56,17 @@ export class Resident {
       }
     }
     const x = this.left + this.pos.x;
-    const hover = 18 * this.scale + Math.sin((time + this.phase) / 260) * 1.2;
+    const hover = this.flying
+      ? FLY_HEIGHT + Math.sin((time + this.phase) / 400) * 4
+      : 18 * this.scale + Math.sin((time + this.phase) / 260) * 1.2;
     this.shadow.setPosition(x, this.pos.y).setDepth(this.pos.y - 1);
     this.sprite.setPosition(x, this.pos.y - hover).setDepth(this.pos.y);
-    this.bubble?.setPosition(x, this.pos.y - 30);
+    this.bubble?.setPosition(x, this.pos.y - hover - 20);
   }
 
   // Stand still a moment, then go somewhere.
   rest() {
-    this.scene.time.delayedCall(Phaser.Math.Between(...REST_MS), () => this.next());
+    this.scene.time.delayedCall(Phaser.Math.Between(...(this.flying ? FLY_REST_MS : REST_MS)), () => this.next());
   }
 
   next() {
@@ -69,10 +76,11 @@ export class Resident {
       this.target = { x: this.home.x, y: this.home.y + 4 };
       return;
     }
-    // A random spot near the house that is on the island.
+    // A random spot near the house (anywhere on the island when flying) that is on the island.
+    const roam = this.flying ? 4 * ROAM : ROAM;
     for (let tries = 0; tries < 20; tries++) {
-      const x = this.home.x + Phaser.Math.Between(-ROAM, ROAM);
-      const y = this.home.y + Phaser.Math.Between(-ROAM / 2, ROAM / 2);
+      const x = this.home.x + Phaser.Math.Between(-roam, roam);
+      const y = this.home.y + Phaser.Math.Between(-roam / 2, roam / 2);
       if (onIslandGround(x, y, EDGE)) {
         this.target = { x, y };
         return;

@@ -171,9 +171,14 @@ export class IslandScene extends Phaser.Scene {
         play(this, 'newdragon');
       }
     });
-    const homeless = dragons.slice(homes.length).filter((d) => d.key.startsWith('hatchling'));
+    // Dragons without a house fly around over the islands, one island after the other, starting with
+    // the one you're on. Babies stay at the nest.
+    dragons.slice(homes.length).forEach((look, i) => {
+      const index = (this.index + i) % this.islands.length;
+      this.residents.push(new Resident(this, look, { x: WIDTH / 2, y: 165 }, index * WIDTH, { flying: true }));
+    });
     const babies = this.save.hatchlings.filter((h) => growth(h) < 1).map((h) => hatchlingLook(h));
-    for (const look of [...homeless, ...babies]) this.addNestDragon(look);
+    for (const look of babies) this.addNestDragon(look);
     this.started = true;
   }
 
