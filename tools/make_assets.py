@@ -115,6 +115,7 @@ MAP_SWAP = {
              '#8b9bb4': '#e8f0f8', '#52607c': '#b9c8da'},
     'fire': {'#84c669': '#6b4b5e', '#65a556': '#57394c', '#8bd87d': '#80596f', '#479f4a': '#3f2838',
              '#f3d58f': '#8a6a5e', '#d9b46e': '#6e5249', '#b98b52': '#4e3832'},
+    'autumn': {'#84c669': '#c9783e', '#65a556': '#ad6233', '#8bd87d': '#dc9150', '#479f4a': '#8a4a26'},
     'nest': {'#84c669': '#b5d96a', '#65a556': '#93bf4f', '#8bd87d': '#cde68a', '#479f4a': '#6f9a3a'},
     'stars': {'#84c669': '#6a5bc0', '#65a556': '#5547a6', '#8bd87d': '#8070d6', '#479f4a': '#3e3488',
               '#e38628': '#ffd84a', '#fdbe53': '#fff0a0', '#5a6988': '#6b4fb0', '#8b9bb4': '#9c7fe0',
@@ -290,8 +291,8 @@ for idx, (isl, m) in enumerate(zip(ISLANDS, masks)):
     layer = recolor(layer, MAP_SWAP[isl['theme']])
     sea.alpha_composite(layer)
 
-# The Brutinsel: a small island without levels, where the dragon eggs are. Must match HOME_ISLANDS
-# in src/world.js. Its own random numbers, so the rest of the map stays the same.
+# Islands without levels: the Brutinsel (where the dragon eggs are) and the Herbstinsel. Must match
+# HOME_ISLANDS in src/world.js.
 def nest_pic(w):
     """A round straw nest, w pixels wide, seen from a bit above."""
     h = w // 2
@@ -309,28 +310,52 @@ def nest_pic(w):
     return outline(im, '#4e3832')
 
 
-NEST_ISLAND = {'blobs': [(66, 90, 42, 24), (44, 100, 22, 14), (92, 98, 18, 12)]}
-nest_rng = random.Random(5)
-m = blob_mask(NEST_ISLAND['blobs'])
-sea.paste(SHALLOW, (0, 0), ImageChops.subtract(grow(m, 7), ImageChops.multiply(grow(m, 7), m)))
-sea.paste(FOAM, (0, 0), ImageChops.subtract(grow(m, 2), m))
-layer = Image.new('RGBA', (W, H))
-top = ImageChops.multiply(ImageChops.offset(m, 0, -5), m)
-layer.paste(CLIFF, (0, 0), m)
-layer.paste(SAND_DARK, (0, 0), ImageChops.offset(top, 0, 2))
-layer.paste(SAND, (0, 0), top)
-tex = Image.new('RGBA', (W, H))
-for ty in range(0, H, 16):
-    for tx in range(0, W, 16):
-        tex.alpha_composite(tt(nest_rng.choice([0, 0, 0, 1, 2])), (tx, ty))
-layer.paste(tex, (0, 0), shrink(top, 4))
+def scatter_leaves(layer, where, count, seed):
+    """Fallen leaves (little 2-pixel marks in red, orange and yellow) on the `where` mask."""
+    rng = random.Random(seed)
+    d = ImageDraw.Draw(layer)
+    for _ in range(count * 4):
+        x, y = rng.randrange(0, W - 1), rng.randrange(0, H)
+        if where.getpixel((x, y)) and count > 0:
+            color = hexc(rng.choice(['#e84537', '#ffd84a', '#ff9a3c', '#fdbe53', '#b3261e']))
+            d.point((x, y), fill=color)
+            d.point((x + 1, y), fill=color)
+            count -= 1
+
+
+def home_island(blobs, theme, decor, seed):
+    """A small island without levels on the map, with its own random numbers so the rest of the map
+    stays the same. decor: (picture, x, y) with x/y the bottom-centre."""
+    rng = random.Random(seed)
+    m = blob_mask(blobs)
+    sea.paste(SHALLOW, (0, 0), ImageChops.subtract(grow(m, 7), ImageChops.multiply(grow(m, 7), m)))
+    sea.paste(FOAM, (0, 0), ImageChops.subtract(grow(m, 2), m))
+    layer = Image.new('RGBA', (W, H))
+    top = ImageChops.multiply(ImageChops.offset(m, 0, -5), m)
+    layer.paste(CLIFF, (0, 0), m)
+    layer.paste(SAND_DARK, (0, 0), ImageChops.offset(top, 0, 2))
+    layer.paste(SAND, (0, 0), top)
+    tex = Image.new('RGBA', (W, H))
+    for ty in range(0, H, 16):
+        for tx in range(0, W, 16):
+            tex.alpha_composite(tt(rng.choice([0, 0, 0, 1, 2])), (tx, ty))
+    layer.paste(tex, (0, 0), shrink(top, 4))
+    if theme == 'autumn':
+        scatter_leaves(layer, shrink(top, 4), 40, seed)
+    for pic, x, y in decor:
+        layer.alpha_composite(pic, (x - pic.width // 2, y - pic.height))
+    sea.alpha_composite(recolor(layer, MAP_SWAP[theme]))
+
+
 small_egg = Image.new('RGBA', (5, 6))
 ImageDraw.Draw(small_egg).ellipse([0, 0, 4, 5], fill=hexc('#fff3e0'))
 small_egg = outline(small_egg, '#4e3832')
-small_nest = nest_pic(18)
-for pic, x, y in [(TREE, 34, 94), (small_nest, 66, 96), (small_egg, 64, 92), (BUSH, 98, 96), (SPROUT, 50, 106)]:
-    layer.alpha_composite(pic, (x - pic.width // 2, y - pic.height))
-sea.alpha_composite(recolor(layer, MAP_SWAP['nest']))
+home_island([(66, 90, 42, 24), (44, 100, 22, 14), (92, 98, 18, 12)], 'nest',
+            [(TREE, 34, 94), (nest_pic(18), 66, 96), (small_egg, 64, 92), (BUSH, 98, 96), (SPROUT, 50, 106)], 5)
+# The Herbstinsel: a free island just for living, golden grass and autumn trees.
+AUTUMN_SMALL = tt(27)
+home_island([(216, 212, 30, 18), (198, 222, 16, 10), (236, 220, 14, 9)], 'autumn',
+            [(TALL_AUTUMN, 200, 210), (AUTUMN_SMALL, 232, 206), (MUSHROOMS, 220, 226)], 6)
 
 sea.save(f'{OUT}/map.png')
 nest_pic(40).save(f'{OUT}/nest.png')
@@ -405,6 +430,8 @@ BIG_DECOR = {
               (MUSHROOMS, 432, 196), (SMALL_PINE, 400, 110)],
     'nest': [(TREE, 62, 160), (TALL_PINE, 92, 140), (BUSH, 426, 120), (SPROUT, 48, 214), (MUSHROOMS, 432, 196),
              (SPROUT, 150, 228), (SMALL_PINE, 400, 110)],
+    'autumn': [(TALL_AUTUMN, 62, 160), (TALL_AUTUMN, 92, 140), (AUTUMN_SMALL, 426, 120), (MUSHROOMS, 48, 214),
+               (AUTUMN_SMALL, 432, 196), (MUSHROOMS, 150, 228), (TALL_AUTUMN, 400, 112)],
 }
 big_rng = random.Random(11)
 big_mask = blob_mask(BIG_ISLAND)
@@ -427,6 +454,8 @@ for theme, decor in BIG_DECOR.items():
         for tx in range(0, W, 16):
             tex.alpha_composite(tt(big_rng.choice([0, 0, 0, 1, 1, 2] if theme == 'flowers' else [0, 0, 0, 1])), (tx, ty))
     layer.paste(tex, (0, 0), grass)
+    if theme == 'autumn':
+        scatter_leaves(layer, grass, 260, 12)
     for thing, x, y in sorted(decor, key=lambda e: e[2]):
         layer.alpha_composite(thing, (x - thing.width // 2, y - thing.height))
     pic.alpha_composite(recolor(layer, MAP_SWAP[theme]))

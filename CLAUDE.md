@@ -54,8 +54,10 @@ through a rainbow at the end. The README has the player-facing description and t
   Residents (`src/objects/Resident.js`, `IslandScene.moveIn`): your dragons except the one you fly
   with live in the `home` decorations, in placing order; they stroll within `ROAM` of the door and
   sometimes go in. `moveIn` rebuilds them whenever a house is placed or put away.
-- Brutinsel: `HOME_ISLANDS` in `world.js` (islands without levels, always first in the island view;
-  `nest` = nest spot), drawn on the map by `make_assets.py` (`NEST_ISLAND`). `src/hatchery.js`:
+- Brutinsel and Herbstinsel (Anna wanted free islands just for living; Claude picked autumn):
+  `HOME_ISLANDS` in `world.js` (islands without levels, always first in the island view; `nest` =
+  nest spot), drawn on the map by `make_assets.py` (`home_island`; the autumn ones get
+  `scatter_leaves`). `src/hatchery.js`:
   `visitNest` (on showing the Brutinsel): an egg from an earlier day (`save.egg.day`, local date
   string) hatches into `save.hatchlings` (`{ id, name, shape, tint, born }`), then a new egg if
   `save.lastEgg` isn't today. Hatchlings are a shape from `dragons-white.png` (made by

@@ -34,6 +34,7 @@ https://matf.github.io/browser-game/
   your bag until you place them on an island. Each house gets one of your other dragons (not the
   one flying with you) as a resident: it strolls around near its house and sometimes goes in. Tap
   it to see its name.
+- Herbstinsel (small island bottom middle, no levels, free): just for living and building.
 - Brutinsel (the small island top left, no levels): every day there is a new dragon egg in the nest,
   and the next day a baby hatches out of it: a new dragon in a colour no other dragon has, with its
   own name. When it hatches, you choose what it will spit. Babies stroll around the nest and grow
