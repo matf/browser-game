@@ -154,13 +154,10 @@ Point her at these when she says something is too easy, too hard, too fast, etc.
 
 ### Ideas and open work
 
-- Anna's island wish is built (island view, Bauen, dragons in houses, Brutinsel). Open questions: can
-  you fly with a grown hatchling in the levels (it would need a shot)? Anna said there can be more
-  islands without levels, just for living ("Wohninseln"); not built yet. Original wish: buy houses, a fountain and more in the
-  shop and place them on the islands in the island view; your dragons live in the houses. Plus a
-  breeding island (Brutinsel): every day you get a dragon egg, the next day a baby dragon hatches.
-  The decorations can come from the Kenney Tiny Town pack (houses, well, trees, fences, beehive,
-  barrels; no fountain, draw one).
+- Anna's island wish is built (island view, Bauen, dragons in houses, Brutinsel). Open questions:
+  can you fly with a grown hatchling in the levels (it would need a shot)? Anna said there can also
+  be islands without levels just for living ("Wohninseln"); not built yet. The "Brunnen" she asked
+  for is the Tiny Town well.
 - Power-ups: Anna asked for more ideas beyond star and heart. Offered Magnet, Zeitlupe, Münzregen and
   Mini-Drache; she hasn't picked yet. Ask her before building any.
 - Shooting the fire dragon: she asked whether shots do anything to it. Offered (1) a health bar so it
