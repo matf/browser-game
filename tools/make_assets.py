@@ -293,20 +293,22 @@ sea.save(f'{OUT}/map.png')
 recolor(SHOP_HOUSE, {}).save(f'{OUT}/shop-house.png')
 
 # --- The fire dragon ----------------------------------------------------------------------------
-# Chili (row 1 of dragons.png) in dark purple with glowing orange, 3 flying frames of 67x52.
+# Chili (row 1 of dragons.png) in dark purple with glowing orange and angry red eyes, 3 flying
+# frames of 67x52.
 dragons = Image.open(f'{OUT}/dragons.png').convert('RGBA')
 chili = dragons.crop((0, 52, 201, 104))
 BOSS_SWAP = {
     '#911f1b': '#4a3560', '#350907': '#140a1c', '#621412': '#33244a', '#ad2622': '#62477c',
     '#c43028': '#ff8a2a', '#6a120f': '#2e2042', '#501512': '#24183a', '#541210': '#24183a',
     '#7d1b18': '#3e2c56', '#90201b': '#4a3560', '#621712': '#33244a', '#4f160e': '#24183a',
+    '#ffffff': '#ff2a2a',  # the eyes
 }
 boss = recolor(chili, BOSS_SWAP)
 px = boss.load()
 for y in range(boss.height):  # whatever reddish pixels are left become dark purple too
     for x in range(boss.width):
         r, g, b, a = px[x, y]
-        if a and r > g + 30 and r > b + 30 and (r, g, b) not in [hexc('#ff8a2a')[:3]]:
+        if a and r > g + 30 and r > b + 30 and (r, g, b) not in [hexc('#ff8a2a')[:3], hexc('#ff2a2a')[:3]]:
             px[x, y] = (r // 3 + 30, g // 3 + 20, b // 3 + 50, a)
 boss.save(f'{OUT}/boss-dragon.png')
 
