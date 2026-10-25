@@ -30,7 +30,7 @@ https://matf.github.io/browser-game/
   arrows/WASD); swipe sideways (or the arrows at the edges, or Q/E) to get to the next open island.
   Esc or the map icon goes back to the world map. Bauen (or B): pick something from your bag
   and tap the island to put it there; tap a placed thing to put it back into the bag. Fertig ends it.
-- Shop, Deko page: houses, well, tree, flower bed, fence, beehive, lantern, bench. They go into
+- Shop, Deko page: castle, wizard tower, tree house, mushroom house, houses, well, tree, flower bed, fence, beehive, lantern, bench. They go into
   your bag until you place them on an island. Each house gets one of your other dragons (not the
   one flying with you) as a resident: it strolls around near its house and sometimes goes in. Tap
   it to see its name.
@@ -106,7 +106,8 @@ islands drawn on the map.
   recoloured for each island.
 - World map and island view houses, trees, bushes, mushrooms, well, fence and beehive (also `deco.png`): [Tiny Town](https://opengameart.org/content/tiny-town)
   by Kenney ([kenney.nl](https://kenney.nl)), CC0, recoloured for each island. The sea and island
-  shapes, and the flower bed, lantern and bench in `deco.png`, were drawn for this game.
+  shapes, and the castle, wizard tower, tree house, mushroom house, flower bed, lantern and bench in
+  `deco.png`, were drawn for this game.
 - Cupcake and marshmallow: [Pixel Platformer Food Expansion](https://opengameart.org/content/pixel-platformer-food-expansion)
   by Kenney ([kenney.nl](https://kenney.nl)), CC0.
 - App icons (`icon-*.png`): the Marshmallow dragon on a sky background, made from `dragons.png`.

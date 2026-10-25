@@ -403,10 +403,135 @@ def bench():
     return outline(im, '#3a2a28')
 
 
+# The cool houses (Anna asked for cooler houses): castle, mushroom house, tree house, wizard tower.
+LINE = '#3a2a28'
+
+
+def speckle(d, box, colors, n, rng, inside=None):
+    x0, y0, x1, y1 = box
+    for _ in range(n):
+        x, y = rng.randint(x0, x1), rng.randint(y0, y1)
+        if inside is None or inside(x, y):
+            d.point((x, y), fill=hexc(rng.choice(colors)))
+
+
+def castle():
+    rng = random.Random(1)
+    im = Image.new('RGBA', (48, 48))
+    d = ImageDraw.Draw(im)
+    stone, light, dark = '#9aa6bf', '#c3cddd', '#6b7896'
+    # Main wall with battlements.
+    d.rectangle([9, 20, 38, 46], fill=hexc(stone))
+    for x in range(9, 39, 6):
+        d.rectangle([x, 16, x + 3, 20], fill=hexc(stone))
+    # Two towers with red pointy roofs and pink flags.
+    for x0 in (1, 34):
+        d.rectangle([x0, 14, x0 + 12, 46], fill=hexc(stone))
+        d.rectangle([x0 + 10, 14, x0 + 12, 46], fill=hexc(dark))
+        d.polygon([(x0 - 1, 15), (x0 + 6, 3), (x0 + 13, 15)], fill=hexc('#e84537'))
+        d.polygon([(x0 + 6, 3), (x0 + 13, 15), (x0 + 8, 15)], fill=hexc('#b3261e'))
+        d.line([(x0 + 6, 0), (x0 + 6, 3)], fill=hexc(LINE))
+        d.rectangle([x0 + 7, 0, x0 + 9, 1], fill=hexc('#ff6fa8'))
+        d.rectangle([x0 + 5, 22, x0 + 7, 26], fill=hexc('#2b2140'))
+        d.rectangle([x0 + 5, 32, x0 + 7, 36], fill=hexc('#ffd84a'))
+    speckle(d, (1, 14, 46, 46), [light, dark], 70, rng, lambda x, y: im.getpixel((x, y))[:3] == hexc(stone)[:3])
+    # The gate: an arch with a wooden door.
+    d.rectangle([18, 32, 29, 46], fill=hexc('#6e4230'))
+    d.ellipse([18, 26, 29, 38], fill=hexc('#6e4230'))
+    d.rectangle([20, 32, 27, 46], fill=hexc('#9f5a52'))
+    d.ellipse([20, 28, 27, 36], fill=hexc('#9f5a52'))
+    d.line([(23, 29), (23, 46)], fill=hexc('#6e4230'))
+    d.point((25, 39), fill=hexc('#ffd84a'))
+    return outline(im, LINE)
+
+
+def mushroom():
+    im = Image.new('RGBA', (48, 48))
+    d = ImageDraw.Draw(im)
+    # Stem with a door and a round window.
+    d.rectangle([13, 24, 34, 46], fill=hexc('#f6ead2'))
+    d.rectangle([30, 24, 34, 46], fill=hexc('#dcc8a4'))
+    d.rectangle([20, 35, 27, 46], fill=hexc('#9f5a52'))
+    d.ellipse([20, 32, 27, 39], fill=hexc('#9f5a52'))
+    d.point((25, 41), fill=hexc('#ffd84a'))
+    d.ellipse([14, 30, 19, 35], fill=hexc('#6e4230'))
+    d.ellipse([15, 31, 18, 34], fill=hexc('#8fd3f4'))
+    # The red cap with white dots.
+    cap = Image.new('RGBA', (48, 48))
+    c = ImageDraw.Draw(cap)
+    c.ellipse([1, 2, 46, 42], fill=hexc('#e84537'))
+    c.ellipse([1, 20, 46, 42], fill=hexc('#b3261e'))
+    c.ellipse([4, 2, 43, 36], fill=hexc('#e84537'))
+    for x, y, r in [(10, 14, 3), (22, 7, 3), (34, 12, 4), (16, 22, 2), (28, 20, 3), (40, 21, 2)]:
+        c.ellipse([x - r, y - r, x + r, y + r], fill=hexc('#ffffff'))
+    c.rectangle([12, 5, 14, 6], fill=hexc('#ff8a7a'))
+    cap = cap.crop((0, 0, 48, 27))
+    im.alpha_composite(cap, (0, 0))
+    return outline(im, LINE)
+
+
+def treehouse():
+    rng = random.Random(3)
+    im = Image.new('RGBA', (48, 48))
+    d = ImageDraw.Draw(im)
+    # Trunk and leafy crown.
+    d.polygon([(19, 46), (21, 20), (27, 20), (29, 46)], fill=hexc('#9f5a52'))
+    d.polygon([(25, 46), (26, 20), (27, 20), (29, 46)], fill=hexc('#7e3125'))
+    for x, y, r in [(12, 14, 10), (24, 9, 11), (36, 14, 10), (18, 22, 9), (32, 22, 9)]:
+        d.ellipse([x - r, y - r, x + r, y + r], fill=hexc('#479f4a'))
+    for x, y, r in [(12, 12, 8), (24, 7, 9), (36, 12, 8)]:
+        d.ellipse([x - r, y - r, x + r, y + r], fill=hexc('#65a556'))
+    speckle(d, (2, 0, 46, 30), ['#84c669', '#8bd87d'], 40, rng, lambda x, y: im.getpixel((x, y))[:3] == hexc('#65a556')[:3])
+    # The little hut in the tree, with a red roof, a window and a ladder.
+    d.rectangle([13, 20, 34, 31], fill=hexc('#cb815e'))
+    for y in (23, 26, 29):
+        d.line([(13, y), (34, y)], fill=hexc('#9f5a52'))
+    d.polygon([(10, 21), (23, 12), (37, 21)], fill=hexc('#e84537'))
+    d.polygon([(23, 12), (37, 21), (30, 21)], fill=hexc('#b3261e'))
+    d.rectangle([16, 23, 20, 28], fill=hexc('#6e4230'))
+    d.rectangle([17, 24, 19, 27], fill=hexc('#ffe066'))
+    d.rectangle([25, 23, 30, 31], fill=hexc('#6e4230'))
+    d.rectangle([9, 31, 38, 32], fill=hexc('#7e3125'))
+    for y in range(34, 47, 3):
+        d.line([(32, y), (36, y)], fill=hexc('#cb815e'))
+    d.line([(32, 33), (32, 46)], fill=hexc('#6e4230'))
+    d.line([(36, 33), (36, 46)], fill=hexc('#6e4230'))
+    return outline(im, LINE)
+
+
+def wizard_tower():
+    rng = random.Random(4)
+    im = Image.new('RGBA', (48, 48))
+    d = ImageDraw.Draw(im)
+    stone, light, dark = '#b9acd9', '#d8cff2', '#8a7bb8'
+    d.rectangle([15, 20, 32, 46], fill=hexc(stone))
+    d.rectangle([29, 20, 32, 46], fill=hexc(dark))
+    speckle(d, (15, 20, 28, 46), [light, dark], 30, rng)
+    d.rectangle([20, 36, 26, 46], fill=hexc('#6e4230'))
+    d.ellipse([20, 33, 26, 39], fill=hexc('#6e4230'))
+    d.point((24, 41), fill=hexc('#ffd84a'))
+    d.ellipse([19, 23, 27, 31], fill=hexc('#ffd84a'))
+    d.ellipse([21, 25, 25, 29], fill=hexc('#fff3b0'))
+    # Tall pointy roof with stars, bent tip.
+    d.polygon([(10, 22), (24, 2), (37, 22)], fill=hexc('#6a4fb0'))
+    d.polygon([(24, 2), (37, 22), (29, 22)], fill=hexc('#4f3a8f'))
+    d.rectangle([10, 20, 37, 22], fill=hexc('#4f3a8f'))
+    d.polygon([(24, 2), (29, 0), (31, 3), (26, 4)], fill=hexc('#6a4fb0'))
+    for x, y in [(19, 16), (25, 10), (28, 17), (22, 19)]:
+        d.point((x, y), fill=hexc('#ffe066'))
+        d.point((x - 1, y), fill=hexc('#ffe066'))
+        d.point((x + 1, y), fill=hexc('#ffe066'))
+        d.point((x, y - 1), fill=hexc('#ffe066'))
+        d.point((x, y + 1), fill=hexc('#ffe066'))
+    d.ellipse([30, 0, 33, 3], fill=hexc('#ffd84a'))
+    return outline(im, LINE)
+
+
 DECO_PICS = [
     compose([[52, 53, 54], [64, 67, 66], [84, 86, 84]]),  # house-red
     compose([[48, 49, 50], [60, 63, 62], [72, 85, 75]]),  # house-blue
     compose([[92], [104]]), TALL_PINE, flowerbed(), compose([[80, 81, 82]]), HIVE, lantern(), bench(),
+    castle(), mushroom(), treehouse(), wizard_tower(),
 ]
 deco = Image.new('RGBA', (48 * len(DECO_PICS), 48))
 for i, pic in enumerate(DECO_PICS):

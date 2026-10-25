@@ -15,6 +15,10 @@ export const FOODS = [
 // Things to put on the islands. frame: picture in deco.png, size: how big it is (for tapping it),
 // home: a dragon can live in it.
 export const DECO = [
+  { key: 'castle', name: 'Burg', price: 120, frame: 9, size: [48, 46], home: true },
+  { key: 'wizard-tower', name: 'Zauberturm', price: 100, frame: 12, size: [30, 48], home: true },
+  { key: 'treehouse', name: 'Baumhaus', price: 80, frame: 11, size: [44, 48], home: true },
+  { key: 'mushroom', name: 'Pilzhaus', price: 70, frame: 10, size: [46, 46], home: true },
   { key: 'house-red', name: 'Rotes Haus', price: 40, frame: 0, size: [48, 48], home: true },
   { key: 'house-blue', name: 'Blaues Haus', price: 40, frame: 1, size: [48, 48], home: true },
   { key: 'well', name: 'Brunnen', price: 30, frame: 2, size: [16, 32] },
