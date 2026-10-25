@@ -31,6 +31,7 @@ through a rainbow at the end. The README has the player-facing description and t
   Hilfe, Mitwirkende. The pages `gallery`, `settings`, `credits` and `help` run over the paused title
   (`TitleScene.openPage`); gallery, settings and credits extend `MenuPage` (`src/scenes/MenuPage.js`:
   background, page title, back button, Esc/Enter/Space/Backspace closes, `addButton` helper).
+  On the very first start on a phone/tablet browser the title also opens `homescreen` (see below).
 - `map` (world map) ↔ `game` (+ `ui` HUD overlay, + `help` on the very first level) and `shop`.
   The map starts a level with `scene.start('game', { level })`; after a first-time win the game
   returns with `{ firstWin }` and the map plays the reveal (star, next station, or a new island with
@@ -52,7 +53,9 @@ through a rainbow at the end. The README has the player-facing description and t
   fireballs (mouth glows first) in phases from `BOSS_FIGHT` (`src/levels.js`); a power-up always comes
   at 30 s. After 60 s it says "Uff!" and flies away, the rainbow comes, and the win goes to
   `finale` (`FinaleScene`: fireworks, then "Zur Weltkarte"). Obstacles with `pops` (drops, fireballs)
-  go puff on the ground, on a hit and on star power.
+  go puff on the ground, on a hit and on star power. The fire dragon (`boss-dragon.png`, made by
+  `tools/make_assets.py` from Chili's row) is dark purple with orange lava stripes and red eyes
+  (Anna's choice).
 - `src/levels.js`: 12 levels (length, scroll speed, pillar spacing and gap, bees, falling things),
   gently harder each level.
 - `src/scenes/GameScene.js`: level rules. Pillars with a coin in the gap, coin rows between them,
@@ -64,7 +67,8 @@ through a rainbow at the end. The README has the player-facing description and t
   power in `Dragon.startStar`: 6 s invulnerable, rainbow tint, bees and drops bounce off).
 - Shooting (`src/objects/Shooter.js`): Space or the touch button bottom right (`SHOOT_HOME`, any
   touch on the right half below y 40) spits the dragon's shot from `SHOTS` (marshmallow = food frame,
-  others are textures drawn in `PreloadScene.makeShotTextures`). A full bar holds `SHOTS_IN_FULL_BAR` (6) shots of
+  others are textures drawn in `PreloadScene.makeShotTextures`). Anna chose: Marshmallow spits
+  marshmallows, Chili fire, Blubb water, Wolke lightning bolts, Kiesel flowers. A full bar holds `SHOTS_IN_FULL_BAR` (6) shots of
   `ENERGY_MAX` energy, refilling at `ENERGY_REFILL`/s; the HUD bar under the hearts shows it and
   blinks red when too empty. Shots (`GameScene.shots`) bonk bees, pop drops and fireballs, stop at
   pillars and make the fire dragon flash (it can't be beaten by shots, only by waiting out the minute).
@@ -88,11 +92,15 @@ through a rainbow at the end. The README has the player-facing description and t
 - `src/hud.js` (hearts and coin digits, used by HUD and map), `src/view.js` (480×270 × `ZOOM` 4,
   `FONT`), `src/touch.js` (`IS_TOUCH`, rotate-your-phone pause, refit), `src/update.js` (update
   banner for iPhone home-screen apps).
-- Generated textures (station markers, map icons, speaker, power-up star) are drawn in
-  `PreloadScene`. `public/assets/map.png`, `shop-house.png` and the themed `*-candy/snow/stars.png`
-  pictures come from `tools/make_assets.py` (see its docstring; it needs the Kenney Tiny Town zip,
-  downloaded outside the project). Moving a station means changing it in both `world.js` and the
-  script, then re-running the script.
+- Generated textures (station markers, map icons, speaker, power-up star, fireball, the dragons'
+  shots) are drawn in `PreloadScene`. `public/assets/map.png`, `shop-house.png`, `boss-dragon.png`
+  and the themed `*-candy/snow/stars/fire.png` pictures come from `tools/make_assets.py` (see its
+  docstring). It needs the Kenney Tiny Town zip
+  (https://opengameart.org/sites/default/files/kenney_tiny-town.zip, unzipped into the scratchpad)
+  and Pillow (venv, see shell notes). It is seeded: re-running it changes only what you edited, so
+  check `git status` afterwards. Moving a station means changing it in both `world.js` and the
+  script, then re-running the script. The app icons `icon-180/192/512.png` were made once from
+  Marshmallow's first frame on a sky/grass background.
 
 ### Conventions used in this game
 
@@ -106,15 +114,43 @@ through a rainbow at the end. The README has the player-facing description and t
 - Scene changes fade (`cameras.main.fadeOut` → `start`); overlay pages pause the scene below and
   resume it on close.
 
+### Numbers Anna has tuned or may want to tune
+
+Point her at these when she says something is too easy, too hard, too fast, etc.:
+- `src/levels.js`: `LEVELS` (per level: `seconds`, `scroll`, `pillarEvery`, `gap`, bees, drops) and
+  `BOSS_FIGHT` (`seconds`, `powerUpAt`, `phases` with `every`, `shots`, `speed`).
+- `src/objects/Shooter.js`: `SHOTS_IN_FULL_BAR` (she picked 6 after trying 5 and 8), `ENERGY_REFILL`,
+  `SHOT_SPEED`, `SHOT_GAP_MS`, `BUTTON_ICON_SCALE`.
+- `src/objects/Dragon.js`: `FLY_SPEED`, `STAR_MS`, `INVULNERABLE_MS`.
+- `src/scenes/GameScene.js`: `POWERUP_CHANCE`, `NAP_MS`, `WAKE_HEARTS`; `src/shop.js`: prices,
+  `MAX_HEARTS`; `src/scenes/FinaleScene.js`: `ROCKET_EVERY`, `SPARKS`.
+
 ### Ideas and open work
 
 - Planned (Anna's idea, not started): buy decorations in the shop and place them on the world map.
-- Power-ups: Anna asked for more ideas beyond star and heart. Offer options and let her pick.
+- Power-ups: Anna asked for more ideas beyond star and heart. Offered Magnet, Zeitlupe, Münzregen and
+  Mini-Drache; she hasn't picked yet. Ask her before building any.
+- Shooting the fire dragon: she asked whether shots do anything to it. Offered (1) a health bar so it
+  gives up earlier, (2) each hit shortens the minute, (3) it shouts "Autsch!" and pauses its fire.
+  No answer yet; it stays as it is until she picks.
+- Fire dragon look: also offered another colour or making it bigger; she only wanted red eyes.
 - Not yet tested on a real iPhone (only Chrome with touch emulation).
 - Once, in a long SwiftShader test run, the finale title rendered partly cut off; it didn't happen
   again in later runs. Worth a look on a real device.
 
 ## Working with the daughter
+
+What we learned working with Anna so far:
+- She types fast in German, often with typos and without capitals ("schüssse", "mkt"). Read it
+  generously and don't point out spelling.
+- She plays the game and comes back with short, concrete wishes or tuning ("Machen wir 6"). Do the
+  change, test it, push, and answer in a few friendly sentences: what changed, how it looks or feels,
+  and which number she can change herself.
+- When she asks how something looks, show her a screenshot (take it with the test browser and send it
+  with `SendUserFile`) rather than only describing it.
+- She may write while you are working. Answer her new message as part of the current work.
+- When her wish leaves a gap ("etc."), build a sensible placeholder, say clearly that you picked
+  it, and offer 2–3 options (that is how Wolke got lightning bolts instead of snowflakes).
 
 - **Talk in German.** All chat with her, and all text the player sees in the game, is German.
   Code, identifiers, comments, commit messages and file names stay in English.
@@ -432,7 +468,15 @@ browser_console_messages`).
 download) and launch the system Chrome with
 `chromium.launch({ executablePath: '/usr/bin/google-chrome', args: ['--autoplay-policy=no-user-gesture-required', '--enable-unsafe-swiftshader', '--use-gl=angle', '--use-angle=swiftshader'] })`.
 For touch, use `newPage({ hasTouch: true, isMobile: true })`. Log `console` errors/warnings and `pageerror`.
-Screenshots can go to the scratchpad in this setup. Pitfalls:
+Screenshots can go to the scratchpad in this setup. The scratchpad is per session, so a new session
+has to set this up again: a small `run.mjs` that launches Chrome as above, logs console errors, and
+imports a steps file `export default async (page, shot) => { ... }` works well. Pitfalls:
+- Before `page.goto`, or right after it followed by a reload, set up `localStorage`: a save with
+  `seenHelp: true` (otherwise the help screen pauses the first level), and for touch runs
+  `dragonFlight.homeHintSeen = '1'` (otherwise the home-screen page pauses the title).
+- Touch with two fingers (joystick plus shoot button): use a CDP session,
+  `Input.dispatchTouchEvent` with several `touchPoints`. Game pixel (x, y) is page (2x, 2y) in a
+  960×540 viewport.
 - `page.evaluate(() => scene.scene.start(...))` returns a Phaser object, and serialising it hangs
   the test and eats gigabytes of memory. Always use a block body: `() => { ...; }`, and return only
   plain values.
