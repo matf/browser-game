@@ -12,6 +12,20 @@ export const FOODS = [
   { key: 'marshmallow', name: 'Marshmallow', price: 18, heal: MAX_HEARTS, frame: 3 },
 ];
 
+// Things to put on the islands. frame: picture in deco.png, size: how big it is (for tapping it),
+// home: a dragon can live in it.
+export const DECO = [
+  { key: 'house-red', name: 'Rotes Haus', price: 40, frame: 0, size: [48, 48], home: true },
+  { key: 'house-blue', name: 'Blaues Haus', price: 40, frame: 1, size: [48, 48], home: true },
+  { key: 'well', name: 'Brunnen', price: 30, frame: 2, size: [16, 32] },
+  { key: 'tree', name: 'Baum', price: 10, frame: 3, size: [16, 32] },
+  { key: 'flowerbed', name: 'Blumenbeet', price: 8, frame: 4, size: [26, 14] },
+  { key: 'fence', name: 'Zaun', price: 6, frame: 5, size: [48, 16] },
+  { key: 'beehive', name: 'Bienenkorb', price: 15, frame: 6, size: [16, 16] },
+  { key: 'lantern', name: 'Laterne', price: 12, frame: 7, size: [11, 26] },
+  { key: 'bench', name: 'Bank', price: 10, frame: 8, size: [24, 16] },
+];
+
 // slot: where it sits. Only one thing per slot can be worn at a time.
 export const ACCESSORIES = [
   { key: 'bow', name: 'Schleife', price: 15, slot: 'head' },

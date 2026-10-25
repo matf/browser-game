@@ -46,7 +46,11 @@ through a rainbow at the end. The README has the player-facing description and t
   by `onIslandGround` in `world.js`). Pictures `island-<theme>.png` come from `tools/make_assets.py`
   (`BIG_ISLAND`, must match `ISLAND_GROUND`). Camera `setBounds`/`getWorldPoint` don't work with the
   zoomed origin-0 camera, so scrolling is clamped and pointers converted by hand (`pointer.x / ZOOM`).
-  This is step 1 of Anna's island wish; see "Ideas and open work".
+  Bauen (`src/objects/BuildMode.js`, button or B): a bar with the bag's things; tap the island to
+  place (`fits`: its bottom edge must be on the ground), tap a placed thing to put it back.
+  Decorations: `DECO` in `src/shop.js` (frame in `deco.png`, made by `tools/make_assets.py`, `size`
+  for tapping, `home` for houses), bought on the shop's Deko tab into `save.bag`, placed ones in
+  `save.placed` (`{ key, island: theme, x, y }`, y = the bottom).
 
 ### Where things live
 
@@ -89,7 +93,7 @@ through a rainbow at the end. The README has the player-facing description and t
   are recolours painted by `tools/make_dragons.py` (colours in `NEW_DRAGONS`; it rebuilds only those rows).
   The gallery shows them in two rows (`CARD.perRow`).
 - `src/save.js`: `localStorage['dragonFlight.save']` = `{ coins, done: [level indices], at (map spot),
-  hearts, dragon, dragons, items, wear, seenHelp }`; old saves with `level` are migrated.
+  hearts, dragon, dragons, items, wear, seenHelp, bag, placed }`; old saves with `level` are migrated.
   `resetSave()` keeps only `seenHelp`. Sound settings are separate keys (`dragonFlight.muted`,
   `dragonFlight.volume`), so Neues Spiel keeps them.
 - `src/sound.js`: always play effects with `play(scene, key)` (respects mute and the Einstellungen
@@ -138,7 +142,7 @@ Point her at these when she says something is too easy, too hard, too fast, etc.
 
 ### Ideas and open work
 
-- Anna's island wish (step 1, the island view, is done): buy houses, a fountain and more in the
+- Anna's island wish (island view and Bauen are done): buy houses, a fountain and more in the
   shop and place them on the islands in the island view; your dragons live in the houses. Plus a
   breeding island (Brutinsel): every day you get a dragon egg, the next day a baby dragon hatches.
   The decorations can come from the Kenney Tiny Town pack (houses, well, trees, fences, beehive,

@@ -14,6 +14,8 @@ const DEFAULTS = {
   items: [], // accessories you own
   wear: [], // accessories the dragon is wearing
   seenHelp: false, // the "So geht's!" screen was shown once
+  bag: {}, // decorations bought but not placed yet: { key: how many }
+  placed: [], // decorations on the islands: { key, island (its theme), x, y }
 };
 
 export function loadSave() {
@@ -34,7 +36,7 @@ export function loadSave() {
 
 // True once there is something to lose: finished levels, coins, or things bought in the shop.
 export function hasProgress(save) {
-  return save.done.length > 0 || save.coins > 0 || save.dragons.length > 1 || save.items.length > 0;
+  return save.done.length > 0 || save.coins > 0 || save.dragons.length > 1 || save.items.length > 0 || save.placed.length > 0;
 }
 
 // Start over. Only "So geht's!" stays seen.

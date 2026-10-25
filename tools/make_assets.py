@@ -292,6 +292,58 @@ for idx, (isl, m) in enumerate(zip(ISLANDS, masks)):
 sea.save(f'{OUT}/map.png')
 recolor(SHOP_HOUSE, {}).save(f'{OUT}/shop-house.png')
 
+# --- Decorations to buy and place on the islands ------------------------------------------------
+# deco.png: one 48x48 cell per thing, the thing standing on the bottom middle of its cell. The order
+# must match DECO_FRAME in src/scenes/PreloadScene.js.
+def flowerbed():
+    im = Image.new('RGBA', (24, 12))
+    d = ImageDraw.Draw(im)
+    d.ellipse([0, 4, 23, 11], fill=hexc('#8a5a3a'))
+    d.ellipse([2, 5, 21, 9], fill=hexc('#a8704a'))
+    for i, (x, y) in enumerate([(4, 4), (9, 2), (14, 4), (19, 3), (7, 6), (12, 6), (17, 6)]):
+        color = ['#ff6fa8', '#ffd84a', '#ffffff', '#b47ee6'][i % 4]
+        d.point((x, y + 2), fill=hexc('#479f4a'))
+        d.rectangle([x - 1, y - 1, x + 1, y + 1], fill=hexc(color))
+        d.point((x, y), fill=hexc('#ffd84a') if color != '#ffd84a' else hexc('#e38628'))
+    return outline(im, '#3a2a28')
+
+
+def lantern():
+    im = Image.new('RGBA', (9, 24))
+    d = ImageDraw.Draw(im)
+    d.rectangle([3, 8, 5, 23], fill=hexc('#3a3550'))
+    d.rectangle([1, 22, 7, 23], fill=hexc('#3a3550'))
+    d.rectangle([1, 2, 7, 8], fill=hexc('#3a3550'))
+    d.rectangle([2, 3, 6, 7], fill=hexc('#ffe066'))
+    d.rectangle([3, 4, 4, 5], fill=hexc('#fff8d0'))
+    d.polygon([(0, 2), (4, 0), (8, 2)], fill=hexc('#3a3550'))
+    return outline(im, '#1b1630')
+
+
+def bench():
+    im = Image.new('RGBA', (22, 14))
+    d = ImageDraw.Draw(im)
+    for x in (2, 18):
+        d.rectangle([x, 8, x + 1, 13], fill=hexc('#6e4230'))
+    d.rectangle([0, 0, 21, 2], fill=hexc('#cb815e'))
+    d.rectangle([0, 3, 21, 3], fill=hexc('#9f5a52'))
+    d.rectangle([3, 3, 4, 6], fill=hexc('#6e4230'))
+    d.rectangle([17, 3, 18, 6], fill=hexc('#6e4230'))
+    d.rectangle([0, 6, 21, 8], fill=hexc('#e29f7b'))
+    d.rectangle([0, 9, 21, 9], fill=hexc('#9f5a52'))
+    return outline(im, '#3a2a28')
+
+
+DECO_PICS = [
+    compose([[52, 53, 54], [64, 67, 66], [84, 86, 84]]),  # house-red
+    compose([[48, 49, 50], [60, 63, 62], [72, 85, 75]]),  # house-blue
+    compose([[92], [104]]), TALL_PINE, flowerbed(), compose([[80, 81, 82]]), HIVE, lantern(), bench(),
+]
+deco = Image.new('RGBA', (48 * len(DECO_PICS), 48))
+for i, pic in enumerate(DECO_PICS):
+    deco.alpha_composite(pic, (i * 48 + (48 - pic.width) // 2, 48 - pic.height))
+deco.save(f'{OUT}/deco.png')
+
 # --- Island views -------------------------------------------------------------------------------
 # One big island per theme filling the screen (island-flowers.png, ...), for walking around and
 # building. BIG_ISLAND must match ISLAND_GROUND in src/world.js. The decorations stay near the

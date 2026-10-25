@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 import { FONT, setupCamera } from '../view.js';
 import { ACCESSORY_ART, DRAGONS, TILE } from './PreloadScene.js';
 import { Accessories } from '../objects/Accessories.js';
-import { ACCESSORIES, DRAGON_PRICE, FOODS, MAX_HEARTS } from '../shop.js';
+import { ACCESSORIES, DECO, DRAGON_PRICE, FOODS, MAX_HEARTS } from '../shop.js';
 import { loadSave, writeSave } from '../save.js';
 import { IS_TOUCH } from '../touch.js';
 import { addMuteButton, play } from '../sound.js';
@@ -29,8 +29,9 @@ const TABS = [
   { key: 'food', label: 'Futter', tab: ['food', 0, 1], cols: 4, w: 72, h: 80, iconScale: 2 },
   { key: 'dragons', label: 'Drachen', tab: ['dragons', 0, 0.3], cols: 5, w: 57, h: 84, iconScale: 0.8 },
   { key: 'accessories', label: 'Accessoires', tab: ['accessories', 1, 1.5], cols: 4, w: 72, h: 54, iconScale: 2 },
+  { key: 'deco', label: 'Deko', tab: ['deco', 0, 0.36], cols: 5, w: 57, h: 84, iconScale: 1 },
 ];
-const TAB_BUTTON = { x: 168, y: 30, w: 100, h: 22, gap: 3 };
+const TAB_BUTTON = { x: 168, y: 30, w: 74, h: 22, gap: 3 };
 const GRID = { x: 168, y: 57, gap: 4 };
 const PREVIEW = { x: 84, y: 105, scale: 2 };
 
@@ -106,9 +107,9 @@ export class ShopScene extends Phaser.Scene {
         .setInteractive({ useHandCursor: true })
         .on('pointerdown', () => this.showTab(i));
       const [key, frame, scale] = t.tab;
-      const icon = this.add.image(14, TAB_BUTTON.h / 2, key, frame).setScale(scale);
+      const icon = this.add.image(11, TAB_BUTTON.h / 2, key, frame).setScale(scale);
       const label = this.add
-        .text(28, TAB_BUTTON.h / 2, t.label, { ...TEXT, fontSize: '11px' })
+        .text(21, TAB_BUTTON.h / 2, t.label, { ...TEXT, fontSize: '9px' })
         .setOrigin(0, 0.5)
         .setResolution(4);
       this.add.container(x, TAB_BUTTON.y, [bg, icon, label]);
@@ -167,6 +168,14 @@ export class ShopScene extends Phaser.Scene {
             act: () => this.pickDragon(d),
           };
         });
+      case 'deco':
+        return DECO.map((d) => ({
+          name: d.name,
+          icon: ['deco', d.frame],
+          info: s.bag[d.key] ? `hast ${s.bag[d.key]}` : null,
+          status: coins(d.price),
+          act: () => this.buyDeco(d),
+        }));
       default:
         return ACCESSORIES.map((a) => {
           const owned = s.items.includes(a.key);
@@ -207,7 +216,7 @@ export class ShopScene extends Phaser.Scene {
           this.select(i);
           item.act();
         });
-      const iconY = layout.key === 'dragons' ? 28 : layout.key === 'food' ? 24 : 14;
+      const iconY = { dragons: 28, food: 24, deco: 28 }[layout.key] ?? 14;
       const icon = this.add
         .image(layout.w / 2, iconY, item.icon[0], item.icon[1])
         .setScale(layout.iconScale);
@@ -345,6 +354,15 @@ export class ShopScene extends Phaser.Scene {
     // Only one thing per slot: putting on the crown takes off the bow.
     const sameSlot = ACCESSORIES.filter((a) => a.slot === item.slot).map((a) => a.key);
     s.wear = [...s.wear.filter((k) => !sameSlot.includes(k)), item.key];
+    this.commit();
+  }
+
+  // Decorations go into your bag; you put them on an island in the island view (Bauen).
+  buyDeco(item) {
+    if (!this.pay(item.price)) return;
+    this.save.bag[item.key] = (this.save.bag[item.key] ?? 0) + 1;
+    this.say(`${item.name} gekauft!\nStell es auf einer Insel auf.`);
+    play(this, 'buy');
     this.commit();
   }
 

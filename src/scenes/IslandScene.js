@@ -1,10 +1,12 @@
 import Phaser from 'phaser';
 import { Accessories } from '../objects/Accessories.js';
+import { BuildMode } from '../objects/BuildMode.js';
 import { loadSave } from '../save.js';
 import { FONT, WIDTH, HEIGHT, ZOOM, setupCamera } from '../view.js';
 import { IS_TOUCH } from '../touch.js';
 import { addMuteButton, play, startMusic } from '../sound.js';
 import { addCoins } from '../hud.js';
+import { DECO } from '../shop.js';
 import { ISLANDS, LEVELS_PER_ISLAND, isOpen, onIslandGround } from '../world.js';
 
 const WALK_SPEED = 80; // how fast your dragon walks on the island, in pixels per second
@@ -36,6 +38,11 @@ export class IslandScene extends Phaser.Scene {
     // No camera bounds: they don't work with the zoomed camera, so scrolling is clamped by hand.
     this.cameras.main.scrollX = this.index * WIDTH;
 
+    // Houses, trees and everything else you put on the islands.
+    this.decoSprites = new Map();
+    const themes = this.islands.map((island) => island.theme);
+    for (const thing of this.save.placed) if (themes.includes(thing.island)) this.addDeco(thing);
+
     // Your dragon, with a little shadow on the ground. pos is its spot on the current island.
     this.pos = { x: WIDTH / 2, y: 170 };
     this.target = null;
@@ -44,6 +51,7 @@ export class IslandScene extends Phaser.Scene {
     this.accessories = new Accessories(this, this.dragon, this.save.wear);
 
     this.addHud();
+    this.builder = new BuildMode(this);
     this.addInput();
     this.showIsland();
     this.cameras.main.fadeIn(250);
@@ -74,8 +82,8 @@ export class IslandScene extends Phaser.Scene {
         .on('pointerdown', () => this.toMap()),
     );
     this.title = fixed(this.add.text(WIDTH / 2, 16, '', { ...TEXT, fontSize: '16px', strokeThickness: 4 }).setOrigin(0.5).setResolution(4));
-    const hint = IS_TOUCH ? 'Tippen: hinlaufen   Wischen: nächste Insel' : 'Pfeile: laufen   Q / E: andere Insel   Esc: Karte';
-    fixed(this.add.text(WIDTH / 2, HEIGHT - 8, hint, { ...TEXT, fontSize: '8px' }).setOrigin(0.5).setResolution(4));
+    const hint = IS_TOUCH ? 'Tippen: hinlaufen   Wischen: nächste Insel' : 'Pfeile: laufen   Q / E: andere Insel   B: bauen   Esc: Karte';
+    this.hint = fixed(this.add.text(WIDTH / 2, HEIGHT - 8, hint, { ...TEXT, fontSize: '8px' }).setOrigin(0.5).setResolution(4));
 
     // Arrows to the islands left and right, and a dot for each island.
     this.arrows = [-1, 1].map((dir) => {
@@ -98,6 +106,39 @@ export class IslandScene extends Phaser.Scene {
     );
   }
 
+  // The hint and the dots at the bottom make room for the building bar.
+  setHintVisible(visible) {
+    this.hint.setVisible(visible);
+    for (const dot of this.dots) dot.setVisible(visible);
+  }
+
+  // The theme of the island you're on; placed things remember their island by it.
+  theme() {
+    return this.islands[this.index].theme;
+  }
+
+  // x on the current island → x in the world (the islands sit side by side).
+  islandX(x) {
+    return this.index * WIDTH + x;
+  }
+
+  // Show a placed thing; `pop` makes it bounce in.
+  addDeco(thing, pop = false) {
+    const index = this.islands.findIndex((island) => island.theme === thing.island);
+    const frame = DECO.find((d) => d.key === thing.key).frame;
+    const sprite = this.add.image(index * WIDTH + thing.x, thing.y, 'deco', frame).setOrigin(0.5, 1).setDepth(thing.y);
+    this.decoSprites.set(thing, sprite);
+    if (pop) {
+      sprite.setScale(0.3);
+      this.tweens.add({ targets: sprite, scale: 1, duration: 300, ease: 'Back.Out' });
+    }
+  }
+
+  removeDeco(thing) {
+    this.decoSprites.get(thing)?.destroy();
+    this.decoSprites.delete(thing);
+  }
+
   // Name, arrows and dots for the island you're on.
   showIsland() {
     this.title.setText(this.islands[this.index].name);
@@ -116,6 +157,7 @@ export class IslandScene extends Phaser.Scene {
       this.drag = { startX: pointer.x, scrollX: camera.scrollX, moving: false };
     });
     this.input.on('pointermove', (pointer) => {
+      if (!this.drag?.moving) this.builder.hover(pointer.x / ZOOM, pointer.y / ZOOM);
       if (!this.drag || !pointer.isDown) return;
       const dx = (pointer.x - this.drag.startX) / camera.zoom;
       if (Math.abs(dx) > DRAG_START) this.drag.moving = true;
@@ -126,6 +168,7 @@ export class IslandScene extends Phaser.Scene {
       this.drag = null;
       if (!drag || this.trip) return;
       if (!drag.moving) {
+        if (this.builder.tap(pointer.x / ZOOM, pointer.y / ZOOM)) return;
         return this.walkTo(pointer.x / ZOOM, pointer.y / ZOOM);
       }
       const dx = (pointer.x - drag.startX) / camera.zoom;
@@ -136,6 +179,7 @@ export class IslandScene extends Phaser.Scene {
     this.input.keyboard.on('keydown-Q', () => this.go(this.index - 1));
     this.input.keyboard.on('keydown-E', () => this.go(this.index + 1));
     this.input.keyboard.on('keydown-ESC', () => this.toMap());
+    this.input.keyboard.on('keydown-B', () => this.builder.toggle());
   }
 
   // --- Moving around --------------------------------------------------------------------------

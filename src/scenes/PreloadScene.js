@@ -68,6 +68,7 @@ export class PreloadScene extends Phaser.Scene {
       }
     }
     this.load.image('map', 'map.png');
+    this.load.spritesheet('deco', 'deco.png', { frameWidth: 48, frameHeight: 48 });
     for (const island of ISLANDS) this.load.image(`island-${island.theme}`, `island-${island.theme}.png`);
     this.load.image('shop-house', 'shop-house.png');
     this.load.image('rainbow', 'rainbow.png');
