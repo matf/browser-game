@@ -29,7 +29,7 @@ export class Resident {
     this.sprite = scene.add.sprite(0, 0, 'dragons').play(look.anim).setScale(this.scale);
     if (look.tint !== undefined) this.sprite.setTint(look.tint);
     this.sprite.anims.setProgress(Math.random());
-    this.sprite.setInteractive({ useHandCursor: true }).on('pointerdown', () => this.say());
+    this.sprite.setInteractive({ useHandCursor: true }).on('pointerdown', () => this.scene.tapResident(this));
     this.phase = Math.random() * 1000;
     this.rest();
   }

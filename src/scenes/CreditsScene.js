@@ -3,6 +3,7 @@ import { TILE } from './PreloadScene.js';
 import { Accessories } from '../objects/Accessories.js';
 import { loadSave } from '../save.js';
 import { WIDTH } from '../view.js';
+import { dragonLook, showDragon } from '../dragons.js';
 
 const MAKERS = 'Anna und Matthias';
 // Who made the pictures, sounds, music and font (the full list with links is in README.md).
@@ -45,7 +46,7 @@ export class CreditsScene extends MenuPage {
     this.tweens.add({ targets: names, scale: 1.06, duration: 900, yoyo: true, repeat: -1, ease: 'Sine.InOut' });
 
     // The dragon you fly with says hello.
-    this.dragon = this.add.sprite(64, 92, 'dragons').play(`${save.dragon}-fly`);
+    this.dragon = showDragon(this.add.sprite(64, 92, 'dragons'), dragonLook(save));
     this.tweens.add({ targets: this.dragon, y: 84, duration: 800, yoyo: true, repeat: -1, ease: 'Sine.InOut' });
     this.accessories = new Accessories(this, this.dragon, save.wear);
 

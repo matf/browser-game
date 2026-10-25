@@ -10,7 +10,9 @@ import { IS_TOUCH } from '../touch.js';
 import { addMuteButton, play, startMusic } from '../sound.js';
 import { addCoins } from '../hud.js';
 import { DECO } from '../shop.js';
+import { SHOTS } from '../objects/Shooter.js';
 import { HOME_ISLANDS, ISLANDS, LEVELS_PER_ISLAND, isOpen, onIslandGround } from '../world.js';
+import { dragonLook, showDragon } from '../dragons.js';
 
 const WALK_SPEED = 80; // how fast your dragon walks on the island, in pixels per second
 const DRAGON_SCALE = 0.5; // size of the dragon on the island (1 = as big as in the levels)
@@ -53,7 +55,7 @@ export class IslandScene extends Phaser.Scene {
     this.pos = { x: WIDTH / 2, y: 212 };
     this.target = null;
     this.shadow = this.add.ellipse(0, 0, 22, 6, 0x1b1630, 0.25);
-    this.dragon = this.add.sprite(0, 0, 'dragons').play(`${this.save.dragon}-fly`).setScale(DRAGON_SCALE);
+    this.dragon = showDragon(this.add.sprite(0, 0, 'dragons'), dragonLook(this.save)).setScale(DRAGON_SCALE);
     this.accessories = new Accessories(this, this.dragon, this.save.wear);
 
     this.addHud();
@@ -154,11 +156,9 @@ export class IslandScene extends Phaser.Scene {
     for (const resident of this.residents) resident.destroy();
     const homes = this.save.placed.filter((t) => DECO.find((d) => d.key === t.key).home);
     const dragons = [
-      ...this.save.dragons
-        .filter((key) => key !== this.save.dragon)
-        .map((key) => ({ key, name: DRAGONS.find((d) => d.key === key).name, anim: `${key}-fly` })),
+      ...this.save.dragons.map((key) => ({ key, name: DRAGONS.find((d) => d.key === key).name, anim: `${key}-fly` })),
       ...this.save.hatchlings.filter((h) => growth(h) >= 1).map((h) => hatchlingLook(h)),
-    ];
+    ].filter((look) => look.key !== this.save.dragon);
     this.residents = [];
     homes.forEach((home, i) => {
       const index = this.islands.findIndex((island) => island.theme === home.island);
@@ -205,28 +205,94 @@ export class IslandScene extends Phaser.Scene {
     writeSave(this.save);
     const { x, y } = this.islands[this.nestIndex].nest;
     const left = this.nestIndex * WIDTH;
-    let delay = 600;
-    if (hatched) {
-      // The egg wobbles, cracks open with sparkles, and the baby is there.
-      this.tweens.add({ targets: this.egg, angle: { from: -15, to: 15 }, duration: 120, yoyo: true, repeat: 5, delay });
-      this.time.delayedCall(delay + 1500, () => {
-        this.egg.setVisible(false).setAngle(0);
-        this.sparkle(left + x, y - 6);
-        play(this, 'newdragon');
-        const baby = this.addNestDragon(hatchlingLook(hatched));
-        baby.pos.y = y + 2;
-        this.banner('Ein Baby ist geschlüpft!', `Es heißt ${hatched.name}.`);
-      });
-      delay += 4500;
-    }
-    if (laid) {
-      this.time.delayedCall(delay, () => {
-        this.egg.setVisible(true).setScale(0);
-        this.tweens.add({ targets: this.egg, scale: 1, duration: 400, ease: 'Back.Out' });
-        play(this, 'coin');
-        this.banner('Ein Drachen-Ei!', 'Morgen schlüpft ein Baby.');
-      });
-    }
+    const layEgg = () => {
+      if (!laid) return;
+      this.egg.setVisible(true).setScale(0);
+      this.tweens.add({ targets: this.egg, scale: 1, duration: 400, ease: 'Back.Out' });
+      play(this, 'coin');
+      this.banner('Ein Drachen-Ei!', 'Morgen schlüpft ein Baby.');
+    };
+    if (!hatched) return this.time.delayedCall(600, layEgg);
+    // The egg wobbles, cracks open with sparkles, and the baby is there. Then you choose what it
+    // will spit, and today's egg appears.
+    this.tweens.add({ targets: this.egg, angle: { from: -15, to: 15 }, duration: 120, yoyo: true, repeat: 5, delay: 600 });
+    this.time.delayedCall(2100, () => {
+      this.egg.setVisible(false).setAngle(0);
+      this.sparkle(left + x, y - 6);
+      play(this, 'newdragon');
+      const baby = this.addNestDragon(hatchlingLook(hatched));
+      baby.pos.y = y + 2;
+      this.banner('Ein Baby ist geschlüpft!', `Es heißt ${hatched.name}.`);
+    });
+    this.time.delayedCall(4600, () => this.chooseShot(hatched, () => this.time.delayedCall(3000, layEgg)));
+  }
+
+  // A dragon on the island was tapped: its name, and a button to fly with it from now on.
+  tapResident(resident) {
+    const { key, name } = resident.look;
+    const hatchling = this.save.hatchlings.find((h) => `hatchling-${h.id}` === key);
+    if (hatchling && growth(hatchling) < 1) return resident.say(`${name} ist noch ein Baby`);
+    resident.say();
+    this.flyButton?.destroy();
+    const bg = this.add.rectangle(0, 0, 76, 18, 0x5fd068).setStrokeStyle(2, 0xffffff);
+    const label = this.add.text(0, 0, 'Mitfliegen', { ...TEXT, fontSize: '10px', color: '#1b1630', strokeThickness: 0 }).setOrigin(0.5).setResolution(4);
+    const button = this.add.container(resident.sprite.x, resident.sprite.y - 36, [bg, label]).setDepth(960);
+    this.flyButton = button;
+    bg.setInteractive({ useHandCursor: true }).on('pointerdown', (p, x, y, event) => {
+      event.stopPropagation();
+      button.destroy();
+      if (hatchling && !hatchling.shot) this.chooseShot(hatchling, () => this.flyWith(resident.look));
+      else this.flyWith(resident.look);
+    });
+    this.time.delayedCall(2500, () => button.destroy());
+  }
+
+  // Swap: the tapped dragon flies with you now, and the one you had moves into its house.
+  flyWith(look) {
+    this.save.dragon = look.key;
+    writeSave(this.save);
+    showDragon(this.dragon, dragonLook(this.save));
+    this.sparkle(this.dragon.x, this.dragon.y);
+    play(this, 'newdragon');
+    this.moveIn();
+    this.banner(`${look.name} fliegt jetzt mit dir!`, 'In den Levels spuckt es sein eigenes Ding.');
+  }
+
+  // "Was soll Krümel spucken?": a box with every kind of shot. Saves the choice in the hatchling,
+  // then calls done.
+  chooseShot(hatchling, done) {
+    const fixed = (obj) => obj.setScrollFactor(0).setDepth(1010);
+    const parts = [];
+    const add = (obj) => {
+      parts.push(fixed(obj));
+      return obj;
+    };
+    // Covers the island, so taps only reach the box.
+    add(this.add.rectangle(0, 0, WIDTH, HEIGHT, 0x1b1630, 0.55).setOrigin(0).setInteractive().on('pointerdown', (p, x, y, event) => event.stopPropagation()));
+    add(this.add.rectangle(WIDTH / 2, 140, 330, 214, 0x2b2140, 0.97).setStrokeStyle(3, 0xff9fc8));
+    add(this.add.text(WIDTH / 2, 50, `Was soll ${hatchling.name} spucken?`, { ...TEXT, fontSize: '15px', strokeThickness: 4 }).setOrigin(0.5).setResolution(4));
+    Object.entries(SHOTS).forEach(([key, shot], i) => {
+      const x = WIDTH / 2 + ((i % 3) - 1) * 104;
+      const y = 92 + Math.floor(i / 3) * 56;
+      add(
+        this.add
+          .rectangle(x, y, 96, 48, 0x4a3a6e)
+          .setStrokeStyle(2, 0xffffff)
+          .setInteractive({ useHandCursor: true })
+          .on('pointerdown', (p, px, py, event) => {
+            event.stopPropagation();
+            hatchling.shot = key;
+            writeSave(this.save);
+            play(this, 'wear');
+            for (const part of parts) part.destroy();
+            this.bannerBox?.destroy();
+            this.banner(`${hatchling.name} spuckt ${shot.name}!`, 'Wenn es groß ist, kann es mitfliegen.');
+            done?.();
+          }),
+      );
+      add(this.add.image(x, y - 8, shot.texture, shot.frame).setScale(shot.scale * 1.5));
+      add(this.add.text(x, y + 13, shot.name, { ...TEXT, fontSize: '10px' }).setOrigin(0.5).setResolution(4));
+    });
   }
 
   banner(title, subtitle) {

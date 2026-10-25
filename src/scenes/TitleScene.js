@@ -6,6 +6,7 @@ import { IS_TOUCH } from '../touch.js';
 import { addMuteButton, play, startMusic } from '../sound.js';
 import { THEMES } from '../world.js';
 import { shouldShowHomeHint } from '../install.js';
+import { dragonLook, showDragon } from '../dragons.js';
 
 const SCROLL_SPEED = 30; // how fast the ground moves past behind the menu, in pixels per second
 const BUTTON = { x: 340, y: 92, width: 150, height: 23, gap: 5 }; // the menu buttons, top one at y
@@ -33,7 +34,7 @@ export class TitleScene extends Phaser.Scene {
     this.hills = this.add.tileSprite(0, HEIGHT - 30, WIDTH, 48, 'hills-flowers').setOrigin(0, 1);
     this.ground = this.add.tileSprite(0, HEIGHT, WIDTH, 54, 'ground-flowers').setOrigin(0, 1);
 
-    this.dragon = this.add.sprite(130, 140, 'dragons').play(`${this.save.dragon}-fly`).setScale(1.3);
+    this.dragon = showDragon(this.add.sprite(130, 140, 'dragons'), dragonLook(this.save)).setScale(1.3);
     this.accessories = new Accessories(this, this.dragon, this.save.wear);
 
     const title = this.add

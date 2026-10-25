@@ -36,8 +36,10 @@ https://matf.github.io/browser-game/
   it to see its name.
 - Brutinsel (the small island top left, no levels): every day there is a new dragon egg in the nest,
   and the next day a baby hatches out of it: a new dragon in a colour no other dragon has, with its
-  own name. Babies stroll around the nest and grow up within a day; then they move into a free house
-  (or stay at the nest when there is none).
+  own name. When it hatches, you choose what it will spit. Babies stroll around the nest and grow
+  up within a day; then they move into a free house (or stay at the nest when there is none).
+- Tap a grown-up dragon on an island, then Mitfliegen: from now on it flies with you in the levels
+  (and the one you had moves into its house).
 - In a level: arrow keys or WASD fly; Space spits (Marshmallow spits marshmallows, Chili fire, Blubb
   water, Wolke lightning bolts, Kiesel flowers, Goldi stars, Lila magic bubbles, Mitternacht moons,
   Summsi honey). A shot knocks bees away and pops raindrops and fireballs.

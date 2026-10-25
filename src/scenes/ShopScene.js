@@ -6,6 +6,7 @@ import { ACCESSORIES, DECO, DRAGON_PRICE, FOODS, MAX_HEARTS } from '../shop.js';
 import { loadSave, writeSave } from '../save.js';
 import { IS_TOUCH } from '../touch.js';
 import { addMuteButton, play } from '../sound.js';
+import { dragonLook, showDragon } from '../dragons.js';
 
 const TEXT = {
   fontFamily: FONT,
@@ -253,8 +254,9 @@ export class ShopScene extends Phaser.Scene {
     const s = this.save;
     this.heartIcons.forEach((h, i) => h.setFrame(i < s.hearts ? TILE.heartFull : TILE.heartEmpty));
     this.coinText.setText(String(s.coins));
-    this.preview.play(`${s.dragon}-fly`, true);
-    this.previewName.setText(DRAGONS.find((d) => d.key === s.dragon).name);
+    const look = dragonLook(s);
+    if (this.preview.anims.currentAnim?.key !== look.anim) showDragon(this.preview, look);
+    this.previewName.setText(look.name);
     this.previewAccessories?.destroy();
     this.previewAccessories = new Accessories(this, this.preview, s.wear);
     this.registry.set('coins', s.coins);
@@ -306,7 +308,7 @@ export class ShopScene extends Phaser.Scene {
 
   feed(food) {
     const s = this.save;
-    const name = DRAGONS.find((d) => d.key === s.dragon).name;
+    const name = dragonLook(s).name;
     if (s.hearts >= MAX_HEARTS) {
       play(this, 'nope');
       return this.say(`${name} ist schon satt!`);

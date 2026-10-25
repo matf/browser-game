@@ -6,12 +6,13 @@ import { PowerUp } from '../objects/PowerUp.js';
 import { FireDragon } from '../objects/FireDragon.js';
 import { Shooter } from '../objects/Shooter.js';
 import { MAX_HEARTS } from '../shop.js';
-import { DRAGONS, TILE } from './PreloadScene.js';
+import { TILE } from './PreloadScene.js';
 import { BOSS_FIGHT, LEVELS } from '../levels.js';
 import { BOSS_LEVEL, LEVELS_PER_ISLAND, LEVEL_COUNT, THEMES, islandOf } from '../world.js';
 import { loadSave, writeSave } from '../save.js';
 import { FONT, HEIGHT, WIDTH, setupCamera } from '../view.js';
 import { play, startMusic } from '../sound.js';
+import { dragonLook } from '../dragons.js';
 
 // The numbers that change from level to level are in src/levels.js.
 const START_CALM_MS = 2000; // quiet time at the start before obstacles come
@@ -64,7 +65,8 @@ export class GameScene extends Phaser.Scene {
     this.ground = this.add.tileSprite(0, height, width, 54, `ground-${this.theme}`).setOrigin(0, 1).setDepth(2);
 
     this.physics.world.setBounds(0, 0, width, this.groundY);
-    this.player = new Dragon(this, 100, height / 2, this.save.dragon).setDepth(3);
+    this.look = dragonLook(this.save);
+    this.player = new Dragon(this, 100, height / 2, this.look).setDepth(3);
     this.accessories = new Accessories(this, this.player, this.save.wear);
     // After the physics step, so the accessories sit exactly on the dragon.
     const follow = () => this.accessories.update();
@@ -78,7 +80,7 @@ export class GameScene extends Phaser.Scene {
     this.powerUps = this.physics.add.group({ allowGravity: false });
     this.physics.add.overlap(this.player, this.powerUps, this.onPowerUp, null, this);
     this.shots = this.physics.add.group({ allowGravity: false });
-    this.shooter = new Shooter(this, this.player, this.save.dragon, this.shots);
+    this.shooter = new Shooter(this, this.player, this.look.shot, this.shots);
     this.physics.add.overlap(this.shots, this.obstacles, this.onShotHit, null, this);
 
     this.splash = this.add.particles(0, 0, 'pixel', {
@@ -125,7 +127,7 @@ export class GameScene extends Phaser.Scene {
     this.registry.set('firstLevel', this.levelIndex === 0);
     this.registry.set('hearts', this.save.hearts);
     this.registry.set('coins', this.save.coins);
-    this.registry.set('dragonName', DRAGONS.find((d) => d.key === this.save.dragon).name);
+    this.registry.set('dragonName', this.look.name);
 
     const every = (delay, callback) =>
       this.time.addEvent({ delay, callback, callbackScope: this, loop: true, startAt: -START_CALM_MS });

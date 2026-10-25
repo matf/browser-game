@@ -8,6 +8,7 @@ import { addCoins, addHearts } from '../hud.js';
 import { FOODS } from '../shop.js';
 import { TILE } from './PreloadScene.js';
 import { addButton } from './MenuPage.js';
+import { dragonLook, showDragon } from '../dragons.js';
 import {
   ALL_ISLANDS,
   BOSS_ISLAND,
@@ -76,7 +77,7 @@ export class MapScene extends Phaser.Scene {
 
     const [x, y] = spotPosition(this.save.at);
     this.pos = { x, y: y - HOVER };
-    this.dragon = this.add.sprite(x, y, 'dragons').play(`${this.save.dragon}-fly`).setScale(DRAGON_SCALE).setDepth(6);
+    this.dragon = showDragon(this.add.sprite(x, y, 'dragons'), dragonLook(this.save)).setScale(DRAGON_SCALE).setDepth(6);
     this.accessories = new Accessories(this, this.dragon, this.save.wear);
 
     addHearts(this)(this.save.hearts);

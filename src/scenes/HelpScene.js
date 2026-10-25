@@ -6,6 +6,7 @@ import { TILE } from './PreloadScene.js';
 import { SHOTS } from '../objects/Shooter.js';
 import { loadSave, writeSave } from '../save.js';
 import { play } from '../sound.js';
+import { dragonLook } from '../dragons.js';
 
 const TEXT = { fontFamily: FONT, fontStyle: 'bold', color: '#ffffff', stroke: '#1b1630', strokeThickness: 3 };
 
@@ -28,7 +29,7 @@ export class HelpScene extends Phaser.Scene {
     const centre = IS_TOUCH ? 310 : WIDTH / 2;
     this.add.text(centre, 26, "So geht's!", { ...TEXT, fontSize: '24px' }).setOrigin(0.5).setResolution(4);
 
-    const shot = SHOTS[loadSave().dragon] ?? SHOTS.marshmallow;
+    const shot = SHOTS[dragonLook(loadSave()).shot] ?? SHOTS.marshmallow;
     const rows = [
       [this.add.sprite(0, 0, 'dragons', 0).setScale(0.5), IS_TOUCH ? 'Flieg mit dem Joystick.' : 'Flieg mit den Pfeiltasten\n(oder W A S D).'],
       [this.add.image(0, 0, 'tiles', TILE.coin), 'Sammle Münzen für den Shop.'],

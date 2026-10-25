@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { TouchStick } from './TouchStick.js';
+import { showDragon } from '../dragons.js';
 
 const SCALE = 0.75; // size of the dragon (1 = full picture size)
 const FLY_SPEED = 170; // top speed in pixels per second
@@ -14,12 +15,14 @@ const STAR_WARN_MS = 1500; // the dragon blinks this long before the star power 
 const STAR_COLOR_SPEED = 0.4; // how quickly the rainbow colours change while the star power lasts
 
 export class Dragon extends Phaser.Physics.Arcade.Sprite {
-  constructor(scene, x, y, dragonKey) {
+  // look: how the dragon looks (see dragonLook in src/dragons.js).
+  constructor(scene, x, y, look) {
     super(scene, x, y, 'dragons');
     scene.add.existing(this);
     scene.physics.add.existing(this);
 
-    this.play(`${dragonKey}-fly`);
+    this.baseTint = look.tint;
+    showDragon(this, look);
     this.setScale(SCALE);
     this.setCollideWorldBounds(true);
     this.body.setMaxVelocity(FLY_SPEED * 1.5, FLY_SPEED * 1.5);
@@ -91,7 +94,9 @@ export class Dragon extends Phaser.Physics.Arcade.Sprite {
     if (!this.starPower) {
       if (this.shining) {
         this.shining = false;
-        this.clearTint().setAlpha(1);
+        this.setAlpha(1);
+        if (this.baseTint === undefined) this.clearTint();
+        else this.setTint(this.baseTint);
       }
       return;
     }

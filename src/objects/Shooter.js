@@ -33,11 +33,12 @@ export const SHOTS = {
 // the bar; the bar slowly fills up again by itself. Space shoots; on phones, the button on the right.
 export class Shooter {
   // group: the physics group the shots go into (the game checks what they hit).
-  constructor(scene, dragon, dragonKey, group) {
+  // shotKey: what to spit, a key of SHOTS.
+  constructor(scene, dragon, shotKey, group) {
     this.scene = scene;
     this.dragon = dragon;
     this.group = group;
-    this.shot = SHOTS[dragonKey] ?? SHOTS.marshmallow;
+    this.shot = SHOTS[shotKey] ?? SHOTS.marshmallow;
     this.energy = ENERGY_MAX;
     this.lastShotAt = -Infinity;
     this.tiredAt = -Infinity; // when you last tried to shoot with too little energy (the bar blinks)

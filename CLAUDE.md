@@ -63,6 +63,10 @@ through a rainbow at the end. The README has the player-facing description and t
   anims. They grow from `BABY_SCALE` to `GROWN_SCALE` over `GROW_HOURS` (24, Anna said "a bit of time
   on their island"); grown ones join the residents after your shop dragons, babies and homeless
   grown-ups stroll at the nest. To test, set `save.egg.day`/`lastEgg` to yesterday or move `born` back.
+  After hatching, `chooseShot` asks what it spits (`hatchling.shot`, a SHOTS key). Tapping a grown
+  resident shows Mitfliegen (`tapResident` → `flyWith`), so `save.dragon` can be `hatchling-<id>`:
+  always get the flying dragon's name/anim/tint/shot with `dragonLook(save)` and draw it with
+  `showDragon` (`src/dragons.js`), never `${save.dragon}-fly`.
 
 ### Where things live
 
@@ -155,9 +159,8 @@ Point her at these when she says something is too easy, too hard, too fast, etc.
 
 ### Ideas and open work
 
-- Anna's island wish is built (island view, Bauen, dragons in houses, Brutinsel). Open questions:
-  can you fly with a grown hatchling in the levels (it would need a shot)? Anna said there can also
-  be islands without levels just for living ("Wohninseln"); not built yet. The "Brunnen" she asked
+- Anna's island wish is built (island view, Bauen, dragons in houses, Brutinsel, flying with grown
+  hatchlings). The "Brunnen" she asked
   for is the Tiny Town well.
 - Power-ups: Anna asked for more ideas beyond star and heart. Offered Magnet, Zeitlupe, Münzregen and
   Mini-Drache; she hasn't picked yet. Ask her before building any.

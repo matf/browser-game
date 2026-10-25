@@ -5,6 +5,7 @@ import { FONT, HEIGHT, WIDTH, setupCamera } from '../view.js';
 import { IS_TOUCH } from '../touch.js';
 import { addMuteButton, play } from '../sound.js';
 import { addButton } from './MenuPage.js';
+import { dragonLook, showDragon } from '../dragons.js';
 
 const ROCKET_EVERY = [350, 750]; // a new rocket after this many milliseconds (shortest, longest)
 const ROCKET_RISE_MS = [700, 1100]; // how long a rocket flies up before it bursts
@@ -36,7 +37,7 @@ export class FinaleScene extends Phaser.Scene {
     this.add.tileSprite(0, HEIGHT, WIDTH, 54, 'ground-stars').setOrigin(0, 1).setDepth(2);
 
     // Your dragon, happily flying in the middle.
-    this.dragon = this.add.sprite(WIDTH / 2, 170, 'dragons').play(`${this.save.dragon}-fly`).setDepth(5);
+    this.dragon = showDragon(this.add.sprite(WIDTH / 2, 170, 'dragons'), dragonLook(this.save)).setDepth(5);
     this.accessories = new Accessories(this, this.dragon, this.save.wear);
 
     const title = this.add
