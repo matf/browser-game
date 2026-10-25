@@ -49,7 +49,7 @@ export class UIScene extends Phaser.Scene {
     this.add.image(BAR.x + BAR.width + 8, BAR.y + BAR.height / 2, 'rainbow').setScale(0.08);
 
     const shot = this.gameScene.shooter.shot;
-    this.add.image(ENERGY_BAR.x - 9, ENERGY_BAR.y + ENERGY_BAR.height / 2, shot.texture, shot.frame).setScale(shot.scale * 0.9);
+    this.add.image(ENERGY_BAR.x - 11, ENERGY_BAR.y + ENERGY_BAR.height / 2, shot.texture, shot.frame).setScale(shot.scale * 0.9);
     this.add
       .rectangle(ENERGY_BAR.x - 1, ENERGY_BAR.y - 1, ENERGY_BAR.width + 2, ENERGY_BAR.height + 2, 0x1b1630)
       .setOrigin(0, 0);

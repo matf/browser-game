@@ -182,19 +182,12 @@ export class PreloadScene extends Phaser.Scene {
       g.fillStyle(0x5fbfff).fillCircle(6.5, 4.5, 3);
       g.fillStyle(0xffffff).fillRect(7, 2.5, 2, 1.5);
     });
-    // A snowflake: three lines through the middle.
-    draw('shot-snow', 13, 13, (g) => {
-      const arms = (width, color) => {
-        g.lineStyle(width, color);
-        for (let i = 0; i < 3; i++) {
-          const a = (i * Math.PI) / 3;
-          g.lineBetween(6.5 - Math.cos(a) * 5.5, 6.5 - Math.sin(a) * 5.5, 6.5 + Math.cos(a) * 5.5, 6.5 + Math.sin(a) * 5.5);
-        }
-      };
-      arms(3, 0x3a7fb8);
-      arms(1, 0xffffff);
-      g.fillStyle(0x3a7fb8).fillCircle(6.5, 6.5, 2.5);
-      g.fillStyle(0xffffff).fillCircle(6.5, 6.5, 1.5);
+    // A zigzag lightning bolt flying right.
+    draw('shot-bolt', 18, 11, (g) => {
+      const zigzag = [[1, 3], [7, 8], [10, 3], [17, 8]].map(([x, y]) => ({ x, y }));
+      g.lineStyle(4, 0xc77d00).strokePoints(zigzag);
+      g.lineStyle(2, 0xffe066).strokePoints(zigzag);
+      g.fillStyle(0xffffff).fillRect(15, 6, 2, 2);
     });
     // A flower with five pink petals.
     draw('shot-flower', 11, 11, (g) => {

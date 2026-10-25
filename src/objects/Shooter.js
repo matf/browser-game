@@ -19,7 +19,7 @@ export const SHOTS = {
   marshmallow: { name: 'Marshmallows', texture: 'food', frame: 3, scale: 0.75, spin: 360, colors: [0xffffff, 0xffd1e6, 0xff9fc8] },
   chili: { name: 'Feuer', texture: 'shot-fire', scale: 1.3, spin: 0, colors: [0xff4a1a, 0xff9a2a, 0xffd84a] },
   blubb: { name: 'Wasser', texture: 'shot-water', scale: 1.3, spin: 0, colors: [0x3da5ff, 0x8fd3f4, 0xffffff] },
-  wolke: { name: 'Schneeflocken', texture: 'shot-snow', scale: 1.3, spin: 240, colors: [0xffffff, 0xcfefff, 0x8fd3f4] },
+  wolke: { name: 'Blitze', texture: 'shot-bolt', scale: 1.3, spin: 0, colors: [0xffe066, 0xffffff, 0xfff3b0] },
   kiesel: { name: 'Blumen', texture: 'shot-flower', scale: 1.3, spin: 200, colors: [0xff9fc8, 0xffe066, 0x9ff0a8] },
 };
 
