@@ -79,8 +79,9 @@ through a rainbow at the end. The README has the player-facing description and t
   go puff on the ground, on a hit and on star power. The fire dragon (`boss-dragon.png`, made by
   `tools/make_assets.py` from Chili's row) is dark purple with orange lava stripes and red eyes
   (Anna's choice).
-- `src/levels.js`: 12 levels (length, scroll speed, pillar spacing and gap, bees, falling things),
-  gently harder each level.
+- `src/levels.js`: 12 levels (length, scroll speed, pillar spacing and gap, bees, falling things).
+  Harder within an island; each island's first level is easier again than the last one before it
+  (Anna found the late levels too hard).
 - `src/scenes/GameScene.js`: level rules. Pillars with a coin in the gap, coin rows between them,
   bees, falling things (raindrop/sugar drop/snowflake/shooting star by theme), rainbow at the end.
   Hit = lose a heart (hearts only come back by food in the shop or a heart power-up); 0 hearts =
