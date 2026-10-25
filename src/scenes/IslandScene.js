@@ -1,6 +1,8 @@
 import Phaser from 'phaser';
 import { Accessories } from '../objects/Accessories.js';
 import { BuildMode } from '../objects/BuildMode.js';
+import { Resident } from '../objects/Resident.js';
+import { DRAGONS } from './PreloadScene.js';
 import { loadSave } from '../save.js';
 import { FONT, WIDTH, HEIGHT, ZOOM, setupCamera } from '../view.js';
 import { IS_TOUCH } from '../touch.js';
@@ -42,9 +44,11 @@ export class IslandScene extends Phaser.Scene {
     this.decoSprites = new Map();
     const themes = this.islands.map((island) => island.theme);
     for (const thing of this.save.placed) if (themes.includes(thing.island)) this.addDeco(thing);
+    this.residents = [];
+    this.moveIn();
 
     // Your dragon, with a little shadow on the ground. pos is its spot on the current island.
-    this.pos = { x: WIDTH / 2, y: 170 };
+    this.pos = { x: WIDTH / 2, y: 212 };
     this.target = null;
     this.shadow = this.add.ellipse(0, 0, 22, 6, 0x1b1630, 0.25);
     this.dragon = this.add.sprite(0, 0, 'dragons').play(`${this.save.dragon}-fly`).setScale(DRAGON_SCALE);
@@ -59,6 +63,7 @@ export class IslandScene extends Phaser.Scene {
 
   update(time, delta) {
     this.walk(delta / 1000);
+    for (const resident of this.residents) resident.update(time, delta);
     const x = this.index * WIDTH + this.pos.x + (this.trip?.offset ?? 0);
     const hover = 10 + Math.sin(time / 260) * 1.5;
     this.shadow.setPosition(x, this.pos.y).setDepth(this.pos.y - 1);
@@ -137,6 +142,40 @@ export class IslandScene extends Phaser.Scene {
   removeDeco(thing) {
     this.decoSprites.get(thing)?.destroy();
     this.decoSprites.delete(thing);
+  }
+
+  // Your other dragons (not the one with you) each live in a house: the first dragon in the first
+  // house you placed, and so on. Called again whenever a house is placed or put away.
+  moveIn() {
+    const before = new Set(this.residents.map((r) => r.dragon.key));
+    for (const resident of this.residents) resident.destroy();
+    const homes = this.save.placed.filter((t) => DECO.find((d) => d.key === t.key).home);
+    const dragons = this.save.dragons.filter((key) => key !== this.save.dragon).map((key) => DRAGONS.find((d) => d.key === key));
+    this.residents = [];
+    homes.forEach((home, i) => {
+      const index = this.islands.findIndex((island) => island.theme === home.island);
+      if (!dragons[i] || index < 0) return;
+      const resident = new Resident(this, dragons[i], { x: home.x, y: home.y }, index * WIDTH);
+      this.residents.push(resident);
+      if (this.started && !before.has(dragons[i].key)) {
+        this.sparkle(index * WIDTH + home.x, home.y - 10);
+        resident.say(`${dragons[i].name} zieht ein!`);
+        play(this, 'newdragon');
+      }
+    });
+    this.started = true;
+  }
+
+  sparkle(x, y) {
+    const emitter = this.add.particles(0, 0, 'pixel', {
+      lifespan: 700,
+      speed: { min: 30, max: 100 },
+      scale: { start: 1.5, end: 0 },
+      tint: [0xffd84a, 0xffffff, 0xff9fd0, 0xb8e8ff],
+      emitting: false,
+    }).setDepth(950);
+    emitter.explode(24, x, y);
+    this.time.delayedCall(800, () => emitter.destroy());
   }
 
   // Name, arrows and dots for the island you're on.

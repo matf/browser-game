@@ -51,6 +51,9 @@ through a rainbow at the end. The README has the player-facing description and t
   Decorations: `DECO` in `src/shop.js` (frame in `deco.png`, made by `tools/make_assets.py`, `size`
   for tapping, `home` for houses), bought on the shop's Deko tab into `save.bag`, placed ones in
   `save.placed` (`{ key, island: theme, x, y }`, y = the bottom).
+  Residents (`src/objects/Resident.js`, `IslandScene.moveIn`): your dragons except the one you fly
+  with live in the `home` decorations, in placing order; they stroll within `ROAM` of the door and
+  sometimes go in. `moveIn` rebuilds them whenever a house is placed or put away.
 
 ### Where things live
 
@@ -142,7 +145,7 @@ Point her at these when she says something is too easy, too hard, too fast, etc.
 
 ### Ideas and open work
 
-- Anna's island wish (island view and Bauen are done): buy houses, a fountain and more in the
+- Anna's island wish (island view, Bauen and dragons living in houses are done; the Brutinsel is next): buy houses, a fountain and more in the
   shop and place them on the islands in the island view; your dragons live in the houses. Plus a
   breeding island (Brutinsel): every day you get a dragon egg, the next day a baby dragon hatches.
   The decorations can come from the Kenney Tiny Town pack (houses, well, trees, fences, beehive,

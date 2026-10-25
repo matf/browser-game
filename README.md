@@ -31,7 +31,9 @@ https://matf.github.io/browser-game/
   Esc or the map icon goes back to the world map. Bauen (or B): pick something from your bag
   and tap the island to put it there; tap a placed thing to put it back into the bag. Fertig ends it.
 - Shop, Deko page: houses, well, tree, flower bed, fence, beehive, lantern, bench. They go into
-  your bag until you place them on an island.
+  your bag until you place them on an island. Each house gets one of your other dragons (not the
+  one flying with you) as a resident: it strolls around near its house and sometimes goes in. Tap
+  it to see its name.
 - In a level: arrow keys or WASD fly; Space spits (Marshmallow spits marshmallows, Chili fire, Blubb
   water, Wolke lightning bolts, Kiesel flowers, Goldi stars, Lila magic bubbles, Mitternacht moons,
   Summsi honey). A shot knocks bees away and pops raindrops and fireballs.

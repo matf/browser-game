@@ -118,6 +118,7 @@ export class BuildMode {
       this.save.placed.push(thing);
       this.save.bag[item.key] -= 1;
       this.scene.addDeco(thing, true);
+      if (item.home) this.scene.moveIn();
       play(this.scene, 'wear');
       if (!this.save.bag[item.key]) this.select(null);
       else this.drawBar();
@@ -134,6 +135,7 @@ export class BuildMode {
       this.save.placed.splice(this.save.placed.indexOf(hit), 1);
       this.save.bag[hit.key] = (this.save.bag[hit.key] ?? 0) + 1;
       this.scene.removeDeco(hit);
+      if (DECO.find((d) => d.key === hit.key).home) this.scene.moveIn();
       play(this.scene, 'click');
       this.drawBar();
     }
