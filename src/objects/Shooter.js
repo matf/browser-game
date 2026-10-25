@@ -4,7 +4,7 @@ import { IS_TOUCH } from '../touch.js';
 import { play } from '../sound.js';
 
 export const ENERGY_MAX = 100; // a full energy bar
-const SHOTS_IN_FULL_BAR = 8; // how many shots a full energy bar is good for
+const SHOTS_IN_FULL_BAR = 6; // how many shots a full energy bar is good for
 const SHOT_COST = ENERGY_MAX / SHOTS_IN_FULL_BAR; // energy for one shot
 const ENERGY_REFILL = 18; // energy that comes back every second
 const SHOT_GAP_MS = 220; // at least this long between two shots, even when holding the button
@@ -62,7 +62,8 @@ export class Shooter {
 
   // True while there is enough energy for a shot.
   get ready() {
-    return this.energy >= SHOT_COST;
+    // A tiny bit of slack: 100 / 6 doesn't come out exactly, and the last shot must still count.
+    return this.energy >= SHOT_COST - 0.001;
   }
 
   update(time, delta) {

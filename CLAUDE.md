@@ -64,7 +64,7 @@ through a rainbow at the end. The README has the player-facing description and t
   power in `Dragon.startStar`: 6 s invulnerable, rainbow tint, bees and drops bounce off).
 - Shooting (`src/objects/Shooter.js`): Space or the touch button bottom right (`SHOOT_HOME`, any
   touch on the right half below y 40) spits the dragon's shot from `SHOTS` (marshmallow = food frame,
-  others are textures drawn in `PreloadScene.makeShotTextures`). A full bar holds `SHOTS_IN_FULL_BAR` (8) shots of
+  others are textures drawn in `PreloadScene.makeShotTextures`). A full bar holds `SHOTS_IN_FULL_BAR` (6) shots of
   `ENERGY_MAX` energy, refilling at `ENERGY_REFILL`/s; the HUD bar under the hearts shows it and
   blinks red when too empty. Shots (`GameScene.shots`) bonk bees, pop drops and fireballs, stop at
   pillars and make the fire dragon flash (it can't be beaten by shots, only by waiting out the minute).
