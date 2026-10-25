@@ -27,7 +27,8 @@ https://matf.github.io/browser-game/
   keyboard, arrows or WASD fly to the previous/next spot (the shop comes before level 1) and Space or
   Enter goes in.
 - In a level: arrow keys or WASD fly; Space spits (Marshmallow spits marshmallows, Chili fire, Blubb
-  water, Wolke lightning bolts, Kiesel flowers). A shot knocks bees away and pops raindrops and fireballs.
+  water, Wolke lightning bolts, Kiesel flowers, Goldi stars, Lila magic bubbles, Mitternacht moons,
+  Summsi honey). A shot knocks bees away and pops raindrops and fireballs.
   Each shot uses some energy from the bar under the hearts, which fills up again by itself.
   Esc or the little map icon goes back to the world map
 - M or the speaker icon: sound on/off
@@ -82,7 +83,8 @@ islands drawn on the map.
   Magicae! Games. License as stated on the page: "Can be used in any project commercial and
   non-commercial. You may modify or adapt however you want. You cannot resell these assets, even if
   modified." The pink dragon (Marshmallow) is a recolour of the Air dragon, and the fire dragon
-  (`boss-dragon.png`) is a dark recolour of the red one.
+  (`boss-dragon.png`) is a dark recolour of the red one. Goldi, Lila, Mitternacht and Summsi (rows 5–8
+  of `dragons.png`, made by `tools/make_dragons.py`) are recolours of the original dragons.
 - Background, ground, rock pillars, snowman, hearts, coins and digits: [Pixel Platformer](https://opengameart.org/content/pixel-platformer-0)
   by Kenney ([kenney.nl](https://kenney.nl)), CC0. `hills-*.png` are recoloured strips of its
   background sheet; `ground-*.png` and the `pillar-*.png` images are assembled from its tiles and
@@ -93,7 +95,7 @@ islands drawn on the map.
 - Cupcake and marshmallow: [Pixel Platformer Food Expansion](https://opengameart.org/content/pixel-platformer-food-expansion)
   by Kenney ([kenney.nl](https://kenney.nl)), CC0.
 - App icons (`icon-*.png`): the Marshmallow dragon on a sky background, made from `dragons.png`.
-- Bee, raindrop, snowflake, shooting star, ember, volcano, fireball, the dragons' shots (fire, water, lightning bolt, flower), rainbow, apple, strawberry, piggy bank and accessories: drawn for this game.
+- Bee, raindrop, snowflake, shooting star, ember, volcano, fireball, the dragons' shots (fire, water, lightning bolt, flower, star, bubble, moon, honey), rainbow, apple, strawberry, piggy bank and accessories: drawn for this game.
 - Sounds: [Interface Sounds](https://opengameart.org/content/interface-sounds),
   [85 Short music jingles](https://opengameart.org/content/85-short-music-jingles),
   [63 Digital sound effects](https://opengameart.org/content/63-digital-sound-effects-lasers-phasers-space-etc) and

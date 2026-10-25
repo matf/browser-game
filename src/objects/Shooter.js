@@ -23,6 +23,10 @@ export const SHOTS = {
   blubb: { name: 'Wasser', texture: 'shot-water', scale: 1.3, spin: 0, colors: [0x3da5ff, 0x8fd3f4, 0xffffff] },
   wolke: { name: 'Blitze', texture: 'shot-bolt', scale: 1.3, spin: 0, colors: [0xffe066, 0xffffff, 0xfff3b0] },
   kiesel: { name: 'Blumen', texture: 'shot-flower', scale: 1.3, spin: 200, colors: [0xff9fc8, 0xffe066, 0x9ff0a8] },
+  goldi: { name: 'Sterne', texture: 'shot-star', scale: 1.3, spin: 300, colors: [0xffe066, 0xffffff, 0xffb84a] },
+  lila: { name: 'Zauberblasen', texture: 'shot-bubble', scale: 1.3, spin: 0, colors: [0xc89aff, 0xff9fe8, 0xffffff] },
+  mitternacht: { name: 'Monde', texture: 'shot-moon', scale: 1.3, spin: 120, colors: [0xfff3b0, 0xb8e8ff, 0xffffff] },
+  summsi: { name: 'Honig', texture: 'shot-honey', scale: 1.3, spin: 0, colors: [0xffb21c, 0xffd84a, 0xfff1a8] },
 };
 
 // Lets your dragon spit things at bees, raindrops and fireballs. Every shot uses some energy from

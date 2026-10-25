@@ -6,7 +6,7 @@ import { loadSave } from '../save.js';
 import { WIDTH } from '../view.js';
 import { play } from '../sound.js';
 
-const CARD = { y: 128, width: 86, height: 150, gap: 6 }; // y: the middle of the cards
+const CARD = { y: 98, width: 86, height: 86, gap: 5, perRow: 5, dragonScale: 0.8 }; // y: the middle of the first row
 const NOT_OWNED_TINT = 0x3a3350; // dragons you don't have yet show as a dark shadow
 
 // Drachen-Galerie: every dragon in the game. Yours fly; the others wait as shadows in the shop.
@@ -23,17 +23,21 @@ export class GalleryScene extends MenuPage {
       .setOrigin(0.5)
       .setResolution(4);
 
-    const rowWidth = DRAGONS.length * CARD.width + (DRAGONS.length - 1) * CARD.gap;
     this.accessories = [];
     DRAGONS.forEach((dragon, i) => {
-      const x = (WIDTH - rowWidth) / 2 + CARD.width / 2 + i * (CARD.width + CARD.gap);
+      // Up to CARD.perRow cards in a row, each row centred.
+      const row = Math.floor(i / CARD.perRow);
+      const inRow = Math.min(CARD.perRow, DRAGONS.length - row * CARD.perRow);
+      const rowWidth = inRow * CARD.width + (inRow - 1) * CARD.gap;
+      const x = (WIDTH - rowWidth) / 2 + CARD.width / 2 + (i % CARD.perRow) * (CARD.width + CARD.gap);
+      const y = CARD.y + row * (CARD.height + CARD.gap);
       const owned = save.dragons.includes(dragon.key);
       const flying = save.dragon === dragon.key;
       const card = this.add
-        .rectangle(x, CARD.y, CARD.width, CARD.height, owned ? COLORS.card : 0x342a4c)
+        .rectangle(x, y, CARD.width, CARD.height, owned ? COLORS.card : 0x342a4c)
         .setStrokeStyle(flying ? 3 : 2, flying ? COLORS.selected : 0xffffff);
 
-      const sprite = this.add.sprite(x, CARD.y - 32, 'dragons', dragon.row * 3);
+      const sprite = this.add.sprite(x, y - 20, 'dragons', dragon.row * 3).setScale(CARD.dragonScale);
       if (owned) {
         sprite.play(`${dragon.key}-fly`);
         // Each dragon flaps a little out of step with the others.
@@ -47,17 +51,17 @@ export class GalleryScene extends MenuPage {
       if (flying) this.accessories.push(new Accessories(this, sprite, save.wear));
 
       this.add
-        .text(x, CARD.y + 18, dragon.name, { ...TEXT, fontSize: '13px' })
+        .text(x, y + 10, dragon.name, { ...TEXT, fontSize: '13px' })
         .setOrigin(0.5)
         .setResolution(4);
       if (flying) {
-        this.add.text(x, CARD.y + 44, 'fliegt\nmit dir!', { ...TEXT, fontSize: '10px', color: '#ffe066', align: 'center' }).setOrigin(0.5).setResolution(4);
+        this.add.text(x, y + 28, 'fliegt mit dir!', { ...TEXT, fontSize: '10px', color: '#ffe066', align: 'center' }).setOrigin(0.5).setResolution(4);
       } else if (owned) {
-        this.add.text(x, CARD.y + 44, 'gehört dir', { ...TEXT, fontSize: '10px', color: '#9ff0a8' }).setOrigin(0.5).setResolution(4);
+        this.add.text(x, y + 28, 'gehört dir', { ...TEXT, fontSize: '10px', color: '#9ff0a8' }).setOrigin(0.5).setResolution(4);
       } else {
-        this.add.text(x, CARD.y + 38, 'im Shop', { ...TEXT, fontSize: '10px' }).setOrigin(0.5).setResolution(4);
-        this.add.image(x - 10, CARD.y + 56, 'tiles', TILE.coin);
-        this.add.text(x + 8, CARD.y + 56, String(DRAGON_PRICE), { ...TEXT, fontSize: '11px' }).setOrigin(0.5).setResolution(4);
+        this.add.text(x, y + 24, 'im Shop', { ...TEXT, fontSize: '10px' }).setOrigin(0.5).setResolution(4);
+        this.add.image(x - 10, y + 35, 'tiles', TILE.coin);
+        this.add.text(x + 8, y + 35, String(DRAGON_PRICE), { ...TEXT, fontSize: '11px' }).setOrigin(0.5).setResolution(4);
       }
     });
   }

@@ -37,6 +37,11 @@ export const DRAGONS = [
   { key: 'blubb', name: 'Blubb', row: 2 },
   { key: 'wolke', name: 'Wolke', row: 3 },
   { key: 'kiesel', name: 'Kiesel', row: 4 },
+  // Rows 5 and up are painted by tools/make_dragons.py.
+  { key: 'goldi', name: 'Goldi', row: 5 },
+  { key: 'lila', name: 'Lila', row: 6 },
+  { key: 'mitternacht', name: 'Mitternacht', row: 7 },
+  { key: 'summsi', name: 'Summsi', row: 8 },
 ];
 
 export class PreloadScene extends Phaser.Scene {
@@ -202,6 +207,46 @@ export class PreloadScene extends Phaser.Scene {
         g.fillCircle(5.5 + Math.cos(a) * 3, 5.5 + Math.sin(a) * 3, 1.8);
       }
       g.fillStyle(0xffd84a).fillCircle(5.5, 5.5, 1.8);
+    });
+    // A twinkling golden star.
+    draw('shot-star', 11, 11, (g) => {
+      const points = (outer, inner) =>
+        Array.from({ length: 10 }, (_, i) => {
+          const r = i % 2 ? inner : outer;
+          const a = -Math.PI / 2 + (i * Math.PI) / 5;
+          return { x: 5.5 + r * Math.cos(a), y: 5.8 + r * Math.sin(a) };
+        });
+      g.fillStyle(0xd98a1c).fillPoints(points(5.5, 2.6), true);
+      g.fillStyle(0xffe066).fillPoints(points(4, 1.9), true);
+      g.fillStyle(0xffffff).fillRect(4, 4, 1.5, 1.5);
+    });
+    // A see-through purple magic bubble with a shine.
+    draw('shot-bubble', 11, 11, (g) => {
+      g.fillStyle(0xb47ee6, 0.55).fillCircle(5.5, 5.5, 5);
+      g.lineStyle(1, 0xe2c4ff).strokeCircle(5.5, 5.5, 4.5);
+      g.fillStyle(0xff9fe8).fillCircle(6.5, 6.5, 1.2);
+      g.fillStyle(0xffffff).fillRect(3, 2.5, 2, 2);
+    });
+    // A pale yellow crescent moon: round on the right, bitten out on the left.
+    draw('shot-moon', 11, 11, (g) => {
+      const crescent = (r, bite) => [
+        ...Array.from({ length: 13 }, (_, i) => {
+          const a = -Math.PI / 2 + (i * Math.PI) / 12;
+          return { x: 5 + r * Math.cos(a), y: 5.5 + r * Math.sin(a) };
+        }),
+        ...Array.from({ length: 13 }, (_, i) => {
+          const a = Math.PI / 2 - (i * Math.PI) / 12;
+          return { x: 5 + bite * Math.cos(a), y: 5.5 + r * Math.sin(a) };
+        }),
+      ];
+      g.fillStyle(0xd9b84a).fillPoints(crescent(5, 1), true);
+      g.fillStyle(0xfff3b0).fillPoints(crescent(4, 1.6), true);
+    });
+    // A drop of golden honey flying right.
+    draw('shot-honey', 11, 9, (g) => {
+      g.fillStyle(0xb8740e).fillTriangle(0, 4.5, 6, 1, 6, 8).fillCircle(6.5, 4.5, 4);
+      g.fillStyle(0xf5b21b).fillCircle(6.5, 4.5, 3);
+      g.fillStyle(0xfff1a8).fillRect(7, 2.5, 2, 1.5);
     });
   }
 

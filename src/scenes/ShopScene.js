@@ -27,7 +27,7 @@ const COLORS = {
 // the picture on each card is drawn.
 const TABS = [
   { key: 'food', label: 'Futter', tab: ['food', 0, 1], cols: 4, w: 72, h: 80, iconScale: 2 },
-  { key: 'dragons', label: 'Drachen', tab: ['dragons', 0, 0.3], cols: 3, w: 98, h: 84, iconScale: 1 },
+  { key: 'dragons', label: 'Drachen', tab: ['dragons', 0, 0.3], cols: 5, w: 57, h: 84, iconScale: 0.8 },
   { key: 'accessories', label: 'Accessoires', tab: ['accessories', 1, 1.5], cols: 4, w: 72, h: 54, iconScale: 2 },
 ];
 const TAB_BUTTON = { x: 168, y: 30, w: 100, h: 22, gap: 3 };

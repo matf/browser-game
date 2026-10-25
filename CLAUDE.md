@@ -68,15 +68,19 @@ through a rainbow at the end. The README has the player-facing description and t
 - Shooting (`src/objects/Shooter.js`): Space or the touch button bottom right (`SHOOT_HOME`, any
   touch on the right half below y 40) spits the dragon's shot from `SHOTS` (marshmallow = food frame,
   others are textures drawn in `PreloadScene.makeShotTextures`). Anna chose: Marshmallow spits
-  marshmallows, Chili fire, Blubb water, Wolke lightning bolts, Kiesel flowers. A full bar holds `SHOTS_IN_FULL_BAR` (6) shots of
+  marshmallows, Chili fire, Blubb water, Wolke lightning bolts, Kiesel flowers, Goldi stars, Lila
+  magic bubbles, Mitternacht moons, Summsi honey drops (Summsi, the bee dragon, and its honey were
+  Claude's placeholder picks). A full bar holds `SHOTS_IN_FULL_BAR` (6) shots of
   `ENERGY_MAX` energy, refilling at `ENERGY_REFILL`/s; the HUD bar under the hearts shows it and
   blinks red when too empty. Shots (`GameScene.shots`) bonk bees, pop drops and fireballs, stop at
   pillars and make the fire dragon flash (it can't be beaten by shots, only by waiting out the minute).
 - `src/objects/`: `Dragon` (flying, joystick, hurt/star), `Shooter`, `Bee`, `PowerUp`, `Accessories` (worn items
   drawn on the dragon per animation frame, also flipped and rotated), `TouchStick`.
 - `src/shop.js`: foods, accessories, dragon price; `src/scenes/ShopScene.js`: shop with tabs Futter /
-  Drachen / Accessoires. 5 dragons (`DRAGONS` in PreloadScene: Marshmallow, Chili, Blubb, Wolke,
-  Kiesel; rows of `dragons.png`).
+  Drachen / Accessoires (dragons in 5 columns). 9 dragons (`DRAGONS` in PreloadScene: Marshmallow,
+  Chili, Blubb, Wolke, Kiesel, Goldi, Lila, Mitternacht, Summsi; rows of `dragons.png`), all `DRAGON_PRICE`. Rows 5–8
+  are recolours painted by `tools/make_dragons.py` (colours in `NEW_DRAGONS`; it rebuilds only those rows).
+  The gallery shows them in two rows (`CARD.perRow`).
 - `src/save.js`: `localStorage['dragonFlight.save']` = `{ coins, done: [level indices], at (map spot),
   hearts, dragon, dragons, items, wear, seenHelp }`; old saves with `level` are migrated.
   `resetSave()` keeps only `seenHelp`. Sound settings are separate keys (`dragonFlight.muted`,
