@@ -5,6 +5,7 @@ import { FONT, HEIGHT, WIDTH, setupCamera } from '../view.js';
 import { IS_TOUCH } from '../touch.js';
 import { addMuteButton, play, startMusic } from '../sound.js';
 import { THEMES } from '../world.js';
+import { shouldShowHomeHint } from '../install.js';
 
 const SCROLL_SPEED = 30; // how fast the ground moves past behind the menu, in pixels per second
 const BUTTON = { x: 340, y: 92, width: 150, height: 23, gap: 5 }; // the menu buttons, top one at y
@@ -61,6 +62,8 @@ export class TitleScene extends Phaser.Scene {
 
     this.showMenu();
     this.cameras.main.fadeIn(300);
+    // The very first time on a phone: how to put the game on the home screen.
+    if (shouldShowHomeHint()) this.time.delayedCall(700, () => this.openPage('homescreen'));
   }
 
   update(time, delta) {

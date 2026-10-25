@@ -35,6 +35,9 @@ https://matf.github.io/browser-game/
   (or the dark border) and slide it. The shoot button waits bottom right; a thumb anywhere on the
   right half shoots, and holding it keeps shooting. A "So geht's!" screen explains this on the first start.
   Held upright, the game pauses and asks you to turn the phone.
+  The first time the game opens in a phone browser, a page explains how to put it on the home screen
+  (iPhone: Teilen → Zum Home-Bildschirm; Android: browser menu → App installieren), so it starts
+  full screen like an app.
 - Shop (the house on the flower island): arrows choose, Space buys, Tab switches page, Enter or Esc
   goes back to the world map; the mouse works too
 
@@ -89,6 +92,7 @@ islands drawn on the map.
   shapes were drawn for this game.
 - Cupcake and marshmallow: [Pixel Platformer Food Expansion](https://opengameart.org/content/pixel-platformer-food-expansion)
   by Kenney ([kenney.nl](https://kenney.nl)), CC0.
+- App icons (`icon-*.png`): the Marshmallow dragon on a sky background, made from `dragons.png`.
 - Bee, raindrop, snowflake, shooting star, ember, volcano, fireball, the dragons' shots (fire, water, lightning bolt, flower), rainbow, apple, strawberry, piggy bank and accessories: drawn for this game.
 - Sounds: [Interface Sounds](https://opengameart.org/content/interface-sounds),
   [85 Short music jingles](https://opengameart.org/content/85-short-music-jingles),

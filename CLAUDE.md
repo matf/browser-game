@@ -79,6 +79,12 @@ through a rainbow at the end. The README has the player-facing description and t
   `dragonFlight.volume`), so Neues Spiel keeps them.
 - `src/sound.js`: always play effects with `play(scene, key)` (respects mute and the Einstellungen
   volume); `startMusic`, `addMuteButton`, `getVolume/setVolume` (steps 0–5, 3 = normal).
+- Home screen: `public/manifest.webmanifest` (fullscreen, landscape, `assets/icon-192/512.png`) and
+  the iOS meta tags in `index.html` make it an app. `src/install.js` decides whether to show the
+  one-time `homescreen` page (touch device, not already started as an app, localStorage key
+  `dragonFlight.homeHintSeen`); `TitleScene` opens it. It shows iPhone or Android steps, or a
+  "Jetzt installieren" button when Android Chrome sent `beforeinstallprompt` (not tested: headless
+  Chrome never sends it).
 - `src/hud.js` (hearts and coin digits, used by HUD and map), `src/view.js` (480×270 × `ZOOM` 4,
   `FONT`), `src/touch.js` (`IS_TOUCH`, rotate-your-phone pause, refit), `src/update.js` (update
   banner for iPhone home-screen apps).

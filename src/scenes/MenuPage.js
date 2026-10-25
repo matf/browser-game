@@ -28,13 +28,13 @@ export function addButton(scene, x, y, label, onPress, { width = 120, height = 2
 // title screen and goes back to it with the "Zurück" button, Esc or Enter.
 export class MenuPage extends Phaser.Scene {
   // Draw the background, the page title and the back button. Call first in create().
-  openPage(title) {
+  openPage(title, backLabel = '◀ Zurück') {
     setupCamera(this);
     this.closing = false;
     this.add.rectangle(0, 0, WIDTH, HEIGHT, COLORS.background).setOrigin(0);
     this.add.text(WIDTH / 2, 22, title, { ...TEXT, fontSize: '22px', color: '#ffe066', strokeThickness: 4 }).setOrigin(0.5).setResolution(4);
 
-    const back = addButton(this, WIDTH / 2, BACK_BUTTON.y, '◀ Zurück', () => this.close(), {
+    const back = addButton(this, WIDTH / 2, BACK_BUTTON.y, backLabel, () => this.close(), {
       width: BACK_BUTTON.width,
       height: BACK_BUTTON.height,
       color: COLORS.back,
