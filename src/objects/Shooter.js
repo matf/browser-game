@@ -4,7 +4,8 @@ import { IS_TOUCH } from '../touch.js';
 import { play } from '../sound.js';
 
 export const ENERGY_MAX = 100; // a full energy bar
-const SHOT_COST = 20; // energy for one shot (100 / 20 = 5 shots with a full bar)
+const SHOTS_IN_FULL_BAR = 8; // how many shots a full energy bar is good for
+const SHOT_COST = ENERGY_MAX / SHOTS_IN_FULL_BAR; // energy for one shot
 const ENERGY_REFILL = 18; // energy that comes back every second
 const SHOT_GAP_MS = 220; // at least this long between two shots, even when holding the button
 const SHOT_SPEED = 280; // how fast a shot flies, in pixels per second
@@ -12,6 +13,7 @@ const SHOT_SIZE = 6; // how big a shot is when it hits something (radius in pixe
 const MOUTH = { x: 23, y: -5 }; // where shots come out, from the middle of the dragon
 export const SHOOT_HOME = { x: 402, y: 176 }; // the shoot button on phones (bottom right)
 const BUTTON_RADIUS = 36; // size of the shoot button
+const BUTTON_ICON_SCALE = 1.3; // size of the shot picture on the button (bigger looks blocky)
 
 // What each dragon spits. texture/frame: the picture, scale: its size, spin: how fast it turns
 // (degrees per second), colors: the little trail behind it and the puff when it hits something.
@@ -105,7 +107,7 @@ export class Shooter {
   addButton() {
     const { x, y } = SHOOT_HOME;
     const ring = this.scene.add.circle(0, 0, BUTTON_RADIUS, 0xffffff, 0.15).setStrokeStyle(3, 0xffffff, 0.6);
-    const icon = this.scene.add.image(0, 0, this.shot.texture, this.shot.frame).setScale(this.shot.scale * 2.4);
+    const icon = this.scene.add.image(0, 0, this.shot.texture, this.shot.frame).setScale(this.shot.scale * BUTTON_ICON_SCALE);
     this.button = this.scene.add.container(x, y, [ring, icon]).setDepth(20).setScrollFactor(0);
     this.touchId = null;
 
