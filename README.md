@@ -25,7 +25,10 @@ https://matf.github.io/browser-game/
   (or Esc there) goes back to it.
 - World map: tap a level (or the shop house) and the dragon flies there and goes in. With the
   keyboard, arrows or WASD fly to the previous/next spot (the shop comes before level 1) and Space or
-  Enter goes in.
+  Enter goes in. Tapping an island somewhere else (or I) opens the island view.
+- Island view: one big island at a time. Tap a spot and your dragon walks there (or walk with the
+  arrows/WASD); swipe sideways (or the arrows at the edges, or Q/E) to get to the next open island.
+  Esc or the map icon goes back to the world map.
 - In a level: arrow keys or WASD fly; Space spits (Marshmallow spits marshmallows, Chili fire, Blubb
   water, Wolke lightning bolts, Kiesel flowers, Goldi stars, Lila magic bubbles, Mitternacht moons,
   Summsi honey). A shot knocks bees away and pops raindrops and fireballs.

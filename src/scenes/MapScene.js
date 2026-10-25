@@ -59,6 +59,7 @@ export class MapScene extends Phaser.Scene {
     this.add.image(0, 0, 'map').setOrigin(0);
     this.addSeaSparkles();
     this.drawPaths();
+    this.addIslandTaps();
     this.addShop();
     this.addStations();
     this.addDriftingClouds();
@@ -85,7 +86,7 @@ export class MapScene extends Phaser.Scene {
       .setDepth(10)
       .setInteractive({ useHandCursor: true })
       .on('pointerdown', () => this.toMenu());
-    const hint = IS_TOUCH ? 'Tippe auf ein Level!' : 'Pfeiltasten: wählen   Leertaste: los!';
+    const hint = IS_TOUCH ? 'Tippe auf ein Level oder eine Insel!' : 'Pfeiltasten: wählen   Leertaste: los!   I: Insel';
     this.add.text(WIDTH / 2, 14, hint, { ...TEXT, fontSize: '10px' }).setOrigin(0.5).setResolution(4).setDepth(10);
 
     // Key events instead of checking keys every frame, so even a very short tap counts.
@@ -102,6 +103,7 @@ export class MapScene extends Phaser.Scene {
     onKeys(['RIGHT', 'DOWN', 'D', 'S'], () => this.step(1));
     onKeys(['SPACE', 'ENTER'], () => !this.flight && this.enter(this.save.at));
     onKeys(['ESC'], () => this.toMenu());
+    onKeys(['I'], () => this.visitIsland(this.save.at < 0 ? 0 : Math.floor(this.save.at / LEVELS_PER_ISLAND)));
 
     this.refresh();
     if (fresh !== null) this.time.delayedCall(REVEAL_DELAY_MS, () => this.reveal(fresh));
@@ -137,6 +139,16 @@ export class MapScene extends Phaser.Scene {
         .on('pointerdown', () => this.tapSpot(level));
       this.stations.push({ pad, number, star });
     }
+  }
+
+  // Tapping an island (not one of its stations) opens the island view.
+  addIslandTaps() {
+    ISLANDS.forEach(({ area: [x, y, rx, ry] }, i) =>
+      this.add
+        .zone(x, y, rx * 2, ry * 2)
+        .setInteractive(new Phaser.Geom.Ellipse(rx, ry, rx * 2, ry * 2), Phaser.Geom.Ellipse.Contains)
+        .on('pointerdown', () => this.visitIsland(i)),
+    );
   }
 
   addShop() {
@@ -490,6 +502,16 @@ export class MapScene extends Phaser.Scene {
         else answers[selected].action();
       },
     };
+  }
+
+  // Go walking on an island (only one that is open; the volcano island has no island view).
+  visitIsland(index) {
+    if (this.leaving || this.question || index >= ISLANDS.length) return;
+    if (!isOpen(this.save, index * LEVELS_PER_ISLAND)) return play(this, 'nope');
+    this.leaving = true;
+    play(this, 'click');
+    this.cameras.main.fadeOut(250);
+    this.cameras.main.once('camerafadeoutcomplete', () => this.scene.start('island', { island: index }));
   }
 
   toMenu() {

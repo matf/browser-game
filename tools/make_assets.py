@@ -292,6 +292,48 @@ for idx, (isl, m) in enumerate(zip(ISLANDS, masks)):
 sea.save(f'{OUT}/map.png')
 recolor(SHOP_HOUSE, {}).save(f'{OUT}/shop-house.png')
 
+# --- Island views -------------------------------------------------------------------------------
+# One big island per theme filling the screen (island-flowers.png, ...), for walking around and
+# building. BIG_ISLAND must match ISLAND_GROUND in src/world.js. The decorations stay near the
+# edge, so the middle is free for building.
+BIG_ISLAND = [(240, 160, 196, 78), (120, 176, 92, 58), (362, 150, 100, 64)]
+BIG_CLIFF = 8
+BIG_DECOR = {
+    'flowers': [(TALL_PINE, 62, 160), (TREE, 92, 140), (BUSH, 426, 120), (HIVE, 48, 214), (MUSHROOMS, 432, 196),
+                (SPROUT, 150, 228), (SPROUT, 330, 214), (SMALL_PINE, 400, 110)],
+    'candy': [(TALL_AUTUMN, 62, 160), (CAKE, 96, 142), (MARSHMALLOW, 428, 122), (BUSH, 56, 214),
+              (CAKE, 430, 196), (SMALL_PINE, 400, 110), (MARSHMALLOW, 150, 228)],
+    'snow': [(TALL_PINE, 62, 160), (TALL_PINE, 92, 140), (SNOWMAN, 428, 124), (SMALL_PINE, 52, 214),
+             (SNOWMAN, 150, 230), (SMALL_PINE, 400, 110), (SMALL_PINE, 434, 196)],
+    'stars': [(TREE, 62, 160), (TALL_PINE, 92, 140), (BUSH, 426, 120), (MUSHROOMS, 48, 214),
+              (MUSHROOMS, 432, 196), (SMALL_PINE, 400, 110)],
+}
+big_rng = random.Random(11)
+big_mask = blob_mask(BIG_ISLAND)
+for theme, decor in BIG_DECOR.items():
+    pic = Image.new('RGBA', (W, H), SEA)
+    d = ImageDraw.Draw(pic)
+    for _ in range(40):
+        x, y = big_rng.randrange(0, W), big_rng.randrange(0, H)
+        d.line([(x, y), (x + 2, y - 1), (x + 4, y)], fill=hexc('#7dcff0'))
+    pic.paste(SHALLOW, (0, 0), grow(big_mask, 10))
+    pic.paste(FOAM, (0, 0), ImageChops.subtract(grow(big_mask, 3), big_mask))
+    layer = Image.new('RGBA', (W, H))
+    top = ImageChops.multiply(ImageChops.offset(big_mask, 0, -BIG_CLIFF), big_mask)
+    layer.paste(CLIFF, (0, 0), big_mask)
+    layer.paste(SAND_DARK, (0, 0), ImageChops.offset(top, 0, 3))
+    layer.paste(SAND, (0, 0), top)
+    grass = shrink(top, 7)
+    tex = Image.new('RGBA', (W, H))
+    for ty in range(0, H, 16):
+        for tx in range(0, W, 16):
+            tex.alpha_composite(tt(big_rng.choice([0, 0, 0, 1, 1, 2] if theme == 'flowers' else [0, 0, 0, 1])), (tx, ty))
+    layer.paste(tex, (0, 0), grass)
+    for thing, x, y in sorted(decor, key=lambda e: e[2]):
+        layer.alpha_composite(thing, (x - thing.width // 2, y - thing.height))
+    pic.alpha_composite(recolor(layer, MAP_SWAP[theme]))
+    pic.save(f'{OUT}/island-{theme}.png')
+
 # --- The fire dragon ----------------------------------------------------------------------------
 # Chili (row 1 of dragons.png) in dark purple with glowing orange and angry red eyes, 3 flying
 # frames of 67x52.

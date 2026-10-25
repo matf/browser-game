@@ -40,6 +40,13 @@ through a rainbow at the end. The README has the player-facing description and t
 - Before a level starts, the map asks "Nur noch N Herzen! Zuerst in den Shop?" when hearts ≤
   `LOW_HEARTS` (2) and the coins buy the cheapest food (`MapScene.askShop`). It asks once per map
   visit, and not right after coming back from the shop (`{ fromShop: true }`).
+- `island` (`IslandScene`, island view): tapping an island's `area` on the map (or I) starts it with
+  `{ island }`. The open islands (not the volcano) sit side by side, `WIDTH` apart; swipe / Q / E /
+  the edge arrows glide the camera over (`go`), a tap walks the dragon (`walkTo`, kept on the ground
+  by `onIslandGround` in `world.js`). Pictures `island-<theme>.png` come from `tools/make_assets.py`
+  (`BIG_ISLAND`, must match `ISLAND_GROUND`). Camera `setBounds`/`getWorldPoint` don't work with the
+  zoomed origin-0 camera, so scrolling is clamped and pointers converted by hand (`pointer.x / ZOOM`).
+  This is step 1 of Anna's island wish; see "Ideas and open work".
 
 ### Where things live
 
@@ -131,7 +138,11 @@ Point her at these when she says something is too easy, too hard, too fast, etc.
 
 ### Ideas and open work
 
-- Planned (Anna's idea, not started): buy decorations in the shop and place them on the world map.
+- Anna's island wish (step 1, the island view, is done): buy houses, a fountain and more in the
+  shop and place them on the islands in the island view; your dragons live in the houses. Plus a
+  breeding island (Brutinsel): every day you get a dragon egg, the next day a baby dragon hatches.
+  The decorations can come from the Kenney Tiny Town pack (houses, well, trees, fences, beehive,
+  barrels; no fountain, draw one).
 - Power-ups: Anna asked for more ideas beyond star and heart. Offered Magnet, Zeitlupe, Münzregen and
   Mini-Drache; she hasn't picked yet. Ask her before building any.
 - Shooting the fire dragon: she asked whether shots do anything to it. Offered (1) a health bar so it

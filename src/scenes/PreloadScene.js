@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { SOUNDS, loadSoundSettings } from '../sound.js';
-import { THEMES } from '../world.js';
+import { ISLANDS, THEMES } from '../world.js';
 
 // Frame indices in the Kenney tilesheet (assets/tiles.png, 18x18, 20 columns).
 export const TILE = {
@@ -68,6 +68,7 @@ export class PreloadScene extends Phaser.Scene {
       }
     }
     this.load.image('map', 'map.png');
+    for (const island of ISLANDS) this.load.image(`island-${island.theme}`, `island-${island.theme}.png`);
     this.load.image('shop-house', 'shop-house.png');
     this.load.image('rainbow', 'rainbow.png');
     this.load.image('piggy', 'piggy.png');
