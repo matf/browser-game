@@ -46,6 +46,8 @@ through a rainbow at the end. The README has the player-facing description and t
   by `onIslandGround` in `world.js`). Pictures `island-<theme>.png` come from `tools/make_assets.py`
   (`BIG_ISLAND`, must match `ISLAND_GROUND`). Camera `setBounds`/`getWorldPoint` don't work with the
   zoomed origin-0 camera, so scrolling is clamped and pointers converted by hand (`pointer.x / ZOOM`).
+  Don't make pinned (scroll factor 0) buttons from containers: their taps miss once the camera has
+  scrolled to another island (that broke Bauen); pin the box and the label separately.
   Bauen (`src/objects/BuildMode.js`, button or B): a bar with the bag's things; tap the island to
   place (`fits`: its bottom edge must be on the ground), tap a placed thing to put it back.
   Decorations: `DECO` in `src/shop.js` (frame in `deco.png`, made by `tools/make_assets.py`, `size`

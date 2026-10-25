@@ -19,11 +19,14 @@ export class BuildMode {
     this.parts = []; // the bar, while building
     this.ghost = scene.add.image(0, 0, 'deco', 0).setOrigin(0.5, 1).setAlpha(0.6).setVisible(false).setDepth(999);
 
-    const bg = scene.add.rectangle(0, 0, 64, 22, 0x5fd068).setStrokeStyle(2, 0xffffff);
-    this.label = scene.add.text(0, 0, 'Bauen', { ...TEXT, fontSize: '12px', color: '#1b1630', strokeThickness: 0 }).setOrigin(0.5).setResolution(4);
-    scene.add
-      .container(40, 248, [bg, this.label])
-      .setScrollFactor(0, 0, true)
+    // No container here: taps on a pinned (scroll factor 0) container miss once the camera has
+    // scrolled to another island.
+    const bg = scene.add.rectangle(40, 248, 64, 22, 0x5fd068).setStrokeStyle(2, 0xffffff).setScrollFactor(0).setDepth(1002);
+    this.label = scene.add
+      .text(40, 248, 'Bauen', { ...TEXT, fontSize: '12px', color: '#1b1630', strokeThickness: 0 })
+      .setOrigin(0.5)
+      .setResolution(4)
+      .setScrollFactor(0)
       .setDepth(1002);
     bg.setInteractive({ useHandCursor: true }).on('pointerdown', (pointer, x, y, event) => {
       event.stopPropagation();
