@@ -54,6 +54,15 @@ through a rainbow at the end. The README has the player-facing description and t
   Residents (`src/objects/Resident.js`, `IslandScene.moveIn`): your dragons except the one you fly
   with live in the `home` decorations, in placing order; they stroll within `ROAM` of the door and
   sometimes go in. `moveIn` rebuilds them whenever a house is placed or put away.
+- Brutinsel: `HOME_ISLANDS` in `world.js` (islands without levels, always first in the island view;
+  `nest` = nest spot), drawn on the map by `make_assets.py` (`NEST_ISLAND`). `src/hatchery.js`:
+  `visitNest` (on showing the Brutinsel): an egg from an earlier day (`save.egg.day`, local date
+  string) hatches into `save.hatchlings` (`{ id, name, shape, tint, born }`), then a new egg if
+  `save.lastEgg` isn't today. Hatchlings are a shape from `dragons-white.png` (made by
+  `tools/make_dragons.py`) with a tint from `COLORS` (none like the 9 shop dragons), `white-<shape>-fly`
+  anims. They grow from `BABY_SCALE` to `GROWN_SCALE` over `GROW_HOURS` (24, Anna said "a bit of time
+  on their island"); grown ones join the residents after your shop dragons, babies and homeless
+  grown-ups stroll at the nest. To test, set `save.egg.day`/`lastEgg` to yesterday or move `born` back.
 
 ### Where things live
 
@@ -96,7 +105,7 @@ through a rainbow at the end. The README has the player-facing description and t
   are recolours painted by `tools/make_dragons.py` (colours in `NEW_DRAGONS`; it rebuilds only those rows).
   The gallery shows them in two rows (`CARD.perRow`).
 - `src/save.js`: `localStorage['dragonFlight.save']` = `{ coins, done: [level indices], at (map spot),
-  hearts, dragon, dragons, items, wear, seenHelp, bag, placed }`; old saves with `level` are migrated.
+  hearts, dragon, dragons, items, wear, seenHelp, bag, placed, egg, lastEgg, hatchlings }`; old saves with `level` are migrated.
   `resetSave()` keeps only `seenHelp`. Sound settings are separate keys (`dragonFlight.muted`,
   `dragonFlight.volume`), so Neues Spiel keeps them.
 - `src/sound.js`: always play effects with `play(scene, key)` (respects mute and the Einstellungen
@@ -145,7 +154,9 @@ Point her at these when she says something is too easy, too hard, too fast, etc.
 
 ### Ideas and open work
 
-- Anna's island wish (island view, Bauen and dragons living in houses are done; the Brutinsel is next): buy houses, a fountain and more in the
+- Anna's island wish is built (island view, Bauen, dragons in houses, Brutinsel). Open questions: can
+  you fly with a grown hatchling in the levels (it would need a shot)? Anna said there can be more
+  islands without levels, just for living ("Wohninseln"); not built yet. Original wish: buy houses, a fountain and more in the
   shop and place them on the islands in the island view; your dragons live in the houses. Plus a
   breeding island (Brutinsel): every day you get a dragon egg, the next day a baby dragon hatches.
   The decorations can come from the Kenney Tiny Town pack (houses, well, trees, fences, beehive,

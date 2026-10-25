@@ -3,13 +3,14 @@ import { Accessories } from '../objects/Accessories.js';
 import { BuildMode } from '../objects/BuildMode.js';
 import { Resident } from '../objects/Resident.js';
 import { DRAGONS } from './PreloadScene.js';
-import { loadSave } from '../save.js';
+import { loadSave, writeSave } from '../save.js';
+import { hatchlingLook, growth, visitNest } from '../hatchery.js';
 import { FONT, WIDTH, HEIGHT, ZOOM, setupCamera } from '../view.js';
 import { IS_TOUCH } from '../touch.js';
 import { addMuteButton, play, startMusic } from '../sound.js';
 import { addCoins } from '../hud.js';
 import { DECO } from '../shop.js';
-import { ISLANDS, LEVELS_PER_ISLAND, isOpen, onIslandGround } from '../world.js';
+import { HOME_ISLANDS, ISLANDS, LEVELS_PER_ISLAND, isOpen, onIslandGround } from '../world.js';
 
 const WALK_SPEED = 80; // how fast your dragon walks on the island, in pixels per second
 const DRAGON_SCALE = 0.5; // size of the dragon on the island (1 = as big as in the levels)
@@ -27,15 +28,15 @@ export class IslandScene extends Phaser.Scene {
     super('island');
   }
 
-  // data.island: which island to show first (index in ISLANDS).
+  // data.island: the theme of the island to show first.
   create(data) {
     setupCamera(this);
     startMusic(this);
     this.save = loadSave();
     this.leaving = false;
-    // Only islands that are open on the map, in map order.
-    this.islands = ISLANDS.filter((_, i) => isOpen(this.save, i * LEVELS_PER_ISLAND));
-    this.index = Math.max(0, this.islands.indexOf(ISLANDS[data?.island ?? 0]));
+    // The islands without levels first, then the level islands that are open on the map.
+    this.islands = [...HOME_ISLANDS, ...ISLANDS.filter((_, i) => isOpen(this.save, i * LEVELS_PER_ISLAND))];
+    this.index = Math.max(0, this.islands.findIndex((island) => island.theme === data?.island));
     this.islands.forEach((island, i) => this.add.image(i * WIDTH, 0, `island-${island.theme}`).setOrigin(0));
     // No camera bounds: they don't work with the zoomed camera, so scrolling is clamped by hand.
     this.cameras.main.scrollX = this.index * WIDTH;
@@ -44,6 +45,7 @@ export class IslandScene extends Phaser.Scene {
     this.decoSprites = new Map();
     const themes = this.islands.map((island) => island.theme);
     for (const thing of this.save.placed) if (themes.includes(thing.island)) this.addDeco(thing);
+    this.addNest();
     this.residents = [];
     this.moveIn();
 
@@ -145,12 +147,18 @@ export class IslandScene extends Phaser.Scene {
   }
 
   // Your other dragons (not the one with you) each live in a house: the first dragon in the first
-  // house you placed, and so on. Called again whenever a house is placed or put away.
+  // house you placed, and so on; grown-up hatchlings after them. Babies, and grown-ups without a
+  // house, stay at the nest. Called again whenever a house is placed or put away.
   moveIn() {
-    const before = new Set(this.residents.map((r) => r.dragon.key));
+    const before = new Set(this.residents.map((r) => r.look.key));
     for (const resident of this.residents) resident.destroy();
     const homes = this.save.placed.filter((t) => DECO.find((d) => d.key === t.key).home);
-    const dragons = this.save.dragons.filter((key) => key !== this.save.dragon).map((key) => DRAGONS.find((d) => d.key === key));
+    const dragons = [
+      ...this.save.dragons
+        .filter((key) => key !== this.save.dragon)
+        .map((key) => ({ key, name: DRAGONS.find((d) => d.key === key).name, anim: `${key}-fly` })),
+      ...this.save.hatchlings.filter((h) => growth(h) >= 1).map((h) => hatchlingLook(h)),
+    ];
     this.residents = [];
     homes.forEach((home, i) => {
       const index = this.islands.findIndex((island) => island.theme === home.island);
@@ -163,7 +171,75 @@ export class IslandScene extends Phaser.Scene {
         play(this, 'newdragon');
       }
     });
+    const homeless = dragons.slice(homes.length).filter((d) => d.key.startsWith('hatchling'));
+    const babies = this.save.hatchlings.filter((h) => growth(h) < 1).map((h) => hatchlingLook(h));
+    for (const look of [...homeless, ...babies]) this.addNestDragon(look);
     this.started = true;
+  }
+
+  // --- The Brutinsel ------------------------------------------------------------------------
+
+  // The nest, with today's egg in it.
+  addNest() {
+    this.nestIndex = this.islands.findIndex((island) => island.nest);
+    const { x, y } = this.islands[this.nestIndex].nest;
+    const left = this.nestIndex * WIDTH;
+    this.add.image(left + x, y, 'nest').setDepth(y - 6);
+    this.egg = this.add.image(left + x, y - 4, 'egg').setDepth(y - 5).setVisible(Boolean(this.save.egg));
+    this.nestChecked = false;
+  }
+
+  // A hatchling strolling around the nest.
+  addNestDragon(look) {
+    const { nest } = this.islands[this.nestIndex];
+    const resident = new Resident(this, look, { x: nest.x, y: nest.y + 14 }, this.nestIndex * WIDTH, { goesInside: false });
+    this.residents.push(resident);
+    return resident;
+  }
+
+  // On the Brutinsel (once per visit): yesterday's egg hatches, and today's egg appears.
+  checkNest() {
+    if (this.nestChecked) return;
+    this.nestChecked = true;
+    const { hatched, laid } = visitNest(this.save);
+    writeSave(this.save);
+    const { x, y } = this.islands[this.nestIndex].nest;
+    const left = this.nestIndex * WIDTH;
+    let delay = 600;
+    if (hatched) {
+      // The egg wobbles, cracks open with sparkles, and the baby is there.
+      this.tweens.add({ targets: this.egg, angle: { from: -15, to: 15 }, duration: 120, yoyo: true, repeat: 5, delay });
+      this.time.delayedCall(delay + 1500, () => {
+        this.egg.setVisible(false).setAngle(0);
+        this.sparkle(left + x, y - 6);
+        play(this, 'newdragon');
+        const baby = this.addNestDragon(hatchlingLook(hatched));
+        baby.pos.y = y + 2;
+        this.banner('Ein Baby ist geschlüpft!', `Es heißt ${hatched.name}.`);
+      });
+      delay += 4500;
+    }
+    if (laid) {
+      this.time.delayedCall(delay, () => {
+        this.egg.setVisible(true).setScale(0);
+        this.tweens.add({ targets: this.egg, scale: 1, duration: 400, ease: 'Back.Out' });
+        play(this, 'coin');
+        this.banner('Ein Drachen-Ei!', 'Morgen schlüpft ein Baby.');
+      });
+    }
+  }
+
+  banner(title, subtitle) {
+    this.bannerBox?.destroy();
+    const big = this.add.text(0, 0, title, { ...TEXT, fontSize: '20px', strokeThickness: 4 }).setOrigin(0.5).setResolution(4);
+    const small = this.add.text(0, 16, subtitle, { ...TEXT, fontSize: '12px' }).setOrigin(0.5, 0).setResolution(4);
+    const w = Math.max(big.width, small.width) + 24;
+    const top = -big.height / 2 - 6;
+    const panel = this.add.rectangle(0, top, w, small.y + small.height + 6 - top, 0x1b1630, 0.6).setOrigin(0.5, 0);
+    const box = this.add.container(WIDTH / 2, 62, [panel, big, small]).setScrollFactor(0, 0, true).setDepth(1003).setScale(0);
+    this.bannerBox = box;
+    this.tweens.add({ targets: box, scale: 1, duration: 400, ease: 'Back.Out' });
+    this.tweens.add({ targets: box, alpha: 0, delay: 3200, duration: 500, onComplete: () => box.destroy() });
   }
 
   sparkle(x, y) {
@@ -180,6 +256,7 @@ export class IslandScene extends Phaser.Scene {
 
   // Name, arrows and dots for the island you're on.
   showIsland() {
+    if (this.islands[this.index].nest) this.checkNest();
     this.title.setText(this.islands[this.index].name);
     this.arrows[0].setVisible(this.index > 0);
     this.arrows[1].setVisible(this.index < this.islands.length - 1);

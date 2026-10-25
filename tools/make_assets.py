@@ -115,6 +115,7 @@ MAP_SWAP = {
              '#8b9bb4': '#e8f0f8', '#52607c': '#b9c8da'},
     'fire': {'#84c669': '#6b4b5e', '#65a556': '#57394c', '#8bd87d': '#80596f', '#479f4a': '#3f2838',
              '#f3d58f': '#8a6a5e', '#d9b46e': '#6e5249', '#b98b52': '#4e3832'},
+    'nest': {'#84c669': '#b5d96a', '#65a556': '#93bf4f', '#8bd87d': '#cde68a', '#479f4a': '#6f9a3a'},
     'stars': {'#84c669': '#6a5bc0', '#65a556': '#5547a6', '#8bd87d': '#8070d6', '#479f4a': '#3e3488',
               '#e38628': '#ffd84a', '#fdbe53': '#fff0a0', '#5a6988': '#6b4fb0', '#8b9bb4': '#9c7fe0',
               '#52607c': '#4f3c8f', '#e84537': '#5fe3ff', '#ff706d': '#a8f2ff', '#f3d58f': '#d8cff2', '#d9b46e': '#b3a6e0', '#b98b52': '#8d7fc4'},
@@ -289,7 +290,50 @@ for idx, (isl, m) in enumerate(zip(ISLANDS, masks)):
     layer = recolor(layer, MAP_SWAP[isl['theme']])
     sea.alpha_composite(layer)
 
+# The Brutinsel: a small island without levels, where the dragon eggs are. Must match HOME_ISLANDS
+# in src/world.js. Its own random numbers, so the rest of the map stays the same.
+def nest_pic(w):
+    """A round straw nest, w pixels wide, seen from a bit above."""
+    h = w // 2
+    im = Image.new('RGBA', (w, h))
+    d = ImageDraw.Draw(im)
+    d.ellipse([0, 0, w - 1, h - 1], fill=hexc('#b98b52'))
+    d.ellipse([w // 6, h // 5, w - 1 - w // 6, h - 1 - h // 3], fill=hexc('#7a5a32'))
+    r = random.Random(w)
+    for _ in range(w):
+        x, y = r.randrange(0, w), r.randrange(0, h)
+        if (x - w / 2) ** 2 / (w / 2) ** 2 + (y - h / 2) ** 2 / (h / 2) ** 2 <= 1:
+            dist = (x - w / 2) ** 2 / (w / 3) ** 2 + (y - h / 2.6) ** 2 / (h / 3.2) ** 2
+            if dist > 1:
+                d.line([(x, y), (x + r.choice([-2, 2]), y + r.choice([-1, 0, 1]))], fill=hexc(r.choice(['#e3c07a', '#d9a35a', '#f3d58f'])))
+    return outline(im, '#4e3832')
+
+
+NEST_ISLAND = {'blobs': [(66, 90, 42, 24), (44, 100, 22, 14), (92, 98, 18, 12)]}
+nest_rng = random.Random(5)
+m = blob_mask(NEST_ISLAND['blobs'])
+sea.paste(SHALLOW, (0, 0), ImageChops.subtract(grow(m, 7), ImageChops.multiply(grow(m, 7), m)))
+sea.paste(FOAM, (0, 0), ImageChops.subtract(grow(m, 2), m))
+layer = Image.new('RGBA', (W, H))
+top = ImageChops.multiply(ImageChops.offset(m, 0, -5), m)
+layer.paste(CLIFF, (0, 0), m)
+layer.paste(SAND_DARK, (0, 0), ImageChops.offset(top, 0, 2))
+layer.paste(SAND, (0, 0), top)
+tex = Image.new('RGBA', (W, H))
+for ty in range(0, H, 16):
+    for tx in range(0, W, 16):
+        tex.alpha_composite(tt(nest_rng.choice([0, 0, 0, 1, 2])), (tx, ty))
+layer.paste(tex, (0, 0), shrink(top, 4))
+small_egg = Image.new('RGBA', (5, 6))
+ImageDraw.Draw(small_egg).ellipse([0, 0, 4, 5], fill=hexc('#fff3e0'))
+small_egg = outline(small_egg, '#4e3832')
+small_nest = nest_pic(18)
+for pic, x, y in [(TREE, 34, 94), (small_nest, 66, 96), (small_egg, 64, 92), (BUSH, 98, 96), (SPROUT, 50, 106)]:
+    layer.alpha_composite(pic, (x - pic.width // 2, y - pic.height))
+sea.alpha_composite(recolor(layer, MAP_SWAP['nest']))
+
 sea.save(f'{OUT}/map.png')
+nest_pic(40).save(f'{OUT}/nest.png')
 recolor(SHOP_HOUSE, {}).save(f'{OUT}/shop-house.png')
 
 # --- Decorations to buy and place on the islands ------------------------------------------------
@@ -359,6 +403,8 @@ BIG_DECOR = {
              (SNOWMAN, 150, 230), (SMALL_PINE, 400, 110), (SMALL_PINE, 434, 196)],
     'stars': [(TREE, 62, 160), (TALL_PINE, 92, 140), (BUSH, 426, 120), (MUSHROOMS, 48, 214),
               (MUSHROOMS, 432, 196), (SMALL_PINE, 400, 110)],
+    'nest': [(TREE, 62, 160), (TALL_PINE, 92, 140), (BUSH, 426, 120), (SPROUT, 48, 214), (MUSHROOMS, 432, 196),
+             (SPROUT, 150, 228), (SMALL_PINE, 400, 110)],
 }
 big_rng = random.Random(11)
 big_mask = blob_mask(BIG_ISLAND)

@@ -12,6 +12,7 @@ import {
   ALL_ISLANDS,
   BOSS_ISLAND,
   BOSS_LEVEL,
+  HOME_ISLANDS,
   ISLANDS,
   LEVELS_PER_ISLAND,
   SHOP,
@@ -66,7 +67,7 @@ export class MapScene extends Phaser.Scene {
     this.addIslandClouds();
     this.addTwinkles();
     this.addVolcanoSmoke();
-    for (const island of ALL_ISLANDS) {
+    for (const island of [...ALL_ISLANDS, ...HOME_ISLANDS]) {
       this.add.text(island.label[0], island.label[1], island.name, { ...TEXT, fontSize: '10px' })
         .setOrigin(0.5)
         .setResolution(4)
@@ -143,12 +144,13 @@ export class MapScene extends Phaser.Scene {
 
   // Tapping an island (not one of its stations) opens the island view.
   addIslandTaps() {
-    ISLANDS.forEach(({ area: [x, y, rx, ry] }, i) =>
+    const islands = [...ISLANDS.map((island, i) => [island, i]), ...HOME_ISLANDS.map((island) => [island, null])];
+    for (const [{ area: [x, y, rx, ry], theme }, i] of islands) {
       this.add
         .zone(x, y, rx * 2, ry * 2)
         .setInteractive(new Phaser.Geom.Ellipse(rx, ry, rx * 2, ry * 2), Phaser.Geom.Ellipse.Contains)
-        .on('pointerdown', () => this.visitIsland(i)),
-    );
+        .on('pointerdown', () => this.visitIsland(i, theme));
+    }
   }
 
   addShop() {
@@ -504,14 +506,15 @@ export class MapScene extends Phaser.Scene {
     };
   }
 
-  // Go walking on an island (only one that is open; the volcano island has no island view).
-  visitIsland(index) {
-    if (this.leaving || this.question || index >= ISLANDS.length) return;
-    if (!isOpen(this.save, index * LEVELS_PER_ISLAND)) return play(this, 'nope');
+  // Go walking on an island: a level island that is open (by its index in ISLANDS; the volcano
+  // island has no island view), or an island without levels (index null, theme given).
+  visitIsland(index, theme = ISLANDS[index]?.theme) {
+    if (this.leaving || this.question || !theme) return;
+    if (index !== null && !isOpen(this.save, index * LEVELS_PER_ISLAND)) return play(this, 'nope');
     this.leaving = true;
     play(this, 'click');
     this.cameras.main.fadeOut(250);
-    this.cameras.main.once('camerafadeoutcomplete', () => this.scene.start('island', { island: index }));
+    this.cameras.main.once('camerafadeoutcomplete', () => this.scene.start('island', { island: theme }));
   }
 
   toMenu() {

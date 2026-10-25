@@ -8,22 +8,26 @@ const EDGE = 12; // keep this far from the beach edge
 const HOME_CHANCE = 0.3; // after a walk, how likely the dragon goes into its house for a while
 const INSIDE_MS = [3000, 7000]; // how long it stays inside (shortest, longest)
 const REST_MS = [800, 2600]; // how long it stands still between walks
-const SCALE = 0.45; // size of a dragon living on the island
+export const RESIDENT_SCALE = 0.45; // size of a dragon living on the island
 
 const TEXT = { fontFamily: FONT, fontStyle: 'bold', color: '#ffffff', stroke: '#1b1630', strokeThickness: 3 };
 
 // One of your dragons living in a house: it strolls around near its house and sometimes goes in.
-// home: { x, y } of the house's door on its island; left: x of that island in the world.
+// look: { key, name, anim, tint, scale }; home: { x, y } of the house's door on its island; left: x
+// of that island in the world. With goesInside false (babies at the nest), it only strolls around.
 export class Resident {
-  constructor(scene, dragon, home, left) {
+  constructor(scene, look, home, left, { goesInside = true } = {}) {
     this.scene = scene;
-    this.dragon = dragon;
+    this.look = look;
+    this.scale = look.scale ?? RESIDENT_SCALE;
+    this.goesInside = goesInside;
     this.home = home;
     this.left = left;
     this.pos = { x: home.x, y: home.y + 4 };
     this.target = null;
-    this.shadow = scene.add.ellipse(0, 0, 18, 5, 0x1b1630, 0.25);
-    this.sprite = scene.add.sprite(0, 0, 'dragons').play(`${dragon.key}-fly`).setScale(SCALE);
+    this.shadow = scene.add.ellipse(0, 0, 40 * this.scale, 5, 0x1b1630, 0.25);
+    this.sprite = scene.add.sprite(0, 0, 'dragons').play(look.anim).setScale(this.scale);
+    if (look.tint !== undefined) this.sprite.setTint(look.tint);
     this.sprite.anims.setProgress(Math.random());
     this.sprite.setInteractive({ useHandCursor: true }).on('pointerdown', () => this.say());
     this.phase = Math.random() * 1000;
@@ -47,7 +51,7 @@ export class Resident {
       }
     }
     const x = this.left + this.pos.x;
-    const hover = 8 + Math.sin((time + this.phase) / 260) * 1.2;
+    const hover = 18 * this.scale + Math.sin((time + this.phase) / 260) * 1.2;
     this.shadow.setPosition(x, this.pos.y).setDepth(this.pos.y - 1);
     this.sprite.setPosition(x, this.pos.y - hover).setDepth(this.pos.y);
     this.bubble?.setPosition(x, this.pos.y - 30);
@@ -60,7 +64,7 @@ export class Resident {
 
   next() {
     if (!this.sprite.active) return;
-    if (Math.random() < HOME_CHANCE) {
+    if (this.goesInside && Math.random() < HOME_CHANCE) {
       this.goingHome = true;
       this.target = { x: this.home.x, y: this.home.y + 4 };
       return;
@@ -85,7 +89,7 @@ export class Resident {
     this.scene.tweens.add({ targets: [this.sprite, this.shadow], alpha: 0, scale: '*=0.6', duration: 300 });
     this.scene.time.delayedCall(Phaser.Math.Between(...INSIDE_MS), () => {
       if (!this.sprite.active) return;
-      this.scene.tweens.add({ targets: this.sprite, alpha: 1, scale: SCALE, duration: 300 });
+      this.scene.tweens.add({ targets: this.sprite, alpha: 1, scale: this.scale, duration: 300 });
       this.scene.tweens.add({ targets: this.shadow, alpha: 1, scale: 1, duration: 300 });
       this.inside = false;
       this.rest();
@@ -93,7 +97,7 @@ export class Resident {
   }
 
   // Its name (or `text`) pops up over it for a moment, for example when it's tapped.
-  say(text = this.dragon.name) {
+  say(text = this.look.name) {
     if (this.inside) return;
     this.bubble?.destroy();
     this.bubble = this.scene.add

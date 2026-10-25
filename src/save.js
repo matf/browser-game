@@ -16,6 +16,9 @@ const DEFAULTS = {
   seenHelp: false, // the "So geht's!" screen was shown once
   bag: {}, // decorations bought but not placed yet: { key: how many }
   placed: [], // decorations on the islands: { key, island (its theme), x, y }
+  egg: null, // the egg in the nest on the Brutinsel: { day } it was laid (see src/hatchery.js)
+  lastEgg: null, // the day the last egg was laid, so there is only one egg a day
+  hatchlings: [], // dragons that hatched: { id, name, shape, tint, born }
 };
 
 export function loadSave() {

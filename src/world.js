@@ -61,6 +61,12 @@ export const BOSS_ISLAND = {
 // All islands on the map, the volcano island last.
 export const ALL_ISLANDS = [...ISLANDS, BOSS_ISLAND];
 
+// Islands without levels, where dragons just live. The Brutinsel has the nest with the dragon eggs.
+// Drawn on the map by tools/make_assets.py (NEST_ISLAND); nest: where the nest sits in the island view.
+export const HOME_ISLANDS = [
+  { name: 'Brutinsel', theme: 'nest', label: [66, 58], area: [66, 94, 48, 28], nest: { x: 240, y: 150 } },
+];
+
 // The shop house: x, y is the bottom middle of the house; the dragon lands at its door.
 export const SHOP = { x: 84, y: 186 };
 export const SHOP_SPOT = -1; // "where the dragon is" when it's at the shop (levels are 0, 1, 2, ...)

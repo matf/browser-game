@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { SOUNDS, loadSoundSettings } from '../sound.js';
-import { ISLANDS, THEMES } from '../world.js';
+import { HOME_ISLANDS, ISLANDS, THEMES } from '../world.js';
+import { SHAPES } from '../hatchery.js';
 
 // Frame indices in the Kenney tilesheet (assets/tiles.png, 18x18, 20 columns).
 export const TILE = {
@@ -69,7 +70,13 @@ export class PreloadScene extends Phaser.Scene {
     }
     this.load.image('map', 'map.png');
     this.load.spritesheet('deco', 'deco.png', { frameWidth: 48, frameHeight: 48 });
-    for (const island of ISLANDS) this.load.image(`island-${island.theme}`, `island-${island.theme}.png`);
+    for (const island of [...HOME_ISLANDS, ...ISLANDS]) this.load.image(`island-${island.theme}`, `island-${island.theme}.png`);
+    this.load.image('nest', 'nest.png');
+    // The dragon shapes in white, coloured with a tint for the dragons that hatch on the Brutinsel.
+    this.load.spritesheet('dragons-white', 'dragons-white.png', {
+      frameWidth: DRAGON_FRAME.width,
+      frameHeight: DRAGON_FRAME.height,
+    });
     this.load.image('shop-house', 'shop-house.png');
     this.load.image('rainbow', 'rainbow.png');
     this.load.image('piggy', 'piggy.png');
@@ -90,6 +97,14 @@ export class PreloadScene extends Phaser.Scene {
         frames: this.anims.generateFrameNumbers('dragons', {
           frames: [first, first + 1, first + 2, first + 1],
         }),
+        frameRate: 8,
+        repeat: -1,
+      });
+    }
+    for (let shape = 0; shape < SHAPES; shape++) {
+      this.anims.create({
+        key: `white-${shape}-fly`,
+        frames: this.anims.generateFrameNumbers('dragons-white', { frames: [shape * 3, shape * 3 + 1, shape * 3 + 2, shape * 3 + 1] }),
         frameRate: 8,
         repeat: -1,
       });
@@ -135,6 +150,7 @@ export class PreloadScene extends Phaser.Scene {
     this.makeStar();
     this.makeFireTextures();
     this.makeShotTextures();
+    this.makeEgg();
 
     this.scene.start('title');
   }
@@ -153,6 +169,17 @@ export class PreloadScene extends Phaser.Scene {
     g.fillStyle(0xffd84a).fillPoints(points(6.2, 2.8), true);
     g.fillStyle(0xffffff).fillRect(6, 5, 2, 2);
     g.generateTexture('powerup-star', 16, 16).destroy();
+  }
+
+  // A dragon egg (12x15): cream with pastel spots and a little shine.
+  makeEgg() {
+    const g = this.add.graphics();
+    g.fillStyle(0x4e3832).fillEllipse(6, 8, 12, 15);
+    g.fillStyle(0xfff3e0).fillEllipse(6, 8, 10, 13);
+    g.fillStyle(0xff9fc8).fillCircle(4, 6, 1.5).fillCircle(8, 10, 1.5);
+    g.fillStyle(0x8ff0c8).fillCircle(8, 5, 1.2).fillCircle(4, 11, 1.2);
+    g.fillStyle(0xffffff).fillRect(3, 3, 2, 2);
+    g.generateTexture('egg', 12, 16).destroy();
   }
 
   // A fireball (12x12) for the fire dragon, and a little flame (7x9) for its station on the map.

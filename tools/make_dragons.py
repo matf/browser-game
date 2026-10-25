@@ -1,10 +1,12 @@
-"""Paint the extra dragons of Dragon Flight as new rows of dragons.png.
+"""Paint the extra dragons of Dragon Flight as new rows of dragons.png, and dragons-white.png.
 
 Usage: python -I tools/make_dragons.py public/assets
 
 Needs Pillow. Rows 0-4 of dragons.png are the original dragons (Free Pixel Art Dragons by
 magicae-games); every row below them is made here by repainting one of those rows. Running it again
 rebuilds the extra rows, so you can change the colours in NEW_DRAGONS and run it.
+dragons-white.png has the five original shapes in white and grey; the game colours them with a tint
+for the dragons that hatch on the Brutinsel.
 """
 import random
 import sys
@@ -87,3 +89,10 @@ out.paste(original, (0, 0))
 for i, dragon in enumerate(NEW_DRAGONS):
     out.paste(paint(dragon, rng), (0, (ORIGINAL_ROWS + i) * FRAME_H))
 out.save(f'{OUT}/dragons.png')
+
+# White dragons for tinting: the eyes stay white and black, everything else goes from dark grey to white.
+WHITE = {'colors': ['#2a2433', '#8a8a94', '#d0d0d8', '#ececf2', '#ffffff']}
+white = Image.new('RGBA', original.size)
+for row in range(ORIGINAL_ROWS):
+    white.paste(paint({**WHITE, 'base': row}, rng), (0, row * FRAME_H))
+white.save(f'{OUT}/dragons-white.png')
