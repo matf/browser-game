@@ -127,6 +127,7 @@ export class PreloadScene extends Phaser.Scene {
     this.makeMapTextures();
     this.makeStar();
     this.makeFireTextures();
+    this.makeShotTextures();
 
     this.scene.start('title');
   }
@@ -160,6 +161,55 @@ export class PreloadScene extends Phaser.Scene {
     flame.fillStyle(0xff4a1a).fillTriangle(3.5, 0, 0, 6, 7, 6).fillCircle(3.5, 6, 3.5);
     flame.fillStyle(0xffd84a).fillTriangle(3.5, 3, 1.5, 7, 5.5, 7).fillCircle(3.5, 7, 1.5);
     flame.generateTexture('map-flame', 7, 10).destroy();
+  }
+
+  // What the dragons spit (see SHOTS in src/objects/Shooter.js). Marshmallow uses the food picture.
+  makeShotTextures() {
+    const draw = (key, width, height, paint) => {
+      const g = this.add.graphics();
+      paint(g);
+      g.generateTexture(key, width, height).destroy();
+    };
+    // A little flame flying right, with its tail behind.
+    draw('shot-fire', 11, 10, (g) => {
+      g.fillStyle(0xff4a1a).fillTriangle(0, 5, 6, 1, 6, 9).fillCircle(6.5, 5, 4);
+      g.fillStyle(0xff9a2a).fillCircle(7, 5, 2.8);
+      g.fillStyle(0xffe066).fillCircle(7.5, 5, 1.5);
+    });
+    // A splash of water.
+    draw('shot-water', 11, 9, (g) => {
+      g.fillStyle(0x2a7fd4).fillTriangle(0, 4.5, 6, 1, 6, 8).fillCircle(6.5, 4.5, 4);
+      g.fillStyle(0x5fbfff).fillCircle(6.5, 4.5, 3);
+      g.fillStyle(0xffffff).fillRect(7, 2.5, 2, 1.5);
+    });
+    // A snowflake: three lines through the middle.
+    draw('shot-snow', 13, 13, (g) => {
+      const arms = (width, color) => {
+        g.lineStyle(width, color);
+        for (let i = 0; i < 3; i++) {
+          const a = (i * Math.PI) / 3;
+          g.lineBetween(6.5 - Math.cos(a) * 5.5, 6.5 - Math.sin(a) * 5.5, 6.5 + Math.cos(a) * 5.5, 6.5 + Math.sin(a) * 5.5);
+        }
+      };
+      arms(3, 0x3a7fb8);
+      arms(1, 0xffffff);
+      g.fillStyle(0x3a7fb8).fillCircle(6.5, 6.5, 2.5);
+      g.fillStyle(0xffffff).fillCircle(6.5, 6.5, 1.5);
+    });
+    // A flower with five pink petals.
+    draw('shot-flower', 11, 11, (g) => {
+      g.fillStyle(0xd94f8a);
+      for (let i = 0; i < 5; i++) {
+        const a = -Math.PI / 2 + (i * 2 * Math.PI) / 5;
+        g.fillCircle(5.5 + Math.cos(a) * 3, 5.5 + Math.sin(a) * 3, 2.6);
+      }
+      g.fillStyle(0xff9fc8);
+      for (let i = 0; i < 5; i++) {
+        const a = -Math.PI / 2 + (i * 2 * Math.PI) / 5;
+        g.fillCircle(5.5 + Math.cos(a) * 3, 5.5 + Math.sin(a) * 3, 1.8);
+      }
+      g.fillStyle(0xffd84a).fillCircle(5.5, 5.5, 1.8);
+    });
   }
 
   makeMapTextures() {

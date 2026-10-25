@@ -62,7 +62,13 @@ through a rainbow at the end. The README has the player-facing description and t
   Power-ups: with `POWERUP_CHANCE` (0.5) a level has one, replacing a coin row between 25 % and 75 %
   of the level: heart (+1 heart, only when one is missing) or star (`src/objects/PowerUp.js`; star
   power in `Dragon.startStar`: 6 s invulnerable, rainbow tint, bees and drops bounce off).
-- `src/objects/`: `Dragon` (flying, joystick, hurt/star), `Bee`, `PowerUp`, `Accessories` (worn items
+- Shooting (`src/objects/Shooter.js`): Space or the touch button bottom right (`SHOOT_HOME`, any
+  touch on the right half below y 40) spits the dragon's shot from `SHOTS` (marshmallow = food frame,
+  others are textures drawn in `PreloadScene.makeShotTextures`). Each shot costs `SHOT_COST` of
+  `ENERGY_MAX` energy, refilling at `ENERGY_REFILL`/s; the HUD bar under the hearts shows it and
+  blinks red when too empty. Shots (`GameScene.shots`) bonk bees, pop drops and fireballs, stop at
+  pillars and make the fire dragon flash (it can't be beaten by shots, only by waiting out the minute).
+- `src/objects/`: `Dragon` (flying, joystick, hurt/star), `Shooter`, `Bee`, `PowerUp`, `Accessories` (worn items
   drawn on the dragon per animation frame, also flipped and rotated), `TouchStick`.
 - `src/shop.js`: foods, accessories, dragon price; `src/scenes/ShopScene.js`: shop with tabs Futter /
   Drachen / Accessoires. 5 dragons (`DRAGONS` in PreloadScene: Marshmallow, Chili, Blubb, Wolke,

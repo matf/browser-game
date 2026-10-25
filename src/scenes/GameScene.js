@@ -4,6 +4,7 @@ import { Bee } from '../objects/Bee.js';
 import { Accessories } from '../objects/Accessories.js';
 import { PowerUp } from '../objects/PowerUp.js';
 import { FireDragon } from '../objects/FireDragon.js';
+import { Shooter } from '../objects/Shooter.js';
 import { MAX_HEARTS } from '../shop.js';
 import { DRAGONS, TILE } from './PreloadScene.js';
 import { BOSS_FIGHT, LEVELS } from '../levels.js';
@@ -76,6 +77,9 @@ export class GameScene extends Phaser.Scene {
     this.physics.add.overlap(this.player, this.coins, this.onCoin, null, this);
     this.powerUps = this.physics.add.group({ allowGravity: false });
     this.physics.add.overlap(this.player, this.powerUps, this.onPowerUp, null, this);
+    this.shots = this.physics.add.group({ allowGravity: false });
+    this.shooter = new Shooter(this, this.player, this.save.dragon, this.shots);
+    this.physics.add.overlap(this.shots, this.obstacles, this.onShotHit, null, this);
 
     this.splash = this.add.particles(0, 0, 'pixel', {
       lifespan: 400,
@@ -284,6 +288,18 @@ export class GameScene extends Phaser.Scene {
     }
   }
 
+  // A shot hit something: bees spin away, raindrops and fireballs go puff, pillars and the fire
+  // dragon just stop it.
+  onShotHit(shot, obstacle) {
+    if (!shot.active || !obstacle.active) return;
+    this.shooter.pop(shot);
+    if (obstacle instanceof Bee || obstacle.pops) this.bonk(obstacle);
+    else if (obstacle === this.fireDragon) {
+      this.fireDragon.setTint(0xffffff).setTintMode(Phaser.TintModes.FILL);
+      this.time.delayedCall(80, () => this.fireDragon.clearTint());
+    }
+  }
+
   // A short word that floats up from the dragon.
   cheer(words, color) {
     const text = this.add
@@ -301,7 +317,7 @@ export class GameScene extends Phaser.Scene {
     this.tweens.add({ targets: text, y: text.y - 26, alpha: 0, duration: 1400, ease: 'Sine.In', onComplete: () => text.destroy() });
   }
 
-  // With star power, bees, raindrops and fireballs just bounce off (pillars and the fire dragon stay).
+  // With star power (or a shot), bees, raindrops and fireballs just bounce off (pillars and the fire dragon stay).
   bonk(obstacle) {
     if (obstacle.pops) return this.popDrop(obstacle);
     if (!(obstacle instanceof Bee)) return;
@@ -342,6 +358,7 @@ export class GameScene extends Phaser.Scene {
   // hearts at the start of the same level (no shop).
   nap() {
     this.napping = true;
+    this.shooter.enabled = false;
     this.physics.pause();
     this.starTrail.stop();
     this.player.anims.pause();
@@ -393,6 +410,7 @@ export class GameScene extends Phaser.Scene {
   // dragon, to the big fireworks).
   win() {
     this.finished = true;
+    this.shooter.enabled = false;
     this.physics.pause();
     this.starTrail.stop();
     this.time.removeAllEvents(); // no more pillars, bees or raindrops
@@ -432,6 +450,7 @@ export class GameScene extends Phaser.Scene {
     this.ground.tilePositionX += dx;
     this.hills.tilePositionX += dx * 0.3;
     this.player.update(time);
+    this.shooter.update(time, delta);
     this.starTrail.emitting = this.player.starPower;
 
     if (this.isBoss) this.fireDragon.update(this.elapsed);

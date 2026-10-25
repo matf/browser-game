@@ -3,6 +3,7 @@ import { FONT, setupCamera } from '../view.js';
 import { IS_TOUCH } from '../touch.js';
 import { addMuteButton, play } from '../sound.js';
 import { addCoins, addHearts } from '../hud.js';
+import { ENERGY_MAX } from '../objects/Shooter.js';
 
 const TEXT_STYLE = {
   fontFamily: FONT,
@@ -12,6 +13,10 @@ const TEXT_STYLE = {
   strokeThickness: 4,
 };
 const BAR = { x: 180, y: 9, width: 120, height: 8 }; // progress bar to the rainbow
+const ENERGY_BAR = { x: 22, y: 27, width: 72, height: 5 }; // the energy for shooting, under the hearts
+const ENERGY_COLOR = 0x7fe0ff;
+const TIRED_COLOR = 0xff5a5f; // the bar blinks in this colour when there's too little energy for a shot
+const TIRED_BLINK_MS = 400;
 
 export class UIScene extends Phaser.Scene {
   constructor() {
@@ -43,6 +48,13 @@ export class UIScene extends Phaser.Scene {
     this.barFill = this.add.rectangle(BAR.x, BAR.y, 0, BAR.height, 0xff7eb6).setOrigin(0, 0);
     this.add.image(BAR.x + BAR.width + 8, BAR.y + BAR.height / 2, 'rainbow').setScale(0.08);
 
+    const shot = this.gameScene.shooter.shot;
+    this.add.image(ENERGY_BAR.x - 9, ENERGY_BAR.y + ENERGY_BAR.height / 2, shot.texture, shot.frame).setScale(shot.scale * 0.9);
+    this.add
+      .rectangle(ENERGY_BAR.x - 1, ENERGY_BAR.y - 1, ENERGY_BAR.width + 2, ENERGY_BAR.height + 2, 0x1b1630)
+      .setOrigin(0, 0);
+    this.energyFill = this.add.rectangle(ENERGY_BAR.x, ENERGY_BAR.y, 0, ENERGY_BAR.height, ENERGY_COLOR).setOrigin(0, 0);
+
     const onChange = (parent, key) => {
       if (key === 'hearts') showHearts(this.registry.get('hearts'));
       if (key === 'coins') showCoins(this.registry.get('coins'));
@@ -52,7 +64,11 @@ export class UIScene extends Phaser.Scene {
     const intro = this.showMessage(
       this.registry.get('levelName'),
       this.registry.get('levelHint') ??
-        (!this.registry.get('firstLevel') ? "Los geht's!" : IS_TOUCH ? 'Joystick: fliegen' : 'Pfeiltasten: fliegen'),
+        (!this.registry.get('firstLevel')
+          ? "Los geht's!"
+          : IS_TOUCH
+            ? 'Joystick: fliegen\nKnopf rechts: spucken'
+            : 'Pfeiltasten: fliegen\nLeertaste: spucken'),
     );
     this.time.delayedCall(this.registry.get('levelHint') ? 3000 : 2000, () =>
       this.tweens.add({ targets: intro, alpha: 0, duration: 500, onComplete: () => intro.destroy() }),
@@ -83,6 +99,11 @@ export class UIScene extends Phaser.Scene {
     const g = this.gameScene;
     const progress = Math.min(1, g.elapsed / (g.level.seconds * 1000));
     this.barFill.width = BAR.width * progress;
+    const shooter = g.shooter;
+    this.energyFill.width = (ENERGY_BAR.width * shooter.energy) / ENERGY_MAX;
+    const tired = g.time.now - shooter.tiredAt < TIRED_BLINK_MS && g.time.now % 160 < 80;
+    this.energyFill.fillColor = tired ? TIRED_COLOR : ENERGY_COLOR;
+    this.energyFill.fillAlpha = shooter.ready ? 1 : 0.55;
   }
 
   showMessage(title, subtitle) {

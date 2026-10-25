@@ -3,7 +3,8 @@ import { FONT, HEIGHT, WIDTH, setupCamera } from '../view.js';
 import { IS_TOUCH } from '../touch.js';
 import { STICK_HOME } from '../objects/TouchStick.js';
 import { TILE } from './PreloadScene.js';
-import { writeSave } from '../save.js';
+import { SHOTS } from '../objects/Shooter.js';
+import { loadSave, writeSave } from '../save.js';
 import { play } from '../sound.js';
 
 const TEXT = { fontFamily: FONT, fontStyle: 'bold', color: '#ffffff', stroke: '#1b1630', strokeThickness: 3 };
@@ -27,17 +28,22 @@ export class HelpScene extends Phaser.Scene {
     const centre = IS_TOUCH ? 310 : WIDTH / 2;
     this.add.text(centre, 26, "So geht's!", { ...TEXT, fontSize: '24px' }).setOrigin(0.5).setResolution(4);
 
+    const shot = SHOTS[loadSave().dragon] ?? SHOTS.marshmallow;
     const rows = [
       [this.add.sprite(0, 0, 'dragons', 0).setScale(0.5), IS_TOUCH ? 'Flieg mit dem Joystick.' : 'Flieg mit den Pfeiltasten\n(oder W A S D).'],
       [this.add.image(0, 0, 'tiles', TILE.coin), 'Sammle Münzen für den Shop.'],
       [this.add.image(0, 0, 'bee', 0), 'Weiche Säulen, Bienen\nund Regentropfen aus.'],
+      [
+        this.add.image(0, 0, shot.texture, shot.frame).setScale(shot.scale * 1.6),
+        `${IS_TOUCH ? 'Knopf rechts' : 'Leertaste'}: spucken! Der Balken unter\nden Herzen zeigt, wie viel Puste du hast.`,
+      ],
       [this.add.image(0, 0, 'rainbow').setScale(0.13), 'Flieg durch den Regenbogen!'],
       [this.add.image(0, 0, 'station-done').setScale(1.5), 'Schaff alle 3 Level einer Insel,\ndann geht die nächste auf.'],
     ];
     rows.forEach(([icon, text], i) => {
-      const y = 62 + i * 36;
+      const y = 56 + i * 32;
       icon.setPosition(left + 18, y);
-      this.add.text(left + 44, y, text, { ...TEXT, fontSize: '12px' }).setOrigin(0, 0.5).setResolution(4);
+      this.add.text(left + 44, y, text, { ...TEXT, fontSize: '11px', lineSpacing: -3 }).setOrigin(0, 0.5).setResolution(4);
     });
 
     if (IS_TOUCH) {
