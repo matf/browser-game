@@ -22,7 +22,10 @@ current-state section up to date when a feature lands (in the same commit).
 
 **Dragon Flight** (German UI) is made by Anna (the daughter, 10–13) and her father Matthias. You fly
 a cute dragon from left to right through a scrolling level, dodge things, collect coins and fly
-through a rainbow at the end. The README has the player-facing description and the asset credits.
+through a rainbow at the end. Between levels there is a little island life: walk on the islands,
+buy houses and decorations and place them, your dragons live in the houses or fly around, and on
+the Brutinsel a dragon egg hatches every day. The README has the player-facing description and the
+asset credits.
 
 ### Scene flow (`src/main.js` lists all scenes)
 
@@ -40,46 +43,57 @@ through a rainbow at the end. The README has the player-facing description and t
 - Before a level starts, the map asks "Nur noch N Herzen! Zuerst in den Shop?" when hearts ≤
   `LOW_HEARTS` (2) and the coins buy the cheapest food (`MapScene.askShop`). It asks once per map
   visit, and not right after coming back from the shop (`{ fromShop: true }`).
-- `island` (`IslandScene`, island view): tapping an island's `area` on the map (or I) starts it with
-  `{ island }`. The open islands (not the volcano) sit side by side, `WIDTH` apart; swipe / Q / E /
-  the edge arrows glide the camera over (`go`), a tap walks the dragon (`walkTo`, kept on the ground
-  by `onIslandGround` in `world.js`). Pictures `island-<theme>.png` come from `tools/make_assets.py`
-  (`BIG_ISLAND`, must match `ISLAND_GROUND`). Camera `setBounds`/`getWorldPoint` don't work with the
-  zoomed origin-0 camera, so scrolling is clamped and pointers converted by hand (`pointer.x / ZOOM`).
-  Don't make pinned (scroll factor 0) buttons from containers: their taps miss once the camera has
-  scrolled to another island (that broke Bauen); pin the box and the label separately.
-  Bauen (`src/objects/BuildMode.js`, button or B): a bar with the bag's things; tap the island to
-  place (`fits`: its bottom edge must be on the ground), tap a placed thing to put it back.
-  Decorations: `DECO` in `src/shop.js` (frame in `deco.png`, made by `tools/make_assets.py`, `size`
-  for tapping, `home` for houses; the castle, wizard tower, tree house, mushroom house, lighthouse,
-  cave, gingerbread house and igloo are drawn in code in `make_assets.py`), bought on the shop's Deko tab (badge = how many in the bag) into `save.bag`, placed ones in
-  `save.placed` (`{ key, island: theme, x, y }`, y = the bottom).
-  Residents (`src/objects/Resident.js`, `IslandScene.moveIn`): your dragons except the one you fly
-  with live in the `home` decorations, in placing order; they stroll within `ROAM` of the door and
-  sometimes go in. Dragons without a house (Anna wanted the bought dragons to fly around) are
-  `flying` Residents, one island after the other starting with the current one; babies stay at the
-  nest. `moveIn` rebuilds them whenever a house is placed or put away.
-- Brutinsel and Herbstinsel (Anna wanted free islands just for living; Claude picked autumn):
-  `HOME_ISLANDS` in `world.js` (islands without levels, always first in the island view; `nest` =
-  nest spot), drawn on the map by `make_assets.py` (`home_island`; the autumn ones get
-  `scatter_leaves`). `src/hatchery.js`:
-  `visitNest` (on showing the Brutinsel): an egg from an earlier day (`save.egg.day`, local date
-  string) hatches into `save.hatchlings` (`{ id, name, shape, tint, born }`), then a new egg if
-  `save.lastEgg` isn't today. Hatchlings are a shape from `dragons-white.png` (made by
-  `tools/make_dragons.py`) with a tint from `COLORS` (none like the 9 shop dragons), `white-<shape>-fly`
-  anims. They grow from `BABY_SCALE` to `GROWN_SCALE` over `GROW_HOURS` (24, Anna said "a bit of time
-  on their island"); grown ones join the residents after your shop dragons, babies and homeless
-  grown-ups stroll at the nest. To test, set `save.egg.day`/`lastEgg` to yesterday or move `born` back.
-  After hatching, `chooseShot` asks what it spits (`hatchling.shot`, a SHOTS key). Tapping a grown
-  resident shows Mitfliegen (`tapResident` → `flyWith`), so `save.dragon` can be `hatchling-<id>`:
-  always get the flying dragon's name/anim/tint/shot with `dragonLook(save)` and draw it with
-  `showDragon` (`src/dragons.js`), never `${save.dragon}-fly`.
+- `island` (`IslandScene`, island view): tapping an island on the map (its `area`, or I) starts it
+  with `{ island: theme }`. Details in "Island life" below.
+
+### Island life
+
+- **Island view** (`src/scenes/IslandScene.js`): the islands without levels (`HOME_ISLANDS`) first,
+  then the open level islands (not the volcano), side by side `WIDTH` apart. Swipe / Q / E / the edge
+  arrows glide the camera over (`go`); a tap walks your dragon there (`walkTo`, kept on the ground by
+  `onIslandGround` in `world.js`). Pictures `island-<theme>.png` come from `tools/make_assets.py`
+  (`BIG_ISLAND`, must match `ISLAND_GROUND`).
+  Camera `setBounds`/`getWorldPoint` don't work with the zoomed origin-0 camera, so scrolling is
+  clamped and pointers converted by hand (`pointer.x / ZOOM`). Don't make pinned (scroll factor 0)
+  buttons from containers: their taps miss once the camera has scrolled to another island (that
+  broke Bauen); pin the box and the label separately.
+- **Decorations**: `DECO` in `src/shop.js` (frame in `deco.png`, `size` for tapping, `home` = a
+  dragon can live in it). 17 things: castle, wizard tower, tree house, mushroom house, lighthouse,
+  dragon cave, gingerbread house, igloo (all drawn in code in `make_assets.py`, Anna asked for
+  "cooler houses"), red and blue house, well (the "Brunnen" she asked for), tree, fence, beehive
+  (Tiny Town), flower bed, lantern, bench (drawn). Bought on the shop's Deko tab (6 columns, long
+  names shrink, badge = how many in the bag) into `save.bag`.
+- **Bauen** (`src/objects/BuildMode.js`, button or B): a bar with the bag's things; tap the island to
+  place (`fits`: its bottom edge must be on the ground), tap a placed thing to put it back. Placed
+  things are in `save.placed` (`{ key, island: theme, x, y }`, y = the bottom).
+- **Residents** (`src/objects/Resident.js`, `IslandScene.moveIn`): your dragons except the one you fly
+  with, shop dragons first, then grown hatchlings, move into the `home` decorations in placing order;
+  they stroll within `ROAM` of the door and sometimes go in. Dragons without a house are `flying`
+  Residents (Anna wanted the bought dragons to fly around), one per island in turn starting with
+  the current one. Babies stroll at the nest. `moveIn` rebuilds all of them whenever a house is
+  placed or put away. Tapping a grown dragon shows its name and Mitfliegen (`tapResident` →
+  `flyWith`): it becomes `save.dragon`, the old one moves into its house.
+- **Islands without levels** (`HOME_ISLANDS` in `world.js`, free and always open; drawn on the map by
+  `home_island` in `make_assets.py`): the Brutinsel (`nest` = nest spot) and the Herbstinsel (Anna
+  wanted islands just for living and let Claude pick the look; autumn, with `scatter_leaves`).
+- **Brutinsel** (`src/hatchery.js`): `visitNest` runs when the Brutinsel is shown. An egg from an
+  earlier day (`save.egg.day`, local date string) hatches into `save.hatchlings`
+  (`{ id, name, shape, tint, born, shot }`), then there is a new egg if `save.lastEgg` isn't today.
+  A hatchling is a shape from `dragons-white.png` (made by `tools/make_dragons.py`) tinted with one
+  of `COLORS` (none like the 9 shop dragons), animation `white-<shape>-fly`, and a name from `NAMES`.
+  After hatching, `chooseShot` asks what it spits (a SHOTS key; asked again on Mitfliegen if
+  missing). It grows from `BABY_SCALE` to `GROWN_SCALE` over `GROW_HOURS` (24; Anna said "a bit of
+  time on their island"), then it can live in a house and fly with you. To test, set
+  `save.egg.day`/`lastEgg` to yesterday or move `born` back.
+- **The flying dragon can be a hatchling** (`save.dragon` = `hatchling-<id>`): always get its
+  name/anim/tint/shot with `dragonLook(save)` and draw it with `showDragon` (`src/dragons.js`), never
+  `${save.dragon}-fly` or `DRAGONS.find(...)`. `Dragon` keeps its tint after star power (`baseTint`).
 
 ### Where things live
 
 - `src/world.js`: 4 islands (Blumeninsel/flowers, Zuckerinsel/candy, Schneeinsel/snow,
-  Sterneninsel/stars), 3 levels each, station positions on the map, `THEMES` (sky colour, splash
-  colours, night stars, embers). A level is open when the previous one is done (`isOpen`).
+  Sterneninsel/stars), 3 levels each, station positions and tap `area` on the map, `THEMES` (sky
+  colour, splash colours, night stars, embers), `HOME_ISLANDS`, `ISLAND_GROUND`/`onIslandGround`. A level is open when the previous one is done (`isOpen`).
   After them comes `BOSS_ISLAND` (Vulkaninsel, theme fire) with one station, `BOSS_LEVEL` = 12;
   `ALL_ISLANDS` includes it and `islandOf(12)` returns it.
 - Boss fight (level index 12, same `GameScene` with `isBoss`): no pillars/bees/drops/coins; the
@@ -109,15 +123,18 @@ through a rainbow at the end. The README has the player-facing description and t
   `ENERGY_MAX` energy, refilling at `ENERGY_REFILL`/s; the HUD bar under the hearts shows it and
   blinks red when too empty. Shots (`GameScene.shots`) bonk bees, pop drops and fireballs, stop at
   pillars and make the fire dragon flash (it can't be beaten by shots, only by waiting out the minute).
-- `src/objects/`: `Dragon` (flying, joystick, hurt/star), `Shooter`, `Bee`, `PowerUp`, `Accessories` (worn items
-  drawn on the dragon per animation frame, also flipped and rotated), `TouchStick`.
-- `src/shop.js`: foods, accessories, dragon price; `src/scenes/ShopScene.js`: shop with tabs Futter /
-  Drachen / Accessoires (dragons in 5 columns). 9 dragons (`DRAGONS` in PreloadScene: Marshmallow,
-  Chili, Blubb, Wolke, Kiesel, Goldi, Lila, Mitternacht, Summsi; rows of `dragons.png`), all `DRAGON_PRICE`. Rows 5–8
-  are recolours painted by `tools/make_dragons.py` (colours in `NEW_DRAGONS`; it rebuilds only those rows).
-  The gallery shows them in two rows (`CARD.perRow`).
+- `src/objects/`: `Dragon` (flying, joystick, hurt/star), `Shooter`, `Bee`, `PowerUp`, `FireDragon`,
+  `Accessories` (worn items drawn on the dragon per animation frame, also flipped and rotated; all
+  dragon shapes share the anchor points), `TouchStick`, `BuildMode`, `Resident`.
+- `src/shop.js`: foods, accessories, decorations, dragon price; `src/scenes/ShopScene.js`: shop with
+  tabs Futter / Drachen / Accessoires / Deko. 9 shop dragons (`DRAGONS` in PreloadScene:
+  Marshmallow, Chili, Blubb, Wolke, Kiesel, Goldi, Lila, Mitternacht, Summsi; rows of
+  `dragons.png`), all `DRAGON_PRICE`. Rows 5–8 are recolours painted by `tools/make_dragons.py`
+  (colours in `NEW_DRAGONS`; it rebuilds only those rows, plus `dragons-white.png`). The gallery
+  shows the shop dragons in two rows (`CARD.perRow`); hatchlings aren't in it.
 - `src/save.js`: `localStorage['dragonFlight.save']` = `{ coins, done: [level indices], at (map spot),
-  hearts, dragon, dragons, items, wear, seenHelp, bag, placed, egg, lastEgg, hatchlings }`; old saves with `level` are migrated.
+  hearts, dragon, dragons, items, wear, seenHelp, bag, placed, egg, lastEgg, hatchlings }`; old
+  saves with `level` are migrated.
   `resetSave()` keeps only `seenHelp`. Sound settings are separate keys (`dragonFlight.muted`,
   `dragonFlight.volume`), so Neues Spiel keeps them.
 - `src/sound.js`: always play effects with `play(scene, key)` (respects mute and the Einstellungen
@@ -132,9 +149,9 @@ through a rainbow at the end. The README has the player-facing description and t
   `FONT`), `src/touch.js` (`IS_TOUCH`, rotate-your-phone pause, refit), `src/update.js` (update
   banner for iPhone home-screen apps).
 - Generated textures (station markers, map icons, speaker, power-up star, fireball, the dragons'
-  shots) are drawn in `PreloadScene`. `public/assets/map.png`, `shop-house.png`, `boss-dragon.png`
-  and the themed `*-candy/snow/stars/fire.png` pictures come from `tools/make_assets.py` (see its
-  docstring). It needs the Kenney Tiny Town zip
+  shots, the egg) are drawn in `PreloadScene`. `public/assets/map.png`, `shop-house.png`,
+  `boss-dragon.png`, `deco.png`, `nest.png`, `island-<theme>.png` and the themed
+  `*-candy/snow/stars/fire.png` pictures come from `tools/make_assets.py` (see its docstring). It needs the Kenney Tiny Town zip
   (https://opengameart.org/sites/default/files/kenney_tiny-town.zip, unzipped into the scratchpad)
   and Pillow (venv, see shell notes). It is seeded: re-running it changes only what you edited, so
   check `git status` afterwards. Moving a station means changing it in both `world.js` and the
@@ -161,14 +178,15 @@ Point her at these when she says something is too easy, too hard, too fast, etc.
 - `src/objects/Shooter.js`: `SHOTS_IN_FULL_BAR` (she picked 6 after trying 5 and 8), `ENERGY_REFILL`,
   `SHOT_SPEED`, `SHOT_GAP_MS`, `BUTTON_ICON_SCALE`.
 - `src/objects/Dragon.js`: `FLY_SPEED`, `STAR_MS`, `INVULNERABLE_MS`.
-- `src/scenes/GameScene.js`: `POWERUP_CHANCE`, `NAP_MS`, `WAKE_HEARTS`; `src/shop.js`: prices,
-  `MAX_HEARTS`; `src/scenes/FinaleScene.js`: `ROCKET_EVERY`, `SPARKS`.
+- `src/scenes/GameScene.js`: `POWERUP_CHANCE`, `NAP_MS`, `WAKE_HEARTS`; `src/shop.js`: prices
+  (also of the decorations), `MAX_HEARTS`; `src/scenes/FinaleScene.js`: `ROCKET_EVERY`, `SPARKS`.
+- Island life: `src/hatchery.js` `GROW_HOURS`, `BABY_SCALE`; `src/objects/Resident.js` `WALK_SPEED`,
+  `ROAM`, `HOME_CHANCE`, `FLY_SPEED`, `FLY_HEIGHT`; `src/scenes/IslandScene.js` `WALK_SPEED`, `SWIPE`.
 
 ### Ideas and open work
 
-- Anna's island wish is built (island view, Bauen, dragons in houses, Brutinsel, flying with grown
-  hatchlings). The "Brunnen" she asked
-  for is the Tiny Town well.
+- Island life ideas not built yet: hatchlings in the Drachen-Galerie; naming a hatchling yourself
+  (names are random now); more houses (she got everything she asked for so far).
 - Power-ups: Anna asked for more ideas beyond star and heart. Offered Magnet, Zeitlupe, Münzregen and
   Mini-Drache; she hasn't picked yet. Ask her before building any.
 - Shooting the fire dragon: she asked whether shots do anything to it. Offered (1) a health bar so it
@@ -503,6 +521,12 @@ browser_console_messages`).
 4. Screenshots must be saved under the project (for example `.playwright-mcp/shot.png`; Playwright
    can't write to the scratchpad), then viewed with Read.
 5. Report what was verified and what wasn't.
+
+Playwright MCP pitfalls (seen on the Mac): set `page.setViewportSize({ width: 960, height: 540 })`
+first, so game pixel (x, y) is page (2x, 2y); otherwise clicks land in the wrong place. Do
+`page.goto` inside the same `browser_run_code_unsafe` call that drives the game: after a separate
+`browser_navigate`, the next call sometimes found the page on `about:blank`. Open the island view
+directly with `scene.start('island', { island: 'flowers' })` (any theme, `nest` = Brutinsel).
 
 **When the Playwright MCP tools aren't there** (as on the exe.dev Linux VM): install
 `playwright-core` into an empty folder in the scratchpad (`npm i playwright-core`, no browser
