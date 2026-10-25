@@ -51,8 +51,8 @@ through a rainbow at the end. The README has the player-facing description and t
   Bauen (`src/objects/BuildMode.js`, button or B): a bar with the bag's things; tap the island to
   place (`fits`: its bottom edge must be on the ground), tap a placed thing to put it back.
   Decorations: `DECO` in `src/shop.js` (frame in `deco.png`, made by `tools/make_assets.py`, `size`
-  for tapping, `home` for houses; the castle, wizard tower, tree house and mushroom house are drawn
-  in code in `make_assets.py`), bought on the shop's Deko tab (badge = how many in the bag) into `save.bag`, placed ones in
+  for tapping, `home` for houses; the castle, wizard tower, tree house, mushroom house, lighthouse,
+  cave, gingerbread house and igloo are drawn in code in `make_assets.py`), bought on the shop's Deko tab (badge = how many in the bag) into `save.bag`, placed ones in
   `save.placed` (`{ key, island: theme, x, y }`, y = the bottom).
   Residents (`src/objects/Resident.js`, `IslandScene.moveIn`): your dragons except the one you fly
   with live in the `home` decorations, in placing order; they stroll within `ROAM` of the door and

@@ -403,7 +403,8 @@ def bench():
     return outline(im, '#3a2a28')
 
 
-# The cool houses (Anna asked for cooler houses): castle, mushroom house, tree house, wizard tower.
+# The cool houses (Anna asked for cooler houses): castle, mushroom house, tree house, wizard tower,
+# gingerbread house, igloo, dragon cave and lighthouse.
 LINE = '#3a2a28'
 
 
@@ -527,11 +528,121 @@ def wizard_tower():
     return outline(im, LINE)
 
 
+def gingerbread():
+    im = Image.new('RGBA', (48, 48))
+    d = ImageDraw.Draw(im)
+    brown, dark = '#b8743a', '#8a5226'
+    d.rectangle([7, 22, 40, 46], fill=hexc(brown))
+    d.rectangle([36, 22, 40, 46], fill=hexc(dark))
+    # Roof with white icing drips and candy along the edge.
+    d.polygon([(2, 24), (24, 3), (45, 24)], fill=hexc(dark))
+    d.polygon([(6, 22), (24, 6), (41, 22)], fill=hexc('#9a5e2c'))
+    d.line([(2, 24), (24, 3), (45, 24)], fill=hexc('#ffffff'), width=2)
+    for x in range(5, 44, 4):
+        d.rectangle([x, 24, x + 1, 25 + (x % 3)], fill=hexc('#ffffff'))
+    for i, x in enumerate(range(10, 40, 7)):
+        d.ellipse([x, 13 + abs(24 - x) // 3, x + 3, 16 + abs(24 - x) // 3], fill=hexc(['#ff6fa8', '#5fd068', '#ffd84a', '#5fbfff'][i % 4]))
+    # Candy-cane posts, a door with icing and windows with icing frames.
+    for x in (8, 37):
+        d.rectangle([x, 28, x + 2, 46], fill=hexc('#ffffff'))
+        for y in range(28, 46, 4):
+            d.rectangle([x, y, x + 2, y + 1], fill=hexc('#e84537'))
+    d.rectangle([19, 34, 28, 46], fill=hexc('#6e3a1c'))
+    d.ellipse([19, 30, 28, 39], fill=hexc('#6e3a1c'))
+    d.arc([18, 29, 29, 40], 180, 360, fill=hexc('#ffffff'))
+    d.ellipse([24, 39, 26, 41], fill=hexc('#ff6fa8'))
+    for x in (12, 30):
+        d.rectangle([x, 28, x + 5, 32], fill=hexc('#ffe066'))
+        d.rectangle([x - 1, 27, x + 6, 27], fill=hexc('#ffffff'))
+        d.rectangle([x - 1, 33, x + 6, 33], fill=hexc('#ffffff'))
+    d.ellipse([13, 38, 16, 41], fill=hexc('#5fd068'))
+    d.ellipse([31, 38, 34, 41], fill=hexc('#ff6fa8'))
+    return outline(im, LINE)
+
+
+def igloo():
+    im = Image.new('RGBA', (48, 48))
+    d = ImageDraw.Draw(im)
+    d.pieslice([2, 14, 45, 78], 180, 360, fill=hexc('#eaf4fc'))
+    d.pieslice([2, 14, 45, 78], 300, 360, fill=hexc('#bcd3e6'))
+    # Ice block lines, only on the dome.
+    lines = Image.new('RGBA', (48, 48))
+    l = ImageDraw.Draw(lines)
+    for y in (24, 32, 40):
+        l.line([(0, y), (47, y)], fill=hexc('#a8c4dc'))
+    for row, y0 in enumerate((16, 24, 32, 40)):
+        for x in range(6 + (row % 2) * 5, 43, 10):
+            l.line([(x, y0), (x, y0 + 8)], fill=hexc('#a8c4dc'))
+    dome = im.getchannel('A')
+    im.paste(lines, (0, 0), ImageChops.multiply(lines.getchannel('A'), dome))
+    d = ImageDraw.Draw(im)
+    # Entrance tunnel, and a little shine.
+    d.pieslice([14, 30, 33, 62], 180, 360, fill=hexc('#ffffff'))
+    d.pieslice([18, 35, 29, 58], 180, 360, fill=hexc('#3f5f86'))
+    d.rectangle([0, 47, 47, 47], fill=(0, 0, 0, 0))
+    d.point((10, 22), fill=hexc('#ffffff'))
+    d.point((11, 21), fill=hexc('#ffffff'))
+    return outline(im, '#3f4f70')
+
+
+def cave():
+    rng = random.Random(6)
+    im = Image.new('RGBA', (48, 48))
+    d = ImageDraw.Draw(im)
+    rock, light, dark = '#8a7a8a', '#a8989e', '#5e4e5e'
+    d.polygon([(1, 46), (4, 26), (12, 12), (22, 5), (32, 8), (41, 18), (46, 32), (47, 46)], fill=hexc(rock))
+    d.polygon([(32, 8), (41, 18), (46, 32), (47, 46), (38, 46), (36, 24)], fill=hexc(dark))
+    speckle(d, (2, 6, 46, 46), [light, dark], 60, rng, lambda x, y: im.getpixel((x, y))[:3] == hexc(rock)[:3])
+    # Moss on top, and a dark round entrance with a warm glow and a flag with a dragon colour.
+    d.ellipse([12, 3, 32, 11], fill=hexc('#65a556'))
+    d.rectangle([12, 8, 32, 11], fill=hexc(rock))
+    d.ellipse([14, 22, 35, 52], fill=hexc('#2b2140'))
+    d.ellipse([18, 30, 31, 50], fill=hexc('#4a2e3a'))
+    d.ellipse([21, 38, 28, 48], fill=hexc('#ff9a3c'))
+    d.ellipse([23, 41, 26, 46], fill=hexc('#ffe066'))
+    for x, y in [(6, 30), (40, 38), (9, 40)]:
+        d.ellipse([x, y, x + 3, y + 2], fill=hexc('#5fe3ff'))
+    im = im.crop((0, 0, 48, 47))
+    out = Image.new('RGBA', (48, 48))
+    out.paste(im, (0, 0))
+    return outline(out, LINE)
+
+
+def lighthouse():
+    im = Image.new('RGBA', (48, 48))
+    d = ImageDraw.Draw(im)
+    # Tapering tower with red and white stripes.
+    top, bottom = 16, 46
+    for y in range(top, bottom + 1):
+        half = 6 + (y - top) * 4 // (bottom - top)
+        stripe = ((y - top) // 6) % 2 == 0
+        d.line([(24 - half, y), (24 + half, y)], fill=hexc('#e84537' if stripe else '#ffffff'))
+        d.line([(24 + half - 2, y), (24 + half, y)], fill=hexc('#b3261e' if stripe else '#d8e0ea'))
+    d.rectangle([21, 38, 26, 46], fill=hexc('#6e4230'))
+    d.point((25, 42), fill=hexc('#ffd84a'))
+    d.rectangle([22, 24, 25, 27], fill=hexc('#3f5f86'))
+    # Lamp room with light, balcony and a dark cap.
+    d.rectangle([15, 14, 32, 15], fill=hexc('#3a3550'))
+    d.rectangle([18, 6, 29, 13], fill=hexc('#ffe066'))
+    d.rectangle([21, 8, 26, 11], fill=hexc('#fff8d0'))
+    d.line([(18, 6), (18, 13)], fill=hexc('#3a3550'))
+    d.line([(29, 6), (29, 13)], fill=hexc('#3a3550'))
+    d.polygon([(16, 6), (24, 0), (31, 6)], fill=hexc('#e84537'))
+    im = outline(im, LINE)
+    # Soft light beams, without an outline.
+    beams = Image.new('RGBA', (48, 48))
+    b = ImageDraw.Draw(beams)
+    for dx in (-1, 1):
+        b.polygon([(24 + dx * 7, 9), (24 + dx * 23, 4), (24 + dx * 23, 13)], fill=(255, 240, 160, 100))
+    beams.alpha_composite(im)
+    return beams
+
+
 DECO_PICS = [
     compose([[52, 53, 54], [64, 67, 66], [84, 86, 84]]),  # house-red
     compose([[48, 49, 50], [60, 63, 62], [72, 85, 75]]),  # house-blue
     compose([[92], [104]]), TALL_PINE, flowerbed(), compose([[80, 81, 82]]), HIVE, lantern(), bench(),
-    castle(), mushroom(), treehouse(), wizard_tower(),
+    castle(), mushroom(), treehouse(), wizard_tower(), gingerbread(), igloo(), cave(), lighthouse(),
 ]
 deco = Image.new('RGBA', (48 * len(DECO_PICS), 48))
 for i, pic in enumerate(DECO_PICS):

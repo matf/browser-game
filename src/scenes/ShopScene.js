@@ -30,7 +30,7 @@ const TABS = [
   { key: 'food', label: 'Futter', tab: ['food', 0, 1], cols: 4, w: 72, h: 80, iconScale: 2 },
   { key: 'dragons', label: 'Drachen', tab: ['dragons', 0, 0.3], cols: 5, w: 57, h: 84, iconScale: 0.8 },
   { key: 'accessories', label: 'Accessoires', tab: ['accessories', 1, 1.5], cols: 4, w: 72, h: 54, iconScale: 2 },
-  { key: 'deco', label: 'Deko', tab: ['deco', 0, 0.36], cols: 5, w: 57, h: 54, iconScale: 0.72 },
+  { key: 'deco', label: 'Deko', tab: ['deco', 0, 0.36], cols: 6, w: 47, h: 54, iconScale: 0.72 },
 ];
 const TAB_BUTTON = { x: 168, y: 30, w: 74, h: 22, gap: 3 };
 const GRID = { x: 168, y: 57, gap: 4 };
@@ -232,6 +232,8 @@ export class ShopScene extends Phaser.Scene {
           .setOrigin(0.5)
           .setResolution(4),
       );
+      // Long names shrink to fit the card.
+      for (const text of texts) if (text.width > layout.w - 4) text.setScale((layout.w - 4) / text.width);
       if (item.badge) {
         texts.push(
           this.add.circle(layout.w - 8, 8, 6, 0xffd84a).setStrokeStyle(1, 0x1b1630),
