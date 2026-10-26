@@ -5,6 +5,9 @@ import { FONT, HEIGHT, WIDTH, setupCamera } from '../view.js';
 import { IS_TOUCH } from '../touch.js';
 import { addMuteButton, play } from '../sound.js';
 import { addButton } from './MenuPage.js';
+import { BOSSES, nameInSentence } from '../objects/Boss.js';
+import { LEVELS } from '../levels.js';
+import { WORLDS, worldOf } from '../world.js';
 import { dragonLook, showDragon } from '../dragons.js';
 
 const ROCKET_EVERY = [350, 750]; // a new rocket after this many milliseconds (shortest, longest)
@@ -15,13 +18,19 @@ const COLORS = [0xff5f9f, 0xffd84a, 0x5fe3ff, 0x9ff0a8, 0xc9a7ff, 0xff8a2a, 0xff
 
 const TEXT = { fontFamily: FONT, fontStyle: 'bold', color: '#ffffff', stroke: '#1b1630', strokeThickness: 4 };
 
-// The end of the game: the fire dragon is gone, and the sky is full of fireworks.
+// After a boss: it is gone, and the sky is full of fireworks. After the very last boss, the game ends.
 export class FinaleScene extends Phaser.Scene {
   constructor() {
     super('finale');
   }
 
-  create() {
+  // data.level: the boss level that was won. data.firstWin: passed on to the map, so it shows what opened.
+  create(data) {
+    this.mapData = data?.firstWin !== undefined ? { firstWin: data.firstWin } : {};
+    const level = data?.level ?? WORLDS[0].bossLevel;
+    const world = WORLDS[worldOf(level)];
+    const last = world === WORLDS.at(-1);
+    const bossName = BOSSES[LEVELS[level].boss].name;
     setupCamera(this);
     this.save = loadSave();
     this.leaving = false;
@@ -49,7 +58,7 @@ export class FinaleScene extends Phaser.Scene {
     this.tweens.add({ targets: title, scale: 1, duration: 700, ease: 'Back.Out', delay: 300 });
     this.tweens.add({ targets: title, angle: { from: -2, to: 2 }, duration: 1500, yoyo: true, repeat: -1, ease: 'Sine.InOut' });
     const subtitle = this.add
-      .text(WIDTH / 2, 80, 'Alle Inseln gerettet, der Feuerdrache ist weg.\nDanke fürs Spielen!', {
+      .text(WIDTH / 2, 80, last ? `Alle Inseln gerettet, ${nameInSentence(LEVELS[level].boss)} ist weg.\nDanke fürs Spielen!` : `${bossName} ist weg!\n${world.boss.gateHint}`, {
         ...TEXT,
         fontSize: '12px',
         align: 'center',
@@ -142,6 +151,6 @@ export class FinaleScene extends Phaser.Scene {
     this.leaving = true;
     play(this, 'click');
     this.cameras.main.fadeOut(400);
-    this.cameras.main.once('camerafadeoutcomplete', () => this.scene.start('map', {}));
+    this.cameras.main.once('camerafadeoutcomplete', () => this.scene.start('map', this.mapData));
   }
 }

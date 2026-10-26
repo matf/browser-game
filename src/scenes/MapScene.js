@@ -9,18 +9,19 @@ import { FOODS } from '../shop.js';
 import { TILE } from './PreloadScene.js';
 import { addButton } from './MenuPage.js';
 import { dragonLook, showDragon } from '../dragons.js';
+import { BOSSES, nameInSentence } from '../objects/Boss.js';
+import { LEVELS } from '../levels.js';
 import {
-  ALL_ISLANDS,
-  BOSS_ISLAND,
-  BOSS_LEVEL,
   HOME_ISLANDS,
   ISLANDS,
-  LEVELS_PER_ISLAND,
-  SHOP,
   SHOP_SPOT,
+  WORLDS,
+  isBossLevel,
   isOpen,
   islandOf,
+  lastOnIsland,
   spotPosition,
+  worldOf,
 } from '../world.js';
 
 const FLY_SPEED = 160; // how fast the dragon flies over the map, in pixels per second
@@ -29,13 +30,17 @@ const HOVER = 14; // how high above a station the dragon hovers, in pixels
 const REVEAL_DELAY_MS = 700; // after a level, wait this long before showing what it opened
 const DOT_SPACING = 6; // pixels between the dots of a path
 const LOW_HEARTS = 2; // with this many hearts or fewer, the map asks whether to go to the shop first
+const GATE_NEXT = 'gate-next'; // the glittering gate to the next island group, as a spot to fly to
+const GATE_BACK = 'gate-back'; // the gate back to the group before
 
 const TEXT = { fontFamily: FONT, fontStyle: 'bold', color: '#ffffff', stroke: '#1b1630', strokeThickness: 3 };
 
 // Where to put the clouds that hide an island you can't visit yet (around the island's middle).
 const CLOUD_SPOTS = [[-38, -16], [0, -24], [38, -14], [-26, 8], [24, 10], [0, -2]];
+const THEMES_WITH_TWINKLES = ['stars']; // islands where little stars blink over the map
 
-// The world map: fly the dragon to a level (or the shop) and go in.
+// The world map of one island group: fly the dragon to a level (or the shop) and go in. A
+// glittering gate leads to the next group once its boss is beaten, and another one leads back.
 export class MapScene extends Phaser.Scene {
   constructor() {
     super('map');
@@ -44,10 +49,15 @@ export class MapScene extends Phaser.Scene {
   // data.firstWin: a level that was just finished for the first time. What it opens (the next
   // station, or a whole new island) is shown with a little show after the map appears.
   // data.fromShop: just back from the shop, so don't ask about the shop again.
+  // data.arrived: just came through a gate (1 = forward, -1 = back).
   create(data) {
     setupCamera(this);
     startMusic(this);
     this.save = loadSave();
+    this.worldIndex = Phaser.Math.Clamp(this.save.world, 0, WORLDS.length - 1);
+    this.world = WORLDS[this.worldIndex];
+    // The dragon is always somewhere on this group's map.
+    if (this.save.at !== SHOP_SPOT && worldOf(this.save.at) !== this.worldIndex) this.save.at = this.world.first;
     this.leaving = false;
     this.flight = null; // the flying tween while the dragon is on its way
     this.target = null; // where it's flying to
@@ -58,24 +68,26 @@ export class MapScene extends Phaser.Scene {
     // What the map shows right now: before the show, the fresh level isn't done yet.
     this.shown = { done: this.save.done.filter((l) => l !== fresh) };
 
-    this.add.image(0, 0, 'map').setOrigin(0);
+    this.add.image(0, 0, this.world.map).setOrigin(0);
     this.addSeaSparkles();
     this.drawPaths();
     this.addIslandTaps();
     this.addShop();
     this.addStations();
+    this.addGates();
     this.addDriftingClouds();
     this.addIslandClouds();
     this.addTwinkles();
     this.addVolcanoSmoke();
-    for (const island of [...ALL_ISLANDS, ...HOME_ISLANDS]) {
+    const homes = this.worldIndex === 0 ? HOME_ISLANDS : [];
+    for (const island of [...this.world.islands, this.world.boss, ...homes]) {
       this.add.text(island.label[0], island.label[1], island.name, { ...TEXT, fontSize: '10px' })
         .setOrigin(0.5)
         .setResolution(4)
         .setDepth(7);
     }
 
-    const [x, y] = spotPosition(this.save.at);
+    const [x, y] = this.spotPos(data?.arrived ? (data.arrived > 0 ? GATE_BACK : GATE_NEXT) : this.save.at);
     this.pos = { x, y: y - HOVER };
     this.dragon = showDragon(this.add.sprite(x, y, 'dragons'), dragonLook(this.save)).setScale(DRAGON_SCALE).setDepth(6);
     this.accessories = new Accessories(this, this.dragon, this.save.wear);
@@ -105,11 +117,24 @@ export class MapScene extends Phaser.Scene {
     onKeys(['RIGHT', 'DOWN', 'D', 'S'], () => this.step(1));
     onKeys(['SPACE', 'ENTER'], () => !this.flight && this.enter(this.save.at));
     onKeys(['ESC'], () => this.toMenu());
-    onKeys(['I'], () => this.visitIsland(this.save.at < 0 ? 0 : Math.floor(this.save.at / LEVELS_PER_ISLAND)));
+    onKeys(['I'], () => this.visitIsland(this.save.at === SHOP_SPOT ? this.world.islands[0] : islandOf(this.save.at)));
 
     this.refresh();
     if (fresh !== null) this.time.delayedCall(REVEAL_DELAY_MS, () => this.reveal(fresh));
+    if (data?.arrived) this.arrive();
     this.cameras.main.fadeIn(250);
+  }
+
+  // Levels of this island group, in order.
+  get levels() {
+    return Array.from({ length: this.world.bossLevel - this.world.first + 1 }, (_, i) => this.world.first + i);
+  }
+
+  // Where a spot is on this map: a level, the shop or a gate.
+  spotPos(spot) {
+    if (spot === GATE_NEXT) return this.world.boss.gate;
+    if (spot === GATE_BACK) return this.world.back;
+    return spotPosition(spot, this.worldIndex);
   }
 
   update(time) {
@@ -120,49 +145,86 @@ export class MapScene extends Phaser.Scene {
   // --- Building the map ---------------------------------------------------------------------
 
   addStations() {
-    this.stations = [];
-    for (let level = 0; level <= BOSS_LEVEL; level++) {
+    this.stations = new Map(); // level -> { pad, number, star }
+    for (const level of this.levels) {
       const [x, y] = spotPosition(level);
       const pad = this.add.image(x, y, 'station-locked').setDepth(3);
-      // The fire dragon's station has a little flame instead of a number.
-      const number =
-        level === BOSS_LEVEL
-          ? this.add.image(x, y - 1, 'map-flame').setDepth(3)
-          : this.add
-              .text(x, y - 1, String((level % LEVELS_PER_ISLAND) + 1), { ...TEXT, fontSize: '8px', strokeThickness: 2 })
-              .setOrigin(0.5)
-              .setResolution(4)
-              .setDepth(3);
+      // A boss station has a little picture (like a flame) instead of a number.
+      const number = isBossLevel(level)
+        ? this.add.image(x, y - 1, this.world.boss.icon).setDepth(3)
+        : this.add
+            .text(x, y - 1, String(level - islandOf(level).firstLevel + 1), {
+              ...TEXT,
+              fontSize: '8px',
+              strokeThickness: 2,
+            })
+            .setOrigin(0.5)
+            .setResolution(4)
+            .setDepth(3);
       const star = this.add.image(x, y - 11, 'map-star').setDepth(4);
       // Bigger than the stone, so it's easy to hit with a finger.
       this.add
         .zone(x, y - 4, 30, 30)
         .setInteractive({ useHandCursor: true })
         .on('pointerdown', () => this.tapSpot(level));
-      this.stations.push({ pad, number, star });
+      this.stations.set(level, { pad, number, star });
     }
   }
 
-  // Tapping an island (not one of its stations) opens the island view.
+  // Tapping an island (not one of its stations) opens the island view (only islands that have one).
   addIslandTaps() {
-    const islands = [...ISLANDS.map((island, i) => [island, i]), ...HOME_ISLANDS.map((island) => [island, null])];
-    for (const [{ area: [x, y, rx, ry], theme }, i] of islands) {
+    if (this.worldIndex !== 0) return;
+    for (const island of [...ISLANDS, ...HOME_ISLANDS]) {
+      const [x, y, rx, ry] = island.area;
       this.add
         .zone(x, y, rx * 2, ry * 2)
         .setInteractive(new Phaser.Geom.Ellipse(rx, ry, rx * 2, ry * 2), Phaser.Geom.Ellipse.Contains)
-        .on('pointerdown', () => this.visitIsland(i, theme));
+        .on('pointerdown', () => this.visitIsland(island));
     }
   }
 
+  // The glittering gates: to the next island group (on the boss island, once the boss is beaten)
+  // and back to the group before.
+  addGates() {
+    const gate = (spot, [x, y]) => {
+      const ring = this.add.image(x, y, 'gate').setDepth(4);
+      this.tweens.add({ targets: ring, scaleX: 1.12, scaleY: 1.06, duration: 700, yoyo: true, repeat: -1, ease: 'Sine.InOut' });
+      const glitter = this.add
+        .particles(x, y, 'pixel', {
+          x: { min: -6, max: 6 },
+          y: { min: -9, max: 9 },
+          lifespan: 900,
+          speed: { min: 4, max: 16 },
+          scale: { start: 1, end: 0 },
+          tint: [0xffffff, 0xffd84a, 0xff9fd0, 0xb8e8ff, 0xc9a7ff],
+          frequency: 90,
+        })
+        .setDepth(4);
+      const zone = this.add
+        .zone(x, y, 30, 34)
+        .setInteractive({ useHandCursor: true })
+        .on('pointerdown', () => this.tapSpot(spot));
+      return { parts: [ring, glitter, zone], ring };
+    };
+    this.gateNext = this.world.boss.gate && this.worldIndex < WORLDS.length - 1 ? gate(GATE_NEXT, this.world.boss.gate) : null;
+    this.gateBack = this.world.back ? gate(GATE_BACK, this.world.back) : null;
+  }
+
+  // The gate to the next group is open once the boss is beaten.
+  get gateOpen() {
+    return Boolean(this.gateNext) && this.shown.done.includes(this.world.bossLevel);
+  }
+
   addShop() {
+    const shop = this.world.shop;
     this.add
-      .image(SHOP.x, SHOP.y, 'shop-house')
+      .image(shop.x, shop.y, 'shop-house')
       .setOrigin(0.5, 1)
       .setDepth(3)
       .setInteractive({ useHandCursor: true })
       .on('pointerdown', () => this.tapSpot(SHOP_SPOT));
     const sign = this.add
-      .text(SHOP.x, SHOP.y - 54, 'Shop', { ...TEXT, fontSize: '9px', color: '#ffe066' })
+      .text(shop.x, shop.y - 54, 'Shop', { ...TEXT, fontSize: '9px', color: '#ffe066' })
       .setOrigin(0.5)
       .setResolution(4)
       .setDepth(7);
@@ -172,17 +234,17 @@ export class MapScene extends Phaser.Scene {
   // Dotted paths between the stations of each island, and over the water to the next island.
   drawPaths() {
     const g = this.add.graphics().setDepth(1);
-    this.bridges = [];
-    for (let level = 0; level < BOSS_LEVEL; level++) {
+    this.bridges = new Map(); // first level of an island -> the dots leading to it
+    for (const level of this.levels.slice(0, -1)) {
       const dots = this.dotsBetween(spotPosition(level), spotPosition(level + 1));
-      if ((level + 1) % LEVELS_PER_ISLAND) {
+      if (!lastOnIsland(level)) {
         for (const [x, y] of dots) {
           g.fillStyle(0x1b1630, 0.3).fillRect(x - 1, y, 2, 2);
           g.fillStyle(0xffffff, 0.9).fillRect(x - 1, y - 1, 2, 2);
         }
       } else {
         // Over the water: only there once the next island is open.
-        this.bridges[level + 1] = dots.map(([x, y]) => this.add.rectangle(x, y, 2, 2, 0xffffff).setDepth(1));
+        this.bridges.set(level + 1, dots.map(([x, y]) => this.add.rectangle(x, y, 2, 2, 0xffffff).setDepth(1)));
       }
     }
   }
@@ -198,16 +260,18 @@ export class MapScene extends Phaser.Scene {
   }
 
   addIslandClouds() {
-    this.islandClouds = ALL_ISLANDS.map((island) => {
+    this.islandClouds = new Map(); // island -> its clouds
+    for (const island of [...this.world.islands, this.world.boss]) {
       const n = island.stations.length;
       const cx = island.stations.reduce((sum, [x]) => sum + x, 0) / n;
-      const cy = island.stations.reduce((sum, [, y]) => sum + y, 0) / n - (island === BOSS_ISLAND ? 18 : 6);
-      return CLOUD_SPOTS.map(([dx, dy], i) => {
+      const cy = island.stations.reduce((sum, [, y]) => sum + y, 0) / n - (island === this.world.boss ? 18 : 6);
+      const clouds = CLOUD_SPOTS.map(([dx, dy], i) => {
         const cloud = this.add.image(cx + dx, cy + dy, 'map-cloud').setScale(1.1).setDepth(5);
         this.tweens.add({ targets: cloud, x: cloud.x + 3, duration: 1400 + i * 230, yoyo: true, repeat: -1, ease: 'Sine.InOut' });
         return cloud;
       });
-    });
+      this.islandClouds.set(island, clouds);
+    }
   }
 
   addDriftingClouds() {
@@ -246,7 +310,8 @@ export class MapScene extends Phaser.Scene {
 
   // Smoke puffs and a few sparks rising from the volcano.
   addVolcanoSmoke() {
-    const [x, y] = BOSS_ISLAND.volcano;
+    if (!this.world.boss.volcano) return;
+    const [x, y] = this.world.boss.volcano;
     this.add
       .particles(x, y, 'map-cloud', {
         lifespan: 2600,
@@ -272,9 +337,10 @@ export class MapScene extends Phaser.Scene {
 
   // Little stars blinking over the star island.
   addTwinkles() {
-    const island = ISLANDS.find((i) => i.theme === 'stars');
+    const island = this.world.islands.find((i) => THEMES_WITH_TWINKLES.includes(i.theme));
+    if (!island) return;
     for (let i = 0; i < 8; i++) {
-      const [x, y] = island.stations[i % LEVELS_PER_ISLAND];
+      const [x, y] = island.stations[i % island.stations.length];
       const star = this.add
         .image(x + Phaser.Math.Between(-30, 30), y + Phaser.Math.Between(-50, -10), 'pixel')
         .setTint(0xfff3b0)
@@ -296,16 +362,18 @@ export class MapScene extends Phaser.Scene {
       star.setVisible(done);
       if (open && !done && next === null) next = level;
     });
-    ALL_ISLANDS.forEach((_, i) => {
-      const open = isOpen(shown, i * LEVELS_PER_ISLAND);
-      for (const cloud of this.islandClouds[i]) cloud.setVisible(!open);
-      for (const dot of this.bridges[i * LEVELS_PER_ISLAND] ?? []) dot.setVisible(open);
-    });
+    for (const [island, clouds] of this.islandClouds) {
+      const open = isOpen(shown, island.firstLevel);
+      for (const cloud of clouds) cloud.setVisible(!open);
+      for (const dot of this.bridges.get(island.firstLevel) ?? []) dot.setVisible(open);
+    }
+    for (const part of this.gateNext?.parts ?? []) part.setVisible(this.gateOpen);
+    this.gateNext?.parts[2].input && (this.gateNext.parts[2].input.enabled = this.gateOpen);
 
     this.pulse?.stop();
     this.stations.forEach(({ pad }) => pad.setScale(1));
     if (next !== null) {
-      this.pulse = this.tweens.add({ targets: this.stations[next].pad, scale: 1.25, duration: 500, yoyo: true, repeat: -1, ease: 'Sine.InOut' });
+      this.pulse = this.tweens.add({ targets: this.stations.get(next).pad, scale: 1.25, duration: 500, yoyo: true, repeat: -1, ease: 'Sine.InOut' });
     }
   }
 
@@ -315,33 +383,56 @@ export class MapScene extends Phaser.Scene {
   reveal(level) {
     this.shown = { done: this.save.done };
     this.refresh();
-    const { star } = this.stations[level];
-    star.setScale(0);
-    this.tweens.add({ targets: star, scale: 1, duration: 400, ease: 'Back.Out' });
+    const station = this.stations.get(level);
+    if (!station) return;
+    station.star.setScale(0);
+    this.tweens.add({ targets: station.star, scale: 1, duration: 400, ease: 'Back.Out' });
 
     const next = level + 1;
-    if (level === BOSS_LEVEL) return;
-    if (next === BOSS_LEVEL) {
+    if (isBossLevel(level)) {
+      if (this.gateNext) this.openGate();
+      return;
+    }
+    const boss = this.world.boss;
+    if (next === this.world.bossLevel) {
       play(this, 'win');
       this.sparkle(WIDTH / 2, HEIGHT / 2, 60);
-      this.banner('Alle Inseln geschafft!', 'Doch auf der Vulkaninsel wartet der Feuerdrache...');
-      // The volcano island stays hidden until the first banner is gone.
-      for (const cloud of this.islandClouds.at(-1)) cloud.setVisible(true);
-      for (const dot of this.bridges[BOSS_LEVEL]) dot.setVisible(false);
-      this.time.delayedCall(3300, () => this.openIsland(ALL_ISLANDS.length - 1, 'Der Feuerdrache!', 'Traust du dich?'));
-    } else if (next % LEVELS_PER_ISLAND === 0) {
-      this.openIsland(next / LEVELS_PER_ISLAND);
+      const kind = LEVELS[next].boss;
+      this.banner('Alle Inseln geschafft!', `Doch auf der ${boss.name} wartet ${nameInSentence(kind)}...`);
+      // The boss island stays hidden until the first banner is gone.
+      for (const cloud of this.islandClouds.get(boss)) cloud.setVisible(true);
+      for (const dot of this.bridges.get(next)) dot.setVisible(false);
+      this.time.delayedCall(3300, () => this.openIsland(boss, `${BOSSES[kind].name}!`, 'Traust du dich?'));
+    } else if (lastOnIsland(level)) {
+      this.openIsland(islandOf(next));
     } else {
       play(this, 'coin');
-      const { pad } = this.stations[next];
+      const { pad } = this.stations.get(next);
       this.sparkle(pad.x, pad.y, 16);
     }
   }
 
+  // The boss is beaten: the glittering gate to the next island group appears.
+  openGate() {
+    const { ring } = this.gateNext;
+    ring.setScale(0);
+    this.tweens.add({ targets: ring, scaleX: 1, scaleY: 1, duration: 900, ease: 'Back.Out' });
+    play(this, 'newdragon');
+    this.sparkle(ring.x, ring.y, 60);
+    this.banner('Ein glitzerndes Tor!', 'Flieg hinein, dahinter warten neue Inseln!');
+  }
+
+  // Just came through a gate: the dragon flies out of it, and the group's name shows.
+  arrive() {
+    this.flyTo(this.save.at, false);
+    play(this, 'newdragon');
+    this.sparkle(this.pos.x, this.pos.y, 40);
+    this.banner(this.world.name, this.worldIndex > 0 && !this.save.done.includes(this.world.first) ? 'Neue Inseln!' : 'Willkommen zurück!');
+  }
+
   // A new island: the clouds blow away and dots appear over the water.
-  openIsland(index, title = 'Neue Insel!', subtitle = `Flieg zur ${ALL_ISLANDS[index].name}!`) {
-    const island = ALL_ISLANDS[index];
-    for (const cloud of this.islandClouds[index]) {
+  openIsland(island, title = 'Neue Insel!', subtitle = `Flieg zur ${island.name}!`) {
+    for (const cloud of this.islandClouds.get(island)) {
       cloud.setVisible(true);
       const [cx] = island.label;
       this.tweens.killTweensOf(cloud);
@@ -355,12 +446,12 @@ export class MapScene extends Phaser.Scene {
         onComplete: () => cloud.setVisible(false),
       });
     }
-    this.bridges[index * LEVELS_PER_ISLAND].forEach((dot, i) => {
+    (this.bridges.get(island.firstLevel) ?? []).forEach((dot, i) => {
       dot.setVisible(true).setScale(0);
       this.tweens.add({ targets: dot, scale: 1, duration: 200, delay: 300 + i * 60 });
     });
     play(this, 'newdragon');
-    const [x, y] = spotPosition(index * LEVELS_PER_ISLAND);
+    const [x, y] = spotPosition(island.firstLevel);
     this.sparkle(x, y, 40);
     this.banner(title, subtitle);
   }
@@ -392,17 +483,22 @@ export class MapScene extends Phaser.Scene {
 
   tapSpot(spot) {
     if (this.leaving || this.question) return;
-    if (spot !== SHOP_SPOT && !isOpen(this.save, spot)) return this.locked(spot);
+    if (typeof spot === 'number' && spot !== SHOP_SPOT && !isOpen(this.save, spot)) return this.locked(spot);
     this.flyTo(spot, true);
   }
 
-  // Arrow keys: fly to the previous or next spot (the shop comes before level 1).
+  // Arrow keys: fly to the previous or next spot. The order is: the gate back, the shop, the
+  // levels, the gate to the next group. Going on from a gate goes through it.
   step(dir) {
+    const order = [...(this.gateBack ? [GATE_BACK] : []), SHOP_SPOT, ...this.levels, ...(this.gateOpen ? [GATE_NEXT] : [])];
     const from = this.target ?? this.save.at;
-    const to = from + dir;
-    if (to < SHOP_SPOT || to > BOSS_LEVEL) return;
-    if (to !== SHOP_SPOT && !isOpen(this.save, to)) return this.locked(to);
-    this.flyTo(to, false);
+    const to = order[order.indexOf(from) + dir];
+    if (to === undefined) {
+      if (typeof from === 'string' && !this.flight) this.enter(from);
+      return;
+    }
+    if (typeof to === 'number' && to !== SHOP_SPOT && !isOpen(this.save, to)) return this.locked(to);
+    this.flyTo(to, typeof to === 'string');
   }
 
   // Fly there; with `enter`, go into the level or shop on arrival.
@@ -412,7 +508,7 @@ export class MapScene extends Phaser.Scene {
       return;
     }
     this.flight?.stop();
-    const [x, y] = spotPosition(spot);
+    const [x, y] = this.spotPos(spot);
     const dx = x - this.pos.x;
     if (Math.abs(dx) > 2) this.dragon.setFlipX(dx < 0);
     const distance = Phaser.Math.Distance.Between(this.pos.x, this.pos.y, x, y - HOVER);
@@ -426,8 +522,10 @@ export class MapScene extends Phaser.Scene {
       onComplete: () => {
         this.flight = null;
         this.target = null;
-        this.save.at = spot;
-        writeSave(this.save);
+        if (typeof spot === 'number') {
+          this.save.at = spot;
+          writeSave(this.save);
+        }
         if (enter) this.enter(spot);
       },
     });
@@ -435,6 +533,7 @@ export class MapScene extends Phaser.Scene {
 
   enter(spot) {
     if (this.leaving) return;
+    if (spot === GATE_NEXT || spot === GATE_BACK) return this.throughGate(spot === GATE_NEXT ? 1 : -1);
     if (spot !== SHOP_SPOT && this.shouldAskShop()) return this.askShop(spot);
     this.leaving = true;
     play(this, 'start');
@@ -507,15 +606,33 @@ export class MapScene extends Phaser.Scene {
     };
   }
 
-  // Go walking on an island: a level island that is open (by its index in ISLANDS; the volcano
-  // island has no island view), or an island without levels (index null, theme given).
-  visitIsland(index, theme = ISLANDS[index]?.theme) {
-    if (this.leaving || this.question || !theme) return;
-    if (index !== null && !isOpen(this.save, index * LEVELS_PER_ISLAND)) return play(this, 'nope');
+  // Through a gate to the next island group (dir 1) or back to the one before (dir -1).
+  throughGate(dir) {
+    this.leaving = true;
+    play(this, 'newdragon');
+    this.sparkle(this.pos.x, this.pos.y, 50);
+    this.tweens.add({ targets: this.dragon, scale: 0, angle: 360, duration: 500, ease: 'Sine.In' });
+    const world = WORLDS[this.worldIndex + dir];
+    this.save.world = this.worldIndex + dir;
+    this.save.at = dir > 0 ? world.first : world.bossLevel;
+    writeSave(this.save);
+    this.cameras.main.flash(500, 255, 255, 255);
+    this.time.delayedCall(450, () => {
+      this.cameras.main.fadeOut(250, 255, 255, 255);
+      this.cameras.main.once('camerafadeoutcomplete', () => this.scene.start('map', { arrived: dir }));
+    });
+  }
+
+  // Go walking on an island: a level island that is open, or an island without levels. Only the
+  // islands of the first group have an island view.
+  visitIsland(island) {
+    if (this.leaving || this.question) return;
+    if (!ISLANDS.includes(island) && !HOME_ISLANDS.includes(island)) return;
+    if (ISLANDS.includes(island) && !isOpen(this.save, island.firstLevel)) return play(this, 'nope');
     this.leaving = true;
     play(this, 'click');
     this.cameras.main.fadeOut(250);
-    this.cameras.main.once('camerafadeoutcomplete', () => this.scene.start('island', { island: theme }));
+    this.cameras.main.once('camerafadeoutcomplete', () => this.scene.start('island', { island: island.theme }));
   }
 
   toMenu() {
@@ -529,14 +646,14 @@ export class MapScene extends Phaser.Scene {
   // Tapped a level that isn't open yet: the stone wiggles and says why.
   locked(level) {
     play(this, 'nope');
-    const { pad } = this.stations[level];
+    const { pad } = this.stations.get(level);
     this.tweens.add({ targets: pad, x: pad.x + 2, duration: 50, yoyo: true, repeat: 3 });
-    const first = level % LEVELS_PER_ISLAND === 0;
-    const text = level === BOSS_LEVEL
+    const island = islandOf(level);
+    const text = isBossLevel(level)
       ? 'Schaff zuerst\nalle Inseln!'
-      : first
+      : level === island.firstLevel
       ? `Schaff zuerst alle Level\nder ${islandOf(level - 1).name}!`
-      : `Schaff zuerst Level ${level % LEVELS_PER_ISLAND}!`;
+      : `Schaff zuerst Level ${level - island.firstLevel}!`;
     this.say?.destroy();
     const [x, y] = spotPosition(level);
     this.say = this.add

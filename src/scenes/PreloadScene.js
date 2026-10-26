@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { SOUNDS, loadSoundSettings } from '../sound.js';
 import { HOME_ISLANDS, ISLANDS, THEMES } from '../world.js';
+import { CRITTERS } from '../obstacles.js';
 import { SHAPES } from '../hatchery.js';
 
 // Frame indices in the Kenney tilesheet (assets/tiles.png, 18x18, 20 columns).
@@ -61,7 +62,10 @@ export class PreloadScene extends Phaser.Scene {
       frameHeight: DRAGON_FRAME.height,
     });
     this.load.spritesheet('tiles', 'tiles.png', { frameWidth: 18, frameHeight: 18 });
-    this.load.spritesheet('bee', 'bee.png', { frameWidth: 24, frameHeight: 20 });
+    // What flies at you: two frames each (bee.png, ...).
+    for (const { texture, frame } of Object.values(CRITTERS)) {
+      this.load.spritesheet(texture, `${texture}.png`, { frameWidth: frame[0], frameHeight: frame[1] });
+    }
     // Each island theme has its own hills, ground, pillars and falling thing (ground-candy.png, ...).
     for (const theme of Object.keys(THEMES)) {
       for (const name of ['drop', 'hills', 'ground', 'pillar-top', 'pillar-bottom']) {
@@ -110,17 +114,20 @@ export class PreloadScene extends Phaser.Scene {
       });
     }
     this.anims.create({
-      key: 'boss-fly',
+      key: 'boss-dragon-fly',
       frames: this.anims.generateFrameNumbers('boss-dragon', { frames: [0, 1, 2, 1] }),
       frameRate: 7,
       repeat: -1,
     });
-    this.anims.create({
-      key: 'bee-fly',
-      frames: this.anims.generateFrameNumbers('bee', { start: 0, end: 1 }),
-      frameRate: 12,
-      repeat: -1,
-    });
+    for (const { texture, flaps } of Object.values(CRITTERS)) {
+      if (this.anims.exists(`${texture}-fly`)) continue;
+      this.anims.create({
+        key: `${texture}-fly`,
+        frames: this.anims.generateFrameNumbers(texture, { start: 0, end: 1 }),
+        frameRate: flaps ?? 12,
+        repeat: -1,
+      });
+    }
 
     this.anims.create({
       key: 'coin-spin',
@@ -313,6 +320,16 @@ export class PreloadScene extends Phaser.Scene {
       for (const [x, y, r] of [[16, 22, 12], [32, 18, 16], [48, 22, 12], [26, 26, 10], [40, 26, 10]]) g.fillCircle(x, y + 2, r);
       g.fillStyle(0xffffff);
       for (const [x, y, r] of [[16, 22, 12], [32, 18, 16], [48, 22, 12], [26, 26, 10], [40, 26, 10]]) g.fillCircle(x, y, r);
+    });
+
+    // The glittering gate to the next island group: a shimmering oval with a sparkly rim.
+    draw('gate', 16, 22, (g) => {
+      g.fillStyle(0x1b1630).fillEllipse(8, 11, 16, 22);
+      g.fillStyle(0xc9a7ff).fillEllipse(8, 11, 14, 20);
+      g.fillStyle(0xff9fd0).fillEllipse(8, 11, 11, 17);
+      g.fillStyle(0x8fe8ff).fillEllipse(8, 11, 8, 14);
+      g.fillStyle(0xffffff).fillEllipse(8, 11, 4, 9);
+      g.fillStyle(0xffe066).fillRect(2, 5, 2, 2).fillRect(12, 15, 2, 2).fillRect(11, 3, 1, 1).fillRect(4, 17, 1, 1);
     });
 
     // Button on the map that goes back to the main menu: a little house.

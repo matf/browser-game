@@ -1,14 +1,15 @@
 import Phaser from 'phaser';
 import { Dragon } from '../objects/Dragon.js';
-import { Bee } from '../objects/Bee.js';
+import { Critter } from '../objects/Critter.js';
 import { Accessories } from '../objects/Accessories.js';
 import { PowerUp } from '../objects/PowerUp.js';
-import { FireDragon } from '../objects/FireDragon.js';
+import { BOSSES, Boss } from '../objects/Boss.js';
 import { Shooter } from '../objects/Shooter.js';
 import { MAX_HEARTS } from '../shop.js';
 import { TILE } from './PreloadScene.js';
-import { BOSS_FIGHT, LEVELS } from '../levels.js';
-import { BOSS_LEVEL, LEVELS_PER_ISLAND, LEVEL_COUNT, THEMES, islandOf } from '../world.js';
+import { LEVELS } from '../levels.js';
+import { DROPS } from '../obstacles.js';
+import { LEVEL_SPOTS, THEMES, isBossLevel, islandOf, lastOnIsland } from '../world.js';
 import { loadSave, writeSave } from '../save.js';
 import { FONT, HEIGHT, WIDTH, setupCamera } from '../view.js';
 import { play, startMusic } from '../sound.js';
@@ -16,7 +17,9 @@ import { dragonLook } from '../dragons.js';
 
 // The numbers that change from level to level are in src/levels.js.
 const START_CALM_MS = 2000; // quiet time at the start before obstacles come
-const DROP_SPEED = 110; // how fast raindrops fall, in pixels per second
+const ARC_GRAVITY = 200; // how strongly thrown things (like cannonballs) fall back down
+const BOUNCE = 0.5; // how much of its speed a bouncing thing keeps when it hits the ground
+const SWAY = 40; // how far swaying things swing left and right (pixels per second)
 const COINS_PER_ROW = 4; // coins in each row between the pillars
 const COIN_SPACING = 18; // pixels between coins in a row
 const GROUND_HEIGHT = 36; // height of the grass and dirt at the bottom
@@ -27,7 +30,7 @@ const POWERUP_CHANCE = 0.5; // how likely a level has a power-up (0 = never, 1 =
 const POWERUP_FROM = 0.25; // the power-up comes somewhere between this part of the level...
 const POWERUP_TO = 0.75; // ...and this part (0 = start, 1 = end)
 const HEART_POWERUP_CHANCE = 0.5; // when a heart is missing, how likely the power-up is a heart instead of a star
-const RAINBOW_AFTER_BOSS_MS = 2500; // after the fire dragon gives up, the rainbow comes this much later
+const RAINBOW_AFTER_BOSS_MS = 2500; // after a boss gives up, the rainbow comes this much later
 
 export class GameScene extends Phaser.Scene {
   constructor() {
@@ -40,10 +43,10 @@ export class GameScene extends Phaser.Scene {
     const height = HEIGHT;
     this.save = loadSave();
     this.coinsAtStart = this.save.coins; // a nap takes away the coins collected in this level
-    // The world map says which level to fly. The one after the last level is the fire dragon.
-    this.levelIndex = Phaser.Math.Clamp(data?.level ?? 0, 0, BOSS_LEVEL);
-    this.isBoss = this.levelIndex === BOSS_LEVEL;
-    this.level = this.isBoss ? BOSS_FIGHT : LEVELS[this.levelIndex];
+    // The world map says which level to fly. The last one of each island group is a boss fight.
+    this.levelIndex = Phaser.Math.Clamp(data?.level ?? 0, 0, LEVELS.length - 1);
+    this.level = LEVELS[this.levelIndex];
+    this.isBoss = Boolean(this.level.boss);
     this.island = islandOf(this.levelIndex);
     this.theme = this.island.theme;
     this.cameras.main.setBackgroundColor(THEMES[this.theme].sky);
@@ -54,9 +57,9 @@ export class GameScene extends Phaser.Scene {
     this.rainbow = null;
     this.ending = false; // the time is up: the rainbow (or the fire dragon giving up) is on its way
     // Some levels hide one power-up: when it comes, it takes the place of a row of coins.
-    // The fire dragon fight always has one.
+    // A boss fight always has one.
     const seconds = this.level.seconds * 1000;
-    if (this.isBoss) this.powerUpAt = BOSS_FIGHT.powerUpAt * 1000;
+    if (this.isBoss) this.powerUpAt = this.level.powerUpAt * 1000;
     else this.powerUpAt = Math.random() < POWERUP_CHANCE ? Phaser.Math.FloatBetween(POWERUP_FROM, POWERUP_TO) * seconds : Infinity;
 
     if (THEMES[this.theme].twinkle) this.addNightStars();
@@ -122,7 +125,8 @@ export class GameScene extends Phaser.Scene {
       emitting: false,
     }).setDepth(2.9);
 
-    this.registry.set('levelName', this.isBoss ? 'Der Feuerdrache!' : `${this.island.name} ${(this.levelIndex % LEVELS_PER_ISLAND) + 1}`);
+    const number = LEVEL_SPOTS[this.levelIndex].station + 1;
+    this.registry.set('levelName', this.isBoss ? `${BOSSES[this.level.boss].name}!` : `${this.island.name} ${number}`);
     this.registry.set('levelHint', this.isBoss ? 'Triff ihn mit deinen Schüssen,\nbis sein Balken leer ist!' : null);
     this.registry.set('firstLevel', this.levelIndex === 0);
     this.registry.set('hearts', this.save.hearts);
@@ -132,11 +136,11 @@ export class GameScene extends Phaser.Scene {
     const every = (delay, callback) =>
       this.time.addEvent({ delay, callback, callbackScope: this, loop: true, startAt: -START_CALM_MS });
     if (this.isBoss) {
-      this.fireDragon = new FireDragon(this, BOSS_FIGHT, this.obstacles, this.player, 50, this.groundY - 40).setDepth(3);
-      this.obstacles.add(this.fireDragon); // flying into it hurts too
+      this.boss = new Boss(this, this.level.boss, this.level, this.obstacles, this.player, 50, this.groundY - 40, this.groundY).setDepth(3);
+      this.obstacles.add(this.boss); // flying into it hurts too
     } else {
       every(this.level.pillarEvery, this.spawnPillars);
-      every(this.level.beeEvery, this.spawnBee);
+      every(this.level.critterEvery, this.spawnCritter);
       every(this.level.dropEvery, this.spawnDrop);
     }
 
@@ -191,10 +195,10 @@ export class GameScene extends Phaser.Scene {
     this.scene.start('map', data);
   }
 
-  // True once the level's time is up (or the fire dragon has no health left): no new obstacles,
-  // only the rainbow.
+  // True once the level's time is up (or the boss has no health left): no new obstacles, only the
+  // rainbow.
   get atEnd() {
-    if (this.isBoss) return this.fireDragon.health <= 0;
+    if (this.isBoss) return this.boss.health <= 0;
     return this.elapsed >= this.level.seconds * 1000;
   }
 
@@ -243,20 +247,65 @@ export class GameScene extends Phaser.Scene {
     this.powerUps.add(new PowerUp(this, WIDTH + 20, y, kind, this.level.scroll).setDepth(3));
   }
 
-  spawnBee() {
+  spawnCritter() {
     if (this.atEnd || this.napping) return;
     const y = Phaser.Math.Between(40, this.groundY - 40);
-    const bee = new Bee(this, WIDTH + 20, y, this.level.beeSpeed).setDepth(3);
-    this.obstacles.add(bee);
+    const critter = new Critter(this, WIDTH + 20, y, THEMES[this.theme].critter, this.level.critterSpeed, this.player).setDepth(3);
+    this.obstacles.add(critter);
   }
 
+  // Something falls down (or comes up from the ground, or is thrown); how is in DROPS (src/obstacles.js).
   spawnDrop() {
     if (this.atEnd || this.napping) return;
-    const drop = this.obstacles.create(Phaser.Math.Between(60, WIDTH + 60), -10, `drop-${this.theme}`);
+    const look = DROPS[THEMES[this.theme].drop];
+    const { motion, speed } = look;
+    const scroll = this.level.scroll;
+    let x = Phaser.Math.Between(60, WIDTH + 60);
+    let y = -10;
+    let vx = -scroll * 0.3;
+    let vy = speed;
+    if (motion === 'rise') {
+      x = Phaser.Math.Between(120, WIDTH + 20);
+      y = this.groundY - 2;
+      vx = -scroll * 0.5;
+      vy = -speed;
+    } else if (motion === 'streak') {
+      x = Phaser.Math.Between(180, WIDTH + 160);
+      vx = -speed * 0.8;
+    } else if (motion === 'arc') {
+      // From the bottom right, up in a high arc and down again.
+      const high = Phaser.Math.Between(110, this.groundY - 40);
+      x = WIDTH + 10;
+      y = this.groundY - 8;
+      vx = -speed;
+      vy = -Math.sqrt(2 * ARC_GRAVITY * high);
+    }
+    const drop = this.obstacles.create(x, y, look.texture).setDepth(3);
     drop.pops = true;
-    drop.setDepth(3);
-    drop.body.setSize(8, 10).setOffset(2, 5);
-    drop.body.setVelocity(-this.level.scroll * 0.3, DROP_SPEED);
+    drop.motion = motion;
+    drop.bounces = motion === 'bounce' ? 1 : 0;
+    const [w, h, ox, oy] = look.body;
+    drop.body.setSize(w, h).setOffset(ox, oy);
+    drop.body.setVelocity(vx, vy);
+    if (motion === 'arc') drop.body.setAccelerationY(ARC_GRAVITY);
+    if (look.spin) drop.body.setAngularVelocity(look.spin);
+  }
+
+  // A falling thing reached the ground: it bounces (when it can) or goes puff. Things coming up
+  // go puff at the top.
+  moveDrop(drop) {
+    if (drop.motion === 'sway') drop.body.velocity.x = -this.level.scroll * 0.3 + Math.cos(drop.y / 18) * SWAY;
+    if (drop.motion === 'rise') {
+      if (drop.y < 14) this.popDrop(drop);
+      return;
+    }
+    if (drop.y <= this.groundY - 4 || drop.body.velocity.y <= 0) return;
+    if (drop.bounces > 0) {
+      drop.bounces -= 1;
+      drop.y = this.groundY - 5;
+      drop.body.velocity.y *= -BOUNCE;
+      this.splash.explode(4, drop.x, this.groundY);
+    } else this.popDrop(drop);
   }
 
   spawnRainbow() {
@@ -293,13 +342,13 @@ export class GameScene extends Phaser.Scene {
   }
 
   // A shot hit something: bees spin away, raindrops and fireballs go puff, pillars stop it, and
-  // the fire dragon loses some health.
+  // a boss loses some health. Shots fly through lightning.
   onShotHit(shot, obstacle) {
-    if (!shot.active || !obstacle.active) return;
+    if (!shot.active || !obstacle.active || obstacle.strike) return;
     this.shooter.pop(shot);
-    if (obstacle instanceof Bee || obstacle.pops) this.bonk(obstacle);
-    else if (obstacle === this.fireDragon) {
-      this.fireDragon.hit();
+    if (obstacle instanceof Critter || obstacle.pops) this.bonk(obstacle);
+    else if (obstacle === this.boss) {
+      this.boss.hit();
       this.sparkle.explode(8, shot.x, shot.y);
     }
   }
@@ -321,10 +370,10 @@ export class GameScene extends Phaser.Scene {
     this.tweens.add({ targets: text, y: text.y - 26, alpha: 0, duration: 1400, ease: 'Sine.In', onComplete: () => text.destroy() });
   }
 
-  // With star power (or a shot), bees, raindrops and fireballs just bounce off (pillars and the fire dragon stay).
+  // With star power (or a shot), bees, raindrops and fireballs just bounce off (pillars, lightning and bosses stay).
   bonk(obstacle) {
     if (obstacle.pops) return this.popDrop(obstacle);
-    if (!(obstacle instanceof Bee)) return;
+    if (!(obstacle instanceof Critter)) return;
     play(this, 'wear');
     this.sparkle.explode(12, obstacle.x, obstacle.y);
     this.obstacles.remove(obstacle);
@@ -388,13 +437,16 @@ export class GameScene extends Phaser.Scene {
     this.time.delayedCall(NAP_MS, () => this.scene.restart({ level: this.levelIndex }));
   }
 
-  // The fire dragon has no health left: all fireballs go puff, the fire dragon flies away, then the rainbow comes.
+  // The boss has no health left: all its shots go puff, it flies away, then the rainbow comes.
   bossGivesUp() {
-    this.fireDragon.giveUp();
-    for (const obstacle of this.obstacles.getChildren().slice()) if (obstacle.pops) this.popDrop(obstacle);
+    this.boss.giveUp();
+    for (const obstacle of this.obstacles.getChildren().slice()) {
+      if (obstacle.pops) this.popDrop(obstacle);
+      else if (obstacle.strike) obstacle.destroy();
+    }
     play(this, 'nope');
     const say = this.add
-      .text(this.fireDragon.x - 20, this.fireDragon.y - 50, 'Uff! Du bist zu stark\nfür mich!', {
+      .text(this.boss.x - 20, this.boss.y - 50, this.boss.look.giveUp, {
         fontFamily: FONT,
         fontSize: '12px',
         fontStyle: 'bold',
@@ -424,21 +476,22 @@ export class GameScene extends Phaser.Scene {
     this.save.at = this.levelIndex;
     writeSave(this.save);
     play(this, 'win');
-    const islandDone = (this.levelIndex + 1) % LEVELS_PER_ISLAND === 0;
     this.events.emit('levelwon', {
       firstTime,
-      islandDone,
-      last: this.levelIndex === LEVEL_COUNT - 1,
-      boss: this.isBoss,
+      islandDone: lastOnIsland(this.levelIndex),
+      last: isBossLevel(this.levelIndex + 1),
+      boss: this.isBoss && BOSSES[this.level.boss].name,
     });
-    if (this.isBoss) this.time.delayedCall(MAP_DELAY_MS, () => this.toFinale());
-    else this.time.delayedCall(MAP_DELAY_MS, () => this.toMap(firstTime ? { firstWin: this.levelIndex } : {}));
+    const data = firstTime ? { firstWin: this.levelIndex } : {};
+    if (this.isBoss) this.time.delayedCall(MAP_DELAY_MS, () => this.toFinale({ level: this.levelIndex, ...data }));
+    else this.time.delayedCall(MAP_DELAY_MS, () => this.toMap(data));
   }
 
-  toFinale() {
+  // After a boss: fireworks. data: { level (the boss level), firstWin } for the finale and the map.
+  toFinale(data) {
     this.scene.stop('ui');
     this.cameras.main.fadeOut(400);
-    this.cameras.main.once('camerafadeoutcomplete', () => this.scene.start('finale', {}));
+    this.cameras.main.once('camerafadeoutcomplete', () => this.scene.start('finale', data));
   }
 
   popDrop(drop) {
@@ -457,7 +510,7 @@ export class GameScene extends Phaser.Scene {
     this.shooter.update(time, delta);
     this.starTrail.emitting = this.player.starPower;
 
-    if (this.isBoss) this.fireDragon.update(this.elapsed);
+    if (this.isBoss) this.boss.update(this.elapsed, delta);
     if (this.isBoss && this.elapsed >= this.powerUpAt) {
       this.powerUpAt = Infinity;
       this.spawnPowerUp(Phaser.Math.Between(60, this.groundY - 50));
@@ -474,8 +527,8 @@ export class GameScene extends Phaser.Scene {
     }
 
     for (const obstacle of this.obstacles.getChildren().slice()) {
-      if (obstacle.pops && obstacle.y > this.groundY - 4) this.popDrop(obstacle);
-      else if (obstacle.x < -60 || obstacle.y < -60) obstacle.destroy();
+      if (obstacle.x < -60 || obstacle.y < -60) obstacle.destroy();
+      else if (obstacle.pops) this.moveDrop(obstacle);
     }
     for (const coin of this.coins.getChildren().slice()) if (coin.x < -20) coin.destroy();
     for (const powerUp of this.powerUps.getChildren().slice()) if (powerUp.x < -20) powerUp.destroy();

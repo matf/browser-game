@@ -7,6 +7,7 @@ const KEY = 'dragonFlight.save';
 const DEFAULTS = {
   coins: 0, // coins you have right now
   done: [], // levels you have finished (0 = the first level)
+  world: 0, // which island group's map is shown (see WORLDS in src/world.js)
   at: 0, // where the dragon sits on the world map: a level, or -1 for the shop
   hearts: MAX_HEARTS, // hearts only come back by feeding
   dragon: 'marshmallow', // the dragon you fly with

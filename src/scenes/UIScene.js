@@ -13,7 +13,7 @@ const TEXT_STYLE = {
   strokeThickness: 4,
 };
 const BAR = { x: 180, y: 9, width: 120, height: 8 }; // progress bar to the rainbow
-const BOSS_BAR = { x: 170, y: 9, width: 150, height: 8 }; // the fire dragon's health
+const BOSS_BAR = { x: 170, y: 9, width: 150, height: 8 }; // the boss's health
 const BOSS_COLOR = 0xff5a5f;
 const ENERGY_BAR = { x: 22, y: 27, width: 72, height: 5 }; // the energy for shooting, under the hearts
 const ENERGY_COLOR = 0x7fe0ff;
@@ -85,7 +85,7 @@ export class UIScene extends Phaser.Scene {
         `${this.registry.get('dragonName')} macht ein Nickerchen...\nDie Münzen aus diesem Level sind weg!`,
       );
     const onLevelWon = ({ firstTime, islandDone, last, boss }) => {
-      if (boss) this.showMessage('Du hast es geschafft!', 'Der Feuerdrache ist weg!');
+      if (boss) this.showMessage('Du hast es geschafft!', `${boss} ist weg!`);
       else if (firstTime && last) this.showMessage('Alle Inseln geschafft!', 'Doch jemand wartet noch auf dich...');
       else if (firstTime && islandDone) this.showMessage('Insel geschafft!', 'Eine neue Insel wartet auf dich!');
       else this.showMessage('Level geschafft!', 'Zurück zur Weltkarte...');
@@ -100,20 +100,21 @@ export class UIScene extends Phaser.Scene {
     });
   }
 
-  // The fire dragon's health: a red bar with its head next to it, which gets shorter with every hit.
+  // The boss's health: a red bar with the boss next to it, which gets shorter with every hit.
   addBossBar() {
+    const look = this.gameScene.boss.look;
     const { x, y, width, height } = BOSS_BAR;
     this.add.rectangle(x - 1, y - 1, width + 2, height + 2, 0x1b1630).setOrigin(0, 0);
     this.bossFill = this.add.rectangle(x, y, width, height, BOSS_COLOR).setOrigin(0, 0);
     this.bossShine = this.add.rectangle(x, y, width, 2, 0xffffff, 0.35).setOrigin(0, 0);
-    this.add.image(x - 12, y + height / 2, 'boss-dragon', 0).setScale(0.32).setFlipX(true);
+    this.add.image(x - 12, y + height / 2, look.texture, 0).setScale(0.32).setFlipX(Boolean(look.flipX));
     this.bossShown = 1; // the part of the bar shown right now; it slides down after a hit
   }
 
   update(time, delta) {
     const g = this.gameScene;
     if (g.isBoss) {
-      const boss = g.fireDragon;
+      const boss = g.boss;
       const want = Math.max(0, boss.health / boss.maxHealth);
       this.bossShown = Math.max(want, this.bossShown - delta / 1000);
       this.bossFill.width = BOSS_BAR.width * this.bossShown;

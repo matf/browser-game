@@ -11,7 +11,7 @@ import { addMuteButton, play, startMusic } from '../sound.js';
 import { addCoins } from '../hud.js';
 import { DECO } from '../shop.js';
 import { SHOTS } from '../objects/Shooter.js';
-import { HOME_ISLANDS, ISLANDS, LEVELS_PER_ISLAND, isOpen, onIslandGround } from '../world.js';
+import { HOME_ISLANDS, ISLANDS, isOpen, onIslandGround } from '../world.js';
 import { dragonLook, showDragon } from '../dragons.js';
 
 const WALK_SPEED = 80; // how fast your dragon walks on the island, in pixels per second
@@ -37,7 +37,7 @@ export class IslandScene extends Phaser.Scene {
     this.save = loadSave();
     this.leaving = false;
     // The islands without levels first, then the level islands that are open on the map.
-    this.islands = [...HOME_ISLANDS, ...ISLANDS.filter((_, i) => isOpen(this.save, i * LEVELS_PER_ISLAND))];
+    this.islands = [...HOME_ISLANDS, ...ISLANDS.filter((island) => isOpen(this.save, island.firstLevel))];
     this.index = Math.max(0, this.islands.findIndex((island) => island.theme === data?.island));
     this.islands.forEach((island, i) => this.add.image(i * WIDTH, 0, `island-${island.theme}`).setOrigin(0));
     // No camera bounds: they don't work with the zoomed camera, so scrolling is clamped by hand.
