@@ -64,6 +64,7 @@ export class GameScene extends Phaser.Scene {
 
     if (THEMES[this.theme].twinkle) this.addNightStars();
     if (THEMES[this.theme].embers) this.addEmbers();
+    if (THEMES[this.theme].bubbles) this.addBubbles();
     this.hills = this.add.tileSprite(0, height - 30, width, 48, `hills-${this.theme}`).setOrigin(0, 1);
     this.ground = this.add.tileSprite(0, height, width, 54, `ground-${this.theme}`).setOrigin(0, 1).setDepth(2);
 
@@ -184,6 +185,20 @@ export class GameScene extends Phaser.Scene {
       alpha: { start: 0.9, end: 0 },
       tint: [0xff7a2a, 0xffd84a, 0xff4a1a],
       frequency: 120,
+    });
+  }
+
+  // Little bubbles floating up in the background, under water.
+  addBubbles() {
+    this.add.particles(0, this.groundY, 'pixel', {
+      x: { min: 0, max: WIDTH },
+      lifespan: 6000,
+      speedY: { min: -40, max: -20 },
+      speedX: { min: -30, max: -10 },
+      scale: { start: 1.4, end: 0.6 },
+      alpha: { start: 0.6, end: 0 },
+      tint: [0xbff4ff, 0xffffff],
+      frequency: 150,
     });
   }
 

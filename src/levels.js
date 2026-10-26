@@ -46,4 +46,29 @@ export const LEVELS = [
       { from: 40, every: 1400, shots: 3, speed: 160 },
     ],
   },
+  // Strandinsel
+  { seconds: 45, scroll: 65, pillarEvery: 4500, gap: 130, critterEvery: 6000, critterSpeed: 95, dropEvery: 2200 },
+  { seconds: 50, scroll: 70, pillarEvery: 4200, gap: 122, critterEvery: 5000, critterSpeed: 105, dropEvery: 1900 },
+  { seconds: 55, scroll: 78, pillarEvery: 3800, gap: 114, critterEvery: 4200, critterSpeed: 115, dropEvery: 1600 },
+  // Korallenriff
+  { seconds: 50, scroll: 70, pillarEvery: 4200, gap: 122, critterEvery: 5000, critterSpeed: 100, dropEvery: 1900 },
+  { seconds: 55, scroll: 78, pillarEvery: 3800, gap: 114, critterEvery: 4200, critterSpeed: 110, dropEvery: 1600 },
+  { seconds: 60, scroll: 85, pillarEvery: 3400, gap: 106, critterEvery: 3500, critterSpeed: 120, dropEvery: 1350 },
+  // Schatzinsel
+  { seconds: 55, scroll: 78, pillarEvery: 3800, gap: 114, critterEvery: 4200, critterSpeed: 110, dropEvery: 2000 },
+  { seconds: 60, scroll: 85, pillarEvery: 3400, gap: 106, critterEvery: 3500, critterSpeed: 120, dropEvery: 1700 },
+  { seconds: 65, scroll: 92, pillarEvery: 3000, gap: 100, critterEvery: 3000, critterSpeed: 130, dropEvery: 1450 },
+  // Krakeninsel: the giant octopus Tinti
+  {
+    boss: 'octopus',
+    health: 30,
+    scroll: 60,
+    powerUpAt: 30,
+    phases: [
+      { from: 0, attack: 'lob', every: 2000, shots: 1, speed: 150 },
+      { from: 15, attack: 'aim', every: 1600, shots: 2, speed: 150 },
+      { from: 30, attack: 'lob', every: 1700, shots: 3, speed: 160 },
+      { from: 45, attack: 'aim', every: 1300, shots: 3, speed: 170 },
+    ],
+  },
 ];

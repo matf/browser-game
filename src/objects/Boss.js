@@ -17,7 +17,8 @@ const STRIKE_GAP = 80; // with several strikes: the distance between them (pixel
 const CHASE_MS = 3200; // little ghosts follow you this long, then they float away
 const CHASE_TURN = 2.2; // how quickly little ghosts turn toward you
 
-// What each boss looks like. texture/anim: its picture, scale: its size, body: the part that
+// What each boss looks like. texture: its picture (frame: the size of one of its 3 frames,
+// flaps: frames per second), scale: its size, flipX: mirror it so it looks left, body: the part that
 // counts for hits [width, height, x, y] (in the picture's own pixels), mouth: where its attacks come
 // from (from its middle), glow: the colour of the warning glow, trail: colours behind its shots,
 // shot: the picture of its shots, icon: the frame shown next to the health bar.
@@ -25,6 +26,8 @@ export const BOSSES = {
   fire: {
     name: 'Der Feuerdrache',
     texture: 'boss-dragon',
+    frame: [67, 52],
+    flaps: 7,
     scale: 1.5,
     flipX: true,
     body: [36, 24, 12, 20],
@@ -33,6 +36,19 @@ export const BOSSES = {
     trail: [0xff7a2a, 0xffd84a, 0xff4a1a],
     shot: 'fireball',
     giveUp: 'Uff! Du bist zu stark\nfür mich!',
+  },
+  octopus: {
+    name: 'Die Riesenkrake Tinti',
+    texture: 'boss-octopus',
+    frame: [66, 58],
+    flaps: 5,
+    scale: 1.4,
+    body: [48, 32, 9, 4],
+    mouth: { x: -11, y: 7 },
+    glow: 0xc9a7ff,
+    trail: [0x3a2560, 0x7a5ab0, 0xc9a7ff],
+    shot: 'drop-deep',
+    giveUp: 'Blubb! Du bist zu stark\nfür mich!',
   },
 };
 

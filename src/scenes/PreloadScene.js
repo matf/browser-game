@@ -1,7 +1,8 @@
 import Phaser from 'phaser';
 import { SOUNDS, loadSoundSettings } from '../sound.js';
-import { HOME_ISLANDS, ISLANDS, THEMES } from '../world.js';
+import { HOME_ISLANDS, ISLANDS, THEMES, WORLDS } from '../world.js';
 import { CRITTERS } from '../obstacles.js';
+import { BOSSES } from '../objects/Boss.js';
 import { SHAPES } from '../hatchery.js';
 
 // Frame indices in the Kenney tilesheet (assets/tiles.png, 18x18, 20 columns).
@@ -57,10 +58,9 @@ export class PreloadScene extends Phaser.Scene {
       frameWidth: DRAGON_FRAME.width,
       frameHeight: DRAGON_FRAME.height,
     });
-    this.load.spritesheet('boss-dragon', 'boss-dragon.png', {
-      frameWidth: DRAGON_FRAME.width,
-      frameHeight: DRAGON_FRAME.height,
-    });
+    for (const { texture, frame } of Object.values(BOSSES)) {
+      this.load.spritesheet(texture, `${texture}.png`, { frameWidth: frame[0], frameHeight: frame[1] });
+    }
     this.load.spritesheet('tiles', 'tiles.png', { frameWidth: 18, frameHeight: 18 });
     // What flies at you: two frames each (bee.png, ...).
     for (const { texture, frame } of Object.values(CRITTERS)) {
@@ -72,7 +72,7 @@ export class PreloadScene extends Phaser.Scene {
         this.load.image(`${name}-${theme}`, `${name}-${theme}.png`);
       }
     }
-    this.load.image('map', 'map.png');
+    for (const world of WORLDS) this.load.image(world.map, `${world.map}.png`);
     this.load.spritesheet('deco', 'deco.png', { frameWidth: 48, frameHeight: 48 });
     for (const island of [...HOME_ISLANDS, ...ISLANDS]) this.load.image(`island-${island.theme}`, `island-${island.theme}.png`);
     this.load.image('nest', 'nest.png');
@@ -113,12 +113,14 @@ export class PreloadScene extends Phaser.Scene {
         repeat: -1,
       });
     }
-    this.anims.create({
-      key: 'boss-dragon-fly',
-      frames: this.anims.generateFrameNumbers('boss-dragon', { frames: [0, 1, 2, 1] }),
-      frameRate: 7,
-      repeat: -1,
-    });
+    for (const { texture, flaps } of Object.values(BOSSES)) {
+      this.anims.create({
+        key: `${texture}-fly`,
+        frames: this.anims.generateFrameNumbers(texture, { frames: [0, 1, 2, 1] }),
+        frameRate: flaps,
+        repeat: -1,
+      });
+    }
     for (const { texture, flaps } of Object.values(CRITTERS)) {
       if (this.anims.exists(`${texture}-fly`)) continue;
       this.anims.create({
@@ -202,6 +204,14 @@ export class PreloadScene extends Phaser.Scene {
     flame.fillStyle(0xff4a1a).fillTriangle(3.5, 0, 0, 6, 7, 6).fillCircle(3.5, 6, 3.5);
     flame.fillStyle(0xffd84a).fillTriangle(3.5, 3, 1.5, 7, 5.5, 7).fillCircle(3.5, 7, 1.5);
     flame.generateTexture('map-flame', 7, 10).destroy();
+
+    // The Krakeninsel's station: a little purple octopus head.
+    const octopus = this.add.graphics();
+    octopus.fillStyle(0x9a4ab0).fillRect(1, 6, 2, 3).fillRect(4, 6, 2, 3).fillRect(7, 6, 2, 3);
+    octopus.fillStyle(0xc86ad8).fillEllipse(5, 4.5, 10, 9);
+    octopus.fillStyle(0xffffff).fillRect(2, 3, 2, 2).fillRect(6, 3, 2, 2);
+    octopus.fillStyle(0x2b1d2e).fillRect(2, 4, 1, 1).fillRect(6, 4, 1, 1);
+    octopus.generateTexture('map-octopus', 10, 10).destroy();
   }
 
   // What the dragons spit (see SHOTS in src/objects/Shooter.js). Marshmallow uses the food picture.

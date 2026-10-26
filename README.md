@@ -115,6 +115,10 @@ islands drawn on the map.
   by Kenney ([kenney.nl](https://kenney.nl)), CC0.
 - App icons (`icon-*.png`): the Marshmallow dragon on a sky background, made from `dragons.png`.
 - Bee, raindrop, snowflake, shooting star, ember, volcano, fireball, the dragons' shots (fire, water, lightning bolt, flower, star, bubble, moon, honey), rainbow, apple, strawberry, piggy bank and accessories: drawn for this game.
+- The later island groups (`tools/make_worlds.py`): the critters (seagull, fish, parrot), the falling
+  things (coconut, bubble, cannonball, ink), the giant octopus Tinti, the glittering gate, the palm
+  trees, shells, starfish, corals, treasure chest and flag on their maps were drawn for this game; the
+  maps' grass is Tiny Town (above), and their level pictures are recolours of the first island's.
 - Sounds: [Interface Sounds](https://opengameart.org/content/interface-sounds),
   [85 Short music jingles](https://opengameart.org/content/85-short-music-jingles),
   [63 Digital sound effects](https://opengameart.org/content/63-digital-sound-effects-lasers-phasers-space-etc) and

@@ -8,6 +8,9 @@
 //   height:  how far it moves up and down (pixels), wiggle: how quickly
 export const CRITTERS = {
   bee: { texture: 'bee', frame: [24, 20], body: [16, 12, 3, 7], motion: 'bob', height: 25, wiggle: 0.004 },
+  gull: { texture: 'critter-gull', frame: [26, 18], body: [16, 8, 4, 6], motion: 'swoop', flaps: 6 },
+  fish: { texture: 'critter-fish', frame: [24, 16], body: [16, 10, 2, 3], motion: 'bob', height: 35, wiggle: 0.0025, flaps: 5 },
+  parrot: { texture: 'critter-parrot', frame: [24, 22], body: [14, 12, 3, 5], motion: 'zigzag', height: 30, wiggle: 0.005, flaps: 8 },
 };
 
 // Things that fall down (or come up) and go puff when they hit something.
@@ -21,4 +24,7 @@ export const DROPS = {
   sugar: { texture: 'drop-candy', body: [8, 10, 2, 5], motion: 'fall', speed: 110 },
   snowflake: { texture: 'drop-snow', body: [8, 10, 2, 5], motion: 'fall', speed: 110 },
   shootingStar: { texture: 'drop-stars', body: [8, 10, 2, 5], motion: 'fall', speed: 110 },
+  coconut: { texture: 'drop-beach', body: [10, 10, 3, 3], motion: 'bounce', speed: 120, spin: 150 },
+  bubble: { texture: 'drop-reef', body: [10, 10, 3, 3], motion: 'rise', speed: 45 },
+  cannonball: { texture: 'drop-treasure', body: [10, 10, 3, 3], motion: 'arc', speed: 150, spin: -200 },
 };

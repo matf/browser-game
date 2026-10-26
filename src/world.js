@@ -10,6 +10,11 @@ export const THEMES = {
   snow: { sky: '#cfe6f5', splash: [0xffffff, 0xbcd8f0], critter: 'bee', drop: 'snowflake' },
   stars: { sky: '#2a2350', splash: [0xffd84a, 0xfff3b0], twinkle: true, critter: 'bee', drop: 'shootingStar' },
   fire: { sky: '#3a1e33', splash: [0xff7a2a, 0xffd84a], embers: true }, // embers: glowing sparks float up
+  // Meeresinseln (bubbles: little bubbles float up in the background)
+  beach: { sky: '#a8e6ff', splash: [0xf3d58f, 0xffffff], critter: 'gull', drop: 'coconut' },
+  reef: { sky: '#3aa6d6', splash: [0xbff4ff, 0xffffff], bubbles: true, critter: 'fish', drop: 'bubble' },
+  treasure: { sky: '#ffd9a0', splash: [0x8a8aa0, 0xffffff], critter: 'parrot', drop: 'cannonball' },
+  deep: { sky: '#16406e', splash: [0x7a5ab0, 0x3a2560], bubbles: true },
 };
 
 // The island groups, one world map each, played one after the other. In each group:
@@ -21,7 +26,7 @@ export const THEMES = {
 //   boss:    the island with one station, the fight against the group's big enemy. icon: the
 //            picture on its station. gate: the glittering gate to the next group that opens once
 //            the boss is beaten (gateHint: what the fireworks say about it).
-//   back:    the gate back to the group before (not in the first group).
+//   back:    where the gate back to the group before is (not in the first group).
 // The map pictures are drawn to match these positions, so moving a station means redrawing the map.
 export const WORLDS = [
   {
@@ -68,6 +73,26 @@ export const WORLDS = [
       gate: [440, 180],
       icon: 'map-flame',
       gateHint: 'Im Vulkan glitzert etwas...',
+    },
+  },
+  {
+    name: 'Meeresinseln',
+    map: 'map-sea',
+    shop: { x: 96, y: 184 },
+    back: [26, 36],
+    islands: [
+      { name: 'Strandinsel', theme: 'beach', label: [100, 258], stations: [[50, 220], [100, 226], [148, 210]] },
+      { name: 'Korallenriff', theme: 'reef', label: [232, 46], stations: [[196, 112], [232, 120], [268, 100]] },
+      { name: 'Schatzinsel', theme: 'treasure', label: [340, 258], stations: [[302, 210], [342, 224], [382, 212]] },
+    ],
+    boss: {
+      name: 'Krakeninsel',
+      theme: 'deep',
+      label: [428, 62],
+      stations: [[424, 118]],
+      gate: [446, 100],
+      icon: 'map-octopus',
+      gateHint: 'Bei der Krakeninsel glitzert etwas...',
     },
   },
 ];

@@ -100,7 +100,10 @@ export class MapScene extends Phaser.Scene {
       .setDepth(10)
       .setInteractive({ useHandCursor: true })
       .on('pointerdown', () => this.toMenu());
-    const hint = IS_TOUCH ? 'Tippe auf ein Level oder eine Insel!' : 'Pfeiltasten: wählen   Leertaste: los!   I: Insel';
+    const views = this.worldIndex === 0; // only the first group's islands can be visited
+    const hint = IS_TOUCH
+      ? `Tippe auf ein Level${views ? ' oder eine Insel' : ''}!`
+      : `Pfeiltasten: wählen   Leertaste: los!${views ? '   I: Insel' : ''}`;
     this.add.text(WIDTH / 2, 14, hint, { ...TEXT, fontSize: '10px' }).setOrigin(0.5).setResolution(4).setDepth(10);
 
     // Key events instead of checking keys every frame, so even a very short tap counts.
@@ -424,7 +427,7 @@ export class MapScene extends Phaser.Scene {
 
   // Just came through a gate: the dragon flies out of it, and the group's name shows.
   arrive() {
-    this.flyTo(this.save.at, false);
+    this.flyTo(this.save.at, false, true);
     play(this, 'newdragon');
     this.sparkle(this.pos.x, this.pos.y, 40);
     this.banner(this.world.name, this.worldIndex > 0 && !this.save.done.includes(this.world.first) ? 'Neue Inseln!' : 'Willkommen zurück!');
@@ -501,9 +504,10 @@ export class MapScene extends Phaser.Scene {
     this.flyTo(to, typeof to === 'string');
   }
 
-  // Fly there; with `enter`, go into the level or shop on arrival.
-  flyTo(spot, enter) {
-    if (spot === this.save.at && !this.flight) {
+  // Fly there; with `enter`, go into the level or shop on arrival. With `always`, fly even when the
+  // save already says the dragon is there (after coming through a gate).
+  flyTo(spot, enter, always = false) {
+    if (spot === this.save.at && !this.flight && !always) {
       if (enter) this.enter(spot);
       return;
     }
