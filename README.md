@@ -73,7 +73,8 @@ shoot at it until its health bar is empty (`src/objects/Boss.js`, its fight is t
 (`src/scenes/FinaleScene.js`), and a glittering gate opens in the volcano. It leads to the next island
 group with its own map: the Meeresinseln (boss: the giant octopus Tinti), then the Himmelsinseln
 (the storm dragon) and the Zauberinseln (the ghost Buhu). Every island has its own critters and
-falling things (`src/obstacles.js`). After the last boss, the game ends with "Danke fürs Spielen".
+falling things (`src/obstacles.js`). After the last boss, the game ends with "Danke fürs Spielen", a
+big firework show (hearts, stars, smileys...) and all the dragons flying around.
 
 The dragon has 5 hearts that only come back by feeding it in the shop; with no hearts left it naps,
 loses the coins collected in that level and restarts it with 3 hearts. Coins, hearts, finished

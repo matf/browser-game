@@ -135,7 +135,12 @@ group has island views (building, residents); later islands have no `area`.
   `powerUpAt`. Each shot hit takes one `health` (the HUD shows a red boss bar instead of the rainbow
   bar); at 0 it says its `giveUp` line and flies away, the rainbow comes, and the win goes to
   `finale` (`FinaleScene`: fireworks, then "Zur Weltkarte"; after the last group it says "Danke fürs
-  Spielen", otherwise the `gateHint`). Obstacles with `pops` (drops, boss shots) go puff on the
+  Spielen", otherwise the `gateHint`). The fireworks are sparks drawn on one Graphics every frame
+  (`burst` kinds in `BURSTS`: ball, ring, heart, star, smiley, double, willow, crackle; don't give
+  that Graphics the ADD blend mode, it cut off the title), and your dragon spits its shot up as a
+  little firework. After the very last boss (Anna wanted a grander ending) all 9 shop dragons and the
+  hatchlings fly back and forth with loop-the-loops (`addParade`), there are more rockets and every
+  `BIG_SHOW_EVERY_MS` a row of them at once. Obstacles with `pops` (drops, boss shots) go puff on the
   ground, on a hit and on star power. The fire dragon (`boss-dragon.png`, made by
   `tools/make_assets.py` from Chili's row) is dark purple with orange lava stripes and red eyes
   (Anna's choice).
@@ -224,7 +229,8 @@ Point her at these when she says something is too easy, too hard, too fast, etc.
   `SHOT_SPEED`, `SHOT_GAP_MS`, `BUTTON_ICON_SCALE`.
 - `src/objects/Dragon.js`: `FLY_SPEED`, `STAR_MS`, `INVULNERABLE_MS`.
 - `src/scenes/GameScene.js`: `POWERUP_CHANCE`, `NAP_MS`, `WAKE_HEARTS`; `src/shop.js`: prices
-  (also of the decorations), `MAX_HEARTS`; `src/scenes/FinaleScene.js`: `ROCKET_EVERY`, `SPARKS`.
+  (also of the decorations), `MAX_HEARTS`; `src/scenes/FinaleScene.js`: `ROCKET_EVERY`, `SPARKS`,
+  `BURST_SIZE`, `SPIT_EVERY`, `PARADE_SPEED`, `LOOP_CHANCE`, `BIG_SHOW_ROCKETS`.
 - Island life: `src/hatchery.js` `GROW_HOURS`, `BABY_SCALE`; `src/objects/Resident.js` `WALK_SPEED`,
   `ROAM`, `HOME_CHANCE`, `FLY_SPEED`, `FLY_HEIGHT`; `src/scenes/IslandScene.js` `WALK_SPEED`, `SWIPE`.
 
@@ -239,8 +245,6 @@ Point her at these when she says something is too easy, too hard, too fast, etc.
   Anna whether she wants to change any. Ideas not built: island views (building) on the later
   islands, music per group.
 - Not yet tested on a real iPhone (only Chrome with touch emulation).
-- Once, in a long SwiftShader test run, the finale title rendered partly cut off; it didn't happen
-  again in later runs. Worth a look on a real device.
 
 ## Working with the daughter
 
