@@ -67,8 +67,9 @@ and raindrops, sugar drops, snowflakes or shooting stars). Islands, themes and m
 `src/world.js`; the level settings (length, speed, pillar gap, bees, falling things) are in
 `src/levels.js`.
 
-After all four islands, the volcano island opens: the fire dragon breathes fireballs at you for a
-minute (`BOSS_FIGHT` in `src/levels.js`, `src/objects/FireDragon.js`). Once it gives up and you fly
+After all four islands, the volcano island opens: the fire dragon breathes fireballs at you, and you
+shoot at it until its health bar is empty (`BOSS_FIGHT` in `src/levels.js`,
+`src/objects/FireDragon.js`). Once it gives up and you fly
 through the rainbow, the game ends with a big fireworks show (`src/scenes/FinaleScene.js`).
 
 The dragon has 5 hearts that only come back by feeding it in the shop; with no hearts left it naps,

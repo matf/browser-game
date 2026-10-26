@@ -123,7 +123,7 @@ export class GameScene extends Phaser.Scene {
     }).setDepth(2.9);
 
     this.registry.set('levelName', this.isBoss ? 'Der Feuerdrache!' : `${this.island.name} ${(this.levelIndex % LEVELS_PER_ISLAND) + 1}`);
-    this.registry.set('levelHint', this.isBoss ? 'Weiche eine Minute lang\nseinen Feuerbällen aus!' : null);
+    this.registry.set('levelHint', this.isBoss ? 'Triff ihn mit deinen Schüssen,\nbis sein Balken leer ist!' : null);
     this.registry.set('firstLevel', this.levelIndex === 0);
     this.registry.set('hearts', this.save.hearts);
     this.registry.set('coins', this.save.coins);
@@ -191,8 +191,10 @@ export class GameScene extends Phaser.Scene {
     this.scene.start('map', data);
   }
 
-  // True once the level's time is up: no new obstacles, only the rainbow.
+  // True once the level's time is up (or the fire dragon has no health left): no new obstacles,
+  // only the rainbow.
   get atEnd() {
+    if (this.isBoss) return this.fireDragon.health <= 0;
     return this.elapsed >= this.level.seconds * 1000;
   }
 
@@ -290,15 +292,15 @@ export class GameScene extends Phaser.Scene {
     }
   }
 
-  // A shot hit something: bees spin away, raindrops and fireballs go puff, pillars and the fire
-  // dragon just stop it.
+  // A shot hit something: bees spin away, raindrops and fireballs go puff, pillars stop it, and
+  // the fire dragon loses some health.
   onShotHit(shot, obstacle) {
     if (!shot.active || !obstacle.active) return;
     this.shooter.pop(shot);
     if (obstacle instanceof Bee || obstacle.pops) this.bonk(obstacle);
     else if (obstacle === this.fireDragon) {
-      this.fireDragon.setTint(0xffffff).setTintMode(Phaser.TintModes.FILL);
-      this.time.delayedCall(80, () => this.fireDragon.clearTint());
+      this.fireDragon.hit();
+      this.sparkle.explode(8, shot.x, shot.y);
     }
   }
 
@@ -386,13 +388,13 @@ export class GameScene extends Phaser.Scene {
     this.time.delayedCall(NAP_MS, () => this.scene.restart({ level: this.levelIndex }));
   }
 
-  // The fight is over: all fireballs go puff, the fire dragon flies away, then the rainbow comes.
+  // The fire dragon has no health left: all fireballs go puff, the fire dragon flies away, then the rainbow comes.
   bossGivesUp() {
     this.fireDragon.giveUp();
     for (const obstacle of this.obstacles.getChildren().slice()) if (obstacle.pops) this.popDrop(obstacle);
     play(this, 'nope');
     const say = this.add
-      .text(this.fireDragon.x - 20, this.fireDragon.y - 50, 'Uff! Du bist zu flink\nfür mich!', {
+      .text(this.fireDragon.x - 20, this.fireDragon.y - 50, 'Uff! Du bist zu stark\nfür mich!', {
         fontFamily: FONT,
         fontSize: '12px',
         fontStyle: 'bold',

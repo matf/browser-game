@@ -99,7 +99,8 @@ asset credits.
 - Boss fight (level index 12, same `GameScene` with `isBoss`): no pillars/bees/drops/coins; the
   `FireDragon` (`src/objects/FireDragon.js`) hovers right, follows your height and breathes
   fireballs (mouth glows first) in phases from `BOSS_FIGHT` (`src/levels.js`); a power-up always comes
-  at 30 s. After 60 s it says "Uff!" and flies away, the rainbow comes, and the win goes to
+  at 30 s. It has `health` hits (Anna wanted to beat bosses with shots and a health bar; the HUD
+  shows a red boss bar instead of the rainbow bar); at 0 it says "Uff!" and flies away, the rainbow comes, and the win goes to
   `finale` (`FinaleScene`: fireworks, then "Zur Weltkarte"). Obstacles with `pops` (drops, fireballs)
   go puff on the ground, on a hit and on star power. The fire dragon (`boss-dragon.png`, made by
   `tools/make_assets.py` from Chili's row) is dark purple with orange lava stripes and red eyes
@@ -122,7 +123,7 @@ asset credits.
   Claude's placeholder picks). A full bar holds `SHOTS_IN_FULL_BAR` (6) shots of
   `ENERGY_MAX` energy, refilling at `ENERGY_REFILL`/s; the HUD bar under the hearts shows it and
   blinks red when too empty. Shots (`GameScene.shots`) bonk bees, pop drops and fireballs, stop at
-  pillars and make the fire dragon flash (it can't be beaten by shots, only by waiting out the minute).
+  pillars and make the fire dragon flash and lose one health (`FireDragon.hit`).
 - `src/objects/`: `Dragon` (flying, joystick, hurt/star), `Shooter`, `Bee`, `PowerUp`, `FireDragon`,
   `Accessories` (worn items drawn on the dragon per animation frame, also flipped and rotated; all
   dragon shapes share the anchor points), `TouchStick`, `BuildMode`, `Resident`.
@@ -174,7 +175,7 @@ asset credits.
 
 Point her at these when she says something is too easy, too hard, too fast, etc.:
 - `src/levels.js`: `LEVELS` (per level: `seconds`, `scroll`, `pillarEvery`, `gap`, bees, drops) and
-  `BOSS_FIGHT` (`seconds`, `powerUpAt`, `phases` with `every`, `shots`, `speed`).
+  `BOSS_FIGHT` (`health`, `powerUpAt`, `phases` with `every`, `shots`, `speed`).
 - `src/objects/Shooter.js`: `SHOTS_IN_FULL_BAR` (she picked 6 after trying 5 and 8), `ENERGY_REFILL`,
   `SHOT_SPEED`, `SHOT_GAP_MS`, `BUTTON_ICON_SCALE`.
 - `src/objects/Dragon.js`: `FLY_SPEED`, `STAR_MS`, `INVULNERABLE_MS`.
@@ -189,9 +190,6 @@ Point her at these when she says something is too easy, too hard, too fast, etc.
   (names are random now); more houses (she got everything she asked for so far).
 - Power-ups: Anna asked for more ideas beyond star and heart. Offered Magnet, Zeitlupe, Münzregen and
   Mini-Drache; she hasn't picked yet. Ask her before building any.
-- Shooting the fire dragon: she asked whether shots do anything to it. Offered (1) a health bar so it
-  gives up earlier, (2) each hit shortens the minute, (3) it shouts "Autsch!" and pauses its fire.
-  No answer yet; it stays as it is until she picks.
 - Fire dragon look: also offered another colour or making it bigger; she only wanted red eyes.
 - Not yet tested on a real iPhone (only Chrome with touch emulation).
 - Once, in a long SwiftShader test run, the finale title rendered partly cut off; it didn't happen

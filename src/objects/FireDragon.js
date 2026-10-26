@@ -12,7 +12,8 @@ const SPREAD = 0.32; // with several fireballs: the angle between them (radians;
 const START_MS = 2500; // after flying in, it waits this long before the first fire breath
 
 // The fire dragon at the end of the game. It hovers on the right and breathes fireballs at your
-// dragon; how often and how many is in BOSS_FIGHT in src/levels.js.
+// dragon; how often and how many is in BOSS_FIGHT in src/levels.js. Every hit with a shot takes
+// away some of its health; when none is left, it gives up.
 export class FireDragon extends Phaser.Physics.Arcade.Sprite {
   // obstacles: the group the fireballs go into (touching them hurts). target: your dragon.
   // minY/maxY: how far up and down it may go.
@@ -32,6 +33,8 @@ export class FireDragon extends Phaser.Physics.Arcade.Sprite {
     this.nextBreathAt = START_MS;
     this.gaveUp = false;
     this.balls = [];
+    this.maxHealth = fight.health;
+    this.health = fight.health;
 
     scene.tweens.add({ targets: this, x: HOME_X, duration: 1800, ease: 'Sine.Out' });
     // The glow in its mouth before a fire breath.
@@ -104,7 +107,16 @@ export class FireDragon extends Phaser.Physics.Arcade.Sprite {
     }
   }
 
-  // Time is up: it stops breathing fire, gets dizzy and flies away.
+  // A shot hit it: it flashes white and loses one health.
+  hit() {
+    if (this.gaveUp || this.health <= 0) return;
+    this.health -= 1;
+    this.setTint(0xffffff).setTintMode(Phaser.TintModes.FILL);
+    this.scene.time.delayedCall(80, () => this.clearTint());
+    play(this.scene, 'wear');
+  }
+
+  // No health left: it stops breathing fire, gets dizzy and flies away.
   giveUp() {
     this.gaveUp = true;
     this.glow.setVisible(false);

@@ -13,6 +13,8 @@ const TEXT_STYLE = {
   strokeThickness: 4,
 };
 const BAR = { x: 180, y: 9, width: 120, height: 8 }; // progress bar to the rainbow
+const BOSS_BAR = { x: 170, y: 9, width: 150, height: 8 }; // the fire dragon's health
+const BOSS_COLOR = 0xff5a5f;
 const ENERGY_BAR = { x: 22, y: 27, width: 72, height: 5 }; // the energy for shooting, under the hearts
 const ENERGY_COLOR = 0x7fe0ff;
 const TIRED_COLOR = 0xff5a5f; // the bar blinks in this colour when there's too little energy for a shot
@@ -42,11 +44,14 @@ export class UIScene extends Phaser.Scene {
         this.gameScene.toMap();
       });
 
-    this.add
-      .rectangle(BAR.x - 1, BAR.y - 1, BAR.width + 2, BAR.height + 2, 0x1b1630)
-      .setOrigin(0, 0);
-    this.barFill = this.add.rectangle(BAR.x, BAR.y, 0, BAR.height, 0xff7eb6).setOrigin(0, 0);
-    this.add.image(BAR.x + BAR.width + 8, BAR.y + BAR.height / 2, 'rainbow').setScale(0.08);
+    if (this.gameScene.isBoss) this.addBossBar();
+    else {
+      this.add
+        .rectangle(BAR.x - 1, BAR.y - 1, BAR.width + 2, BAR.height + 2, 0x1b1630)
+        .setOrigin(0, 0);
+      this.barFill = this.add.rectangle(BAR.x, BAR.y, 0, BAR.height, 0xff7eb6).setOrigin(0, 0);
+      this.add.image(BAR.x + BAR.width + 8, BAR.y + BAR.height / 2, 'rainbow').setScale(0.08);
+    }
 
     const shot = this.gameScene.shooter.shot;
     this.add.image(ENERGY_BAR.x - 11, ENERGY_BAR.y + ENERGY_BAR.height / 2, shot.texture, shot.frame).setScale(shot.scale * 0.9);
@@ -95,10 +100,28 @@ export class UIScene extends Phaser.Scene {
     });
   }
 
-  update() {
+  // The fire dragon's health: a red bar with its head next to it, which gets shorter with every hit.
+  addBossBar() {
+    const { x, y, width, height } = BOSS_BAR;
+    this.add.rectangle(x - 1, y - 1, width + 2, height + 2, 0x1b1630).setOrigin(0, 0);
+    this.bossFill = this.add.rectangle(x, y, width, height, BOSS_COLOR).setOrigin(0, 0);
+    this.bossShine = this.add.rectangle(x, y, width, 2, 0xffffff, 0.35).setOrigin(0, 0);
+    this.add.image(x - 12, y + height / 2, 'boss-dragon', 0).setScale(0.32).setFlipX(true);
+    this.bossShown = 1; // the part of the bar shown right now; it slides down after a hit
+  }
+
+  update(time, delta) {
     const g = this.gameScene;
-    const progress = Math.min(1, g.elapsed / (g.level.seconds * 1000));
-    this.barFill.width = BAR.width * progress;
+    if (g.isBoss) {
+      const boss = g.fireDragon;
+      const want = Math.max(0, boss.health / boss.maxHealth);
+      this.bossShown = Math.max(want, this.bossShown - delta / 1000);
+      this.bossFill.width = BOSS_BAR.width * this.bossShown;
+      this.bossShine.width = this.bossFill.width;
+    } else {
+      const progress = Math.min(1, g.elapsed / (g.level.seconds * 1000));
+      this.barFill.width = BAR.width * progress;
+    }
     const shooter = g.shooter;
     this.energyFill.width = (ENERGY_BAR.width * shooter.energy) / ENERGY_MAX;
     const tired = g.time.now - shooter.tiredAt < TIRED_BLINK_MS && g.time.now % 160 < 80;

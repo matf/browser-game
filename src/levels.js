@@ -27,13 +27,13 @@ export const LEVELS = [
 ];
 
 // The fight against the fire dragon on the volcano island, after all levels.
-//   seconds:   how long you must dodge until the fire dragon gives up
+//   health:    how many hits with your shots it takes until the fire dragon gives up
 //   scroll:    how fast the ground moves past (pixels per second)
 //   powerUpAt: when the helping power-up comes (seconds)
 //   phases:    how it attacks, from `from` seconds on: a fire breath every `every` milliseconds with
 //              `shots` fireballs, flying `speed` pixels per second
 export const BOSS_FIGHT = {
-  seconds: 60,
+  health: 25,
   scroll: 70,
   powerUpAt: 30,
   phases: [
