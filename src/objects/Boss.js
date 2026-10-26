@@ -50,6 +50,33 @@ export const BOSSES = {
     shot: 'drop-deep',
     giveUp: 'Blubb! Du bist zu stark\nfür mich!',
   },
+  storm: {
+    name: 'Der Gewitterdrache',
+    texture: 'boss-storm',
+    frame: [67, 52],
+    flaps: 8,
+    scale: 1.5,
+    flipX: true,
+    body: [36, 24, 12, 20],
+    mouth: { x: -48, y: -6 },
+    glow: 0xffe066,
+    trail: [0xffe066, 0xffffff, 0x9aa6d0],
+    shot: 'drop-storm',
+    giveUp: 'Grrr! Du bist zu stark\nfür mich!',
+  },
+  ghost: {
+    name: 'Das Gespenst Buhu',
+    texture: 'boss-ghost',
+    frame: [62, 58],
+    flaps: 4,
+    scale: 1.4,
+    body: [40, 40, 12, 8],
+    mouth: { x: -8, y: 3 },
+    glow: 0x9fffd0,
+    trail: [0xf4f0ff, 0xc9bfe8, 0x9fffd0],
+    shot: 'drop-ghost',
+    giveUp: 'Buhuuu! Du bist zu stark\nfür mich!',
+  },
 };
 
 // A boss's name inside a sentence: "der Feuerdrache" instead of "Der Feuerdrache".
@@ -64,6 +91,7 @@ export function nameInSentence(kind) {
 //   lob:    blobs are thrown in a high arc and come down where your dragon is
 //   strike: lightning blinks where your dragon is, then strikes from top to bottom
 //   chase:  little ghosts follow your dragon for a while
+// `attack` can also be a list, like ['aim', 'strike']: then the boss takes turns.
 export class Boss extends Phaser.Physics.Arcade.Sprite {
   // kind: a key of BOSSES. obstacles: the group its shots go into (touching them hurts).
   // target: your dragon. minY/maxY: how far up and down it may go. groundY: where the ground is.
@@ -84,6 +112,7 @@ export class Boss extends Phaser.Physics.Arcade.Sprite {
     this.groundY = groundY;
     this.baseY = this.y;
     this.nextAttackAt = START_MS;
+    this.attacks = 0; // how many attacks so far (for taking turns)
     this.gaveUp = false;
     this.shots = [];
     this.maxHealth = fight.health;
@@ -146,7 +175,8 @@ export class Boss extends Phaser.Physics.Arcade.Sprite {
       onComplete: () => {
         this.glow.setVisible(false);
         if (this.gaveUp) return;
-        const attack = phase.attack ?? 'aim';
+        const kinds = [].concat(phase.attack ?? 'aim');
+        const attack = kinds[this.attacks++ % kinds.length];
         if (attack === 'aim') this.aim(phase);
         else if (attack === 'lob') this.lob(phase);
         else if (attack === 'strike') this.strike(phase);

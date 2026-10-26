@@ -71,4 +71,52 @@ export const LEVELS = [
       { from: 45, attack: 'aim', every: 1300, shots: 3, speed: 170 },
     ],
   },
+  // Wolkeninsel
+  { seconds: 45, scroll: 70, pillarEvery: 4200, gap: 124, critterEvery: 5200, critterSpeed: 100, dropEvery: 1800 },
+  { seconds: 50, scroll: 76, pillarEvery: 3900, gap: 116, critterEvery: 4500, critterSpeed: 110, dropEvery: 1600 },
+  { seconds: 55, scroll: 84, pillarEvery: 3500, gap: 108, critterEvery: 3800, critterSpeed: 120, dropEvery: 1400 },
+  // Regenbogeninsel
+  { seconds: 50, scroll: 76, pillarEvery: 3900, gap: 116, critterEvery: 4500, critterSpeed: 110, dropEvery: 1700 },
+  { seconds: 55, scroll: 84, pillarEvery: 3500, gap: 108, critterEvery: 3800, critterSpeed: 120, dropEvery: 1500 },
+  { seconds: 60, scroll: 90, pillarEvery: 3200, gap: 102, critterEvery: 3200, critterSpeed: 130, dropEvery: 1300 },
+  // Mondinsel
+  { seconds: 55, scroll: 84, pillarEvery: 3500, gap: 108, critterEvery: 3800, critterSpeed: 120, dropEvery: 1800 },
+  { seconds: 60, scroll: 90, pillarEvery: 3200, gap: 102, critterEvery: 3200, critterSpeed: 130, dropEvery: 1600 },
+  { seconds: 65, scroll: 96, pillarEvery: 2900, gap: 96, critterEvery: 2800, critterSpeed: 140, dropEvery: 1400 },
+  // Gewitterinsel: the storm dragon
+  {
+    boss: 'storm',
+    health: 35,
+    scroll: 70,
+    powerUpAt: 30,
+    phases: [
+      { from: 0, attack: 'aim', every: 1600, shots: 1, speed: 180 },
+      { from: 15, attack: ['aim', 'strike'], every: 1800, shots: 2, speed: 185 },
+      { from: 35, attack: ['strike', 'aim'], every: 1500, shots: 2, speed: 200 },
+    ],
+  },
+  // Pilzinsel
+  { seconds: 50, scroll: 76, pillarEvery: 3900, gap: 116, critterEvery: 4500, critterSpeed: 110, dropEvery: 1500 },
+  { seconds: 55, scroll: 84, pillarEvery: 3500, gap: 108, critterEvery: 3800, critterSpeed: 120, dropEvery: 1300 },
+  { seconds: 60, scroll: 90, pillarEvery: 3200, gap: 102, critterEvery: 3200, critterSpeed: 130, dropEvery: 1150 },
+  // Gruselinsel
+  { seconds: 55, scroll: 84, pillarEvery: 3500, gap: 108, critterEvery: 3800, critterSpeed: 120, dropEvery: 1900 },
+  { seconds: 60, scroll: 90, pillarEvery: 3200, gap: 102, critterEvery: 3200, critterSpeed: 135, dropEvery: 1700 },
+  { seconds: 65, scroll: 96, pillarEvery: 2900, gap: 96, critterEvery: 2800, critterSpeed: 145, dropEvery: 1500 },
+  // Kristallinsel
+  { seconds: 55, scroll: 88, pillarEvery: 3400, gap: 104, critterEvery: 3600, critterSpeed: 130, dropEvery: 1300 },
+  { seconds: 60, scroll: 94, pillarEvery: 3100, gap: 98, critterEvery: 3000, critterSpeed: 140, dropEvery: 1150 },
+  { seconds: 65, scroll: 100, pillarEvery: 2800, gap: 92, critterEvery: 2600, critterSpeed: 150, dropEvery: 1000 },
+  // Geisterinsel: the ghost Buhu
+  {
+    boss: 'ghost',
+    health: 40,
+    scroll: 60,
+    powerUpAt: 30,
+    phases: [
+      { from: 0, attack: 'chase', every: 2600, shots: 1, speed: 75 },
+      { from: 15, attack: ['aim', 'chase'], every: 2000, shots: 2, speed: 95 },
+      { from: 35, attack: ['chase', 'aim', 'lob'], every: 1700, shots: 3, speed: 105 },
+    ],
+  },
 ];

@@ -68,9 +68,12 @@ and raindrops, sugar drops, snowflakes or shooting stars). Islands, themes and m
 `src/levels.js`.
 
 After all four islands, the volcano island opens: the fire dragon breathes fireballs at you, and you
-shoot at it until its health bar is empty (`BOSS_FIGHT` in `src/levels.js`,
-`src/objects/FireDragon.js`). Once it gives up and you fly
-through the rainbow, the game ends with a big fireworks show (`src/scenes/FinaleScene.js`).
+shoot at it until its health bar is empty (`src/objects/Boss.js`, its fight is the boss entry in
+`src/levels.js`). Once it gives up and you fly through the rainbow, there are fireworks
+(`src/scenes/FinaleScene.js`), and a glittering gate opens in the volcano. It leads to the next island
+group with its own map: the Meeresinseln (boss: the giant octopus Tinti), then the Himmelsinseln
+(the storm dragon) and the Zauberinseln (the ghost Buhu). Every island has its own critters and
+falling things (`src/obstacles.js`). After the last boss, the game ends with "Danke fürs Spielen".
 
 The dragon has 5 hearts that only come back by feeding it in the shop; with no hearts left it naps,
 loses the coins collected in that level and restarts it with 3 hearts. Coins, hearts, finished
@@ -115,10 +118,13 @@ islands drawn on the map.
   by Kenney ([kenney.nl](https://kenney.nl)), CC0.
 - App icons (`icon-*.png`): the Marshmallow dragon on a sky background, made from `dragons.png`.
 - Bee, raindrop, snowflake, shooting star, ember, volcano, fireball, the dragons' shots (fire, water, lightning bolt, flower, star, bubble, moon, honey), rainbow, apple, strawberry, piggy bank and accessories: drawn for this game.
-- The later island groups (`tools/make_worlds.py`): the critters (seagull, fish, parrot), the falling
-  things (coconut, bubble, cannonball, ink), the giant octopus Tinti, the glittering gate, the palm
-  trees, shells, starfish, corals, treasure chest and flag on their maps were drawn for this game; the
-  maps' grass is Tiny Town (above), and their level pictures are recolours of the first island's.
+- The later island groups (`tools/make_worlds.py`): the critters (seagull, fish, parrot, rain
+  cloud, butterfly, UFO, firefly, bat, crystal), the falling things (coconut, bubble, cannonball, ink,
+  hail, rainbow drop, meteor, spore, pumpkin, icicle, storm ball, little ghost), the giant octopus
+  Tinti, the ghost Buhu, the glittering gate, the lightning and the map decorations (palm trees,
+  shells, corals, chest, clouds, craters, mushrooms, graves, crystals) were drawn for this game; the
+  storm dragon is a recolour of Wolke from `dragons.png`, the maps' grass is Tiny Town (above), and
+  their level pictures are recolours of the first island's.
 - Sounds: [Interface Sounds](https://opengameart.org/content/interface-sounds),
   [85 Short music jingles](https://opengameart.org/content/85-short-music-jingles),
   [63 Digital sound effects](https://opengameart.org/content/63-digital-sound-effects-lasers-phasers-space-etc) and

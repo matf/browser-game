@@ -22,7 +22,8 @@ current-state section up to date when a feature lands (in the same commit).
 
 **Dragon Flight** (German UI) is made by Anna (the daughter, 10–13) and her father Matthias. You fly
 a cute dragon from left to right through a scrolling level, dodge things, collect coins and fly
-through a rainbow at the end. Between levels there is a little island life: walk on the islands,
+through a rainbow at the end. There are four island groups, each with its own map, three islands of
+three levels and a boss you beat with shots; a glittering gate leads on to the next group. Between levels there is a little island life: walk on the islands,
 buy houses and decorations and place them, your dragons live in the houses or fly around, and on
 the Brutinsel a dragon egg hatches every day. The README has the player-facing description and the
 asset credits.
@@ -39,7 +40,9 @@ asset credits.
   The map starts a level with `scene.start('game', { level })`; after a first-time win the game
   returns with `{ firstWin }` and the map plays the reveal (star, next station, or a new island with
   clouds blowing away). The house icon / Esc on the map goes to `title`; Esc / the map icon in a level
-  goes to `map`. The shop is the little house on the flower island (map spot `SHOP_SPOT = -1`).
+  goes to `map`. Every group's map has the shop house (map spot `SHOP_SPOT = -1`; which map is shown
+  is `save.world`). After a boss the game goes to `finale` with `{ level, firstWin }`, which passes
+  `firstWin` on to the map, where the gate to the next group appears (`openGate`).
 - Before a level starts, the map asks "Nur noch N Herzen! Zuerst in den Shop?" when hearts ≤
   `LOW_HEARTS` (2) and the coins buy the cheapest food (`MapScene.askShop`). It asks once per map
   visit, and not right after coming back from the shop (`{ fromShop: true }`).
@@ -89,27 +92,55 @@ asset credits.
   name/anim/tint/shot with `dragonLook(save)` and draw it with `showDragon` (`src/dragons.js`), never
   `${save.dragon}-fly` or `DRAGONS.find(...)`. `Dragon` keeps its tint after star power (`baseTint`).
 
+### Island groups (Anna's wish: "the game goes on after the volcano island")
+
+Anna asked for three more island groups with their own obstacles on every island and different
+bosses she beats with shots (health bar); she let Claude pick the islands. Claude picked:
+
+| Group (map) | Islands (theme: critter / falling thing) | Boss island: boss (attacks) |
+|---|---|---|
+| Dracheninseln (`map`) | Blumeninsel, Zuckerinsel, Schneeinsel, Sterneninsel (bees / raindrop, sugar drop, snowflake, shooting star) | Vulkaninsel: Feuerdrache (aim) |
+| Meeresinseln (`map-sea`) | Strandinsel (seagull swoops / coconut bounces), Korallenriff (fish / bubbles rise), Schatzinsel (parrot zigzags / cannonball arcs) | Krakeninsel: Riesenkrake Tinti (lob, aim ink) |
+| Himmelsinseln (`map-sky`) | Wolkeninsel (grumpy rain cloud / hail), Regenbogeninsel (butterfly / swaying rainbow drop), Mondinsel (UFO / meteor streaks) | Gewitterinsel: Gewitterdrache (aim, lightning strike) |
+| Zauberinseln (`map-magic`) | Pilzinsel (firefly / swaying spore), Gruselinsel (bat / bouncing pumpkin), Kristallinsel (spinning crystal / icicle) | Geisterinsel: Gespenst Buhu (chasing little ghosts, aim, lob) |
+
+The gate to the next group is in the volcano (Anna: "Im Vulkan soll sich ein glitzerndes Tor
+öffnen"), later on each boss island; each later map has a gate back (top left). Only the first
+group has island views (building, residents); later islands have no `area`.
+
 ### Where things live
 
-- `src/world.js`: 4 islands (Blumeninsel/flowers, Zuckerinsel/candy, Schneeinsel/snow,
-  Sterneninsel/stars), 3 levels each, station positions and tap `area` on the map, `THEMES` (sky
-  colour, splash colours, night stars, embers), `HOME_ISLANDS`, `ISLAND_GROUND`/`onIslandGround`. A level is open when the previous one is done (`isOpen`).
-  After them comes `BOSS_ISLAND` (Vulkaninsel, theme fire) with one station, `BOSS_LEVEL` = 12;
-  `ALL_ISLANDS` includes it and `islandOf(12)` returns it.
-- Boss fight (level index 12, same `GameScene` with `isBoss`): no pillars/bees/drops/coins; the
-  `FireDragon` (`src/objects/FireDragon.js`) hovers right, follows your height and breathes
-  fireballs (mouth glows first) in phases from `BOSS_FIGHT` (`src/levels.js`); a power-up always comes
-  at 30 s. It has `health` hits (Anna wanted to beat bosses with shots and a health bar; the HUD
-  shows a red boss bar instead of the rainbow bar); at 0 it says "Uff!" and flies away, the rainbow comes, and the win goes to
-  `finale` (`FinaleScene`: fireworks, then "Zur Weltkarte"). Obstacles with `pops` (drops, fireballs)
-  go puff on the ground, on a hit and on star power. The fire dragon (`boss-dragon.png`, made by
+- `src/world.js`: `THEMES` (sky colour, splash colours, `twinkle` night stars, `embers`, `bubbles`,
+  and which `critter` and `drop` the theme's levels have), `WORLDS` (the island groups: `map`,
+  `shop` position, `islands` with `stations`/`label`/`area`, the `boss` island with `icon`, `gate`,
+  `gateHint`, and `back` gate position). `LEVEL_SPOTS` numbers every level in playing order (the save
+  remembers these numbers; the first group is 0–12 as before, 12 = fire dragon, then 13–22, 23–32,
+  33–42). Helpers: `islandOf`, `worldOf`, `isBossLevel`, `lastOnIsland`, `spotPosition(spot, world)`,
+  `isOpen` (open when the level before is done, so a group opens with the boss before it). Each
+  world gets `first`/`bossLevel`, each island `firstLevel`/`world`. `ISLANDS` = the first group's
+  islands (the ones with island views). Also `HOME_ISLANDS`, `ISLAND_GROUND`/`onIslandGround`.
+- `src/obstacles.js`: `CRITTERS` (spritesheet, frame size, hit body, `motion` bob/zigzag/swoop/spin)
+  and `DROPS` (texture, body, `motion` fall/rise/bounce/arc/sway/streak, speed, spin).
+  `src/objects/Critter.js` flies them; `GameScene.spawnDrop`/`moveDrop` does the falling things.
+- `src/levels.js`: `LEVELS`, one entry per level in `LEVEL_SPOTS` order (length, scroll speed,
+  pillar spacing and gap, `critterEvery`/`critterSpeed`, `dropEvery`); a boss entry has `boss`,
+  `health`, `scroll`, `powerUpAt`, `phases` (`from` s, `attack` or a list of attacks to take turns,
+  `every` ms, `shots`, `speed`). Harder within an island; each island's first level is easier again
+  than the last one before it (Anna found the late levels too hard).
+- Boss fights (same `GameScene` with `isBoss`): no pillars/critters/drops/coins; `src/objects/Boss.js`
+  (`BOSSES`: look of each boss) hovers right, follows your height, floats up and down by itself
+  (`ROAM`, Anna wanted it to move more) and attacks (mouth glows first): `aim`, `lob` (arcs with
+  gravity), `strike` (lightning: a blinking line, then a `strike` bolt; shots fly through it,
+  `obstacle.strike`), `chase` (little ghosts follow you for `CHASE_MS`). A power-up always comes at
+  `powerUpAt`. Each shot hit takes one `health` (the HUD shows a red boss bar instead of the rainbow
+  bar); at 0 it says its `giveUp` line and flies away, the rainbow comes, and the win goes to
+  `finale` (`FinaleScene`: fireworks, then "Zur Weltkarte"; after the last group it says "Danke fürs
+  Spielen", otherwise the `gateHint`). Obstacles with `pops` (drops, boss shots) go puff on the
+  ground, on a hit and on star power. The fire dragon (`boss-dragon.png`, made by
   `tools/make_assets.py` from Chili's row) is dark purple with orange lava stripes and red eyes
   (Anna's choice).
-- `src/levels.js`: 12 levels (length, scroll speed, pillar spacing and gap, bees, falling things).
-  Harder within an island; each island's first level is easier again than the last one before it
-  (Anna found the late levels too hard).
 - `src/scenes/GameScene.js`: level rules. Pillars with a coin in the gap, coin rows between them,
-  bees, falling things (raindrop/sugar drop/snowflake/shooting star by theme), rainbow at the end.
+  critters, falling things by theme, rainbow at the end.
   Hit = lose a heart (hearts only come back by food in the shop or a heart power-up); 0 hearts =
   the dragon naps 5 s, loses this level's coins and restarts the level with 3 hearts.
   Power-ups: with `POWERUP_CHANCE` (0.5) a level has one, replacing a coin row between 25 % and 75 %
@@ -123,8 +154,8 @@ asset credits.
   Claude's placeholder picks). A full bar holds `SHOTS_IN_FULL_BAR` (6) shots of
   `ENERGY_MAX` energy, refilling at `ENERGY_REFILL`/s; the HUD bar under the hearts shows it and
   blinks red when too empty. Shots (`GameScene.shots`) bonk bees, pop drops and fireballs, stop at
-  pillars and make the fire dragon flash and lose one health (`FireDragon.hit`).
-- `src/objects/`: `Dragon` (flying, joystick, hurt/star), `Shooter`, `Bee`, `PowerUp`, `FireDragon`,
+  pillars and make a boss flash and lose one health (`Boss.hit`).
+- `src/objects/`: `Dragon` (flying, joystick, hurt/star), `Shooter`, `Critter`, `PowerUp`, `Boss`,
   `Accessories` (worn items drawn on the dragon per animation frame, also flipped and rotated; all
   dragon shapes share the anchor points), `TouchStick`, `BuildMode`, `Resident`.
 - `src/shop.js`: foods, accessories, decorations, dragon price; `src/scenes/ShopScene.js`: shop with
@@ -158,6 +189,16 @@ asset credits.
   check `git status` afterwards. Moving a station means changing it in both `world.js` and the
   script, then re-running the script. The app icons `icon-180/192/512.png` were made once from
   Marshmallow's first frame on a sky/grass background.
+- Everything for the later island groups comes from `tools/make_worlds.py` (same Tiny Town zip and
+  venv; `python -I tools/make_worlds.py <tilemap_packed.png> public/assets [preview-folder]`): per
+  theme `ground/hills/pillar-top/pillar-bottom-<theme>.png` (colour swaps of the `*-flowers.png`
+  originals in `THEMES`) and `drop-<theme>.png`, the `critter-*.png` spritesheets, `boss-octopus`,
+  `boss-storm` (Wolke's row recoloured), `boss-ghost`, and the maps `map-sea/sky/magic.png` (its
+  `WORLDS` blobs and decor must match `WORLDS` in `world.js`; all three later maps share the same
+  layout). Pictures are drawn with Pillow shapes plus a dark outline (`pic`, `face` for the cute eye
+  and cheek), in the style of the bee. Seeded, so re-running changes only what you edited. The map
+  station icons (`map-octopus/storm/ghost`), the `gate` and the lightning `strike` are drawn in
+  `PreloadScene`.
 
 ### Conventions used in this game
 
@@ -174,8 +215,11 @@ asset credits.
 ### Numbers Anna has tuned or may want to tune
 
 Point her at these when she says something is too easy, too hard, too fast, etc.:
-- `src/levels.js`: `LEVELS` (per level: `seconds`, `scroll`, `pillarEvery`, `gap`, bees, drops) and
-  `BOSS_FIGHT` (`health`, `powerUpAt`, `phases` with `every`, `shots`, `speed`).
+- `src/levels.js`: `LEVELS` (per level: `seconds`, `scroll`, `pillarEvery`, `gap`, `critterEvery`,
+  `critterSpeed`, `dropEvery`; per boss: `health`, `powerUpAt`, `phases` with `attack`, `every`,
+  `shots`, `speed`). `src/obstacles.js`: how critters and falling things move (`height`, `wiggle`,
+  `speed`). `src/objects/Boss.js`: `ROAM`, `ROAM_MS`, `BOB` (how much bosses move up and down),
+  `STRIKE_WARN_MS`, `CHASE_MS`.
 - `src/objects/Shooter.js`: `SHOTS_IN_FULL_BAR` (she picked 6 after trying 5 and 8), `ENERGY_REFILL`,
   `SHOT_SPEED`, `SHOT_GAP_MS`, `BUTTON_ICON_SCALE`.
 - `src/objects/Dragon.js`: `FLY_SPEED`, `STAR_MS`, `INVULNERABLE_MS`.
@@ -191,6 +235,9 @@ Point her at these when she says something is too easy, too hard, too fast, etc.
 - Power-ups: Anna asked for more ideas beyond star and heart. Offered Magnet, Zeitlupe, Münzregen and
   Mini-Drache; she hasn't picked yet. Ask her before building any.
 - Fire dragon look: also offered another colour or making it bigger; she only wanted red eyes.
+- Island groups: Claude picked the islands, critters and bosses of groups 2–4 (see the table); ask
+  Anna whether she wants to change any. Ideas not built: island views (building) on the later
+  islands, music per group.
 - Not yet tested on a real iPhone (only Chrome with touch emulation).
 - Once, in a long SwiftShader test run, the finale title rendered partly cut off; it didn't happen
   again in later runs. Worth a look on a real device.

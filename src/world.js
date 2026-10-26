@@ -15,6 +15,16 @@ export const THEMES = {
   reef: { sky: '#3aa6d6', splash: [0xbff4ff, 0xffffff], bubbles: true, critter: 'fish', drop: 'bubble' },
   treasure: { sky: '#ffd9a0', splash: [0x8a8aa0, 0xffffff], critter: 'parrot', drop: 'cannonball' },
   deep: { sky: '#16406e', splash: [0x7a5ab0, 0x3a2560], bubbles: true },
+  // Himmelsinseln
+  cloud: { sky: '#cfeaff', splash: [0xffffff, 0xd8ecff], critter: 'raincloud', drop: 'hail' },
+  colors: { sky: '#ffe8f6', splash: [0xff9fd0, 0x5fe3ff, 0xffe066], critter: 'butterfly', drop: 'rainbowDrop' },
+  moon: { sky: '#141238', splash: [0xffb13b, 0xfff3b0], twinkle: true, critter: 'ufo', drop: 'meteor' },
+  storm: { sky: '#2a2f4a', splash: [0xffe066, 0xffffff] },
+  // Zauberinseln
+  mushroom: { sky: '#c8ecd0', splash: [0xd8f070, 0xf4ffb0], critter: 'firefly', drop: 'spore' },
+  spooky: { sky: '#3a2a5e', splash: [0xff9a3c, 0xffd84a], twinkle: true, critter: 'bat', drop: 'pumpkin' },
+  crystal: { sky: '#d6efff', splash: [0x8fe8ff, 0xffffff], critter: 'crystal', drop: 'icicle' },
+  ghost: { sky: '#241a3a', splash: [0xf4f0ff, 0xc9bfe8], twinkle: true },
 };
 
 // The island groups, one world map each, played one after the other. In each group:
@@ -93,6 +103,44 @@ export const WORLDS = [
       gate: [446, 100],
       icon: 'map-octopus',
       gateHint: 'Bei der Krakeninsel glitzert etwas...',
+    },
+  },
+  {
+    name: 'Himmelsinseln',
+    map: 'map-sky',
+    shop: { x: 96, y: 184 },
+    back: [26, 36],
+    islands: [
+      { name: 'Wolkeninsel', theme: 'cloud', label: [100, 258], stations: [[50, 220], [100, 226], [148, 210]] },
+      { name: 'Regenbogeninsel', theme: 'colors', label: [232, 46], stations: [[196, 112], [232, 120], [268, 100]] },
+      { name: 'Mondinsel', theme: 'moon', label: [340, 258], stations: [[302, 210], [342, 224], [382, 212]] },
+    ],
+    boss: {
+      name: 'Gewitterinsel',
+      theme: 'storm',
+      label: [428, 62],
+      stations: [[424, 118]],
+      gate: [446, 100],
+      icon: 'map-storm',
+      gateHint: 'Bei der Gewitterinsel glitzert etwas...',
+    },
+  },
+  {
+    name: 'Zauberinseln',
+    map: 'map-magic',
+    shop: { x: 96, y: 184 },
+    back: [26, 36],
+    islands: [
+      { name: 'Pilzinsel', theme: 'mushroom', label: [100, 258], stations: [[50, 220], [100, 226], [148, 210]] },
+      { name: 'Gruselinsel', theme: 'spooky', label: [232, 46], stations: [[196, 112], [232, 120], [268, 100]] },
+      { name: 'Kristallinsel', theme: 'crystal', label: [340, 258], stations: [[302, 210], [342, 224], [382, 212]] },
+    ],
+    boss: {
+      name: 'Geisterinsel',
+      theme: 'ghost',
+      label: [428, 62],
+      stations: [[424, 118]],
+      icon: 'map-ghost',
     },
   },
 ];

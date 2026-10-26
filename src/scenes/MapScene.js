@@ -37,7 +37,7 @@ const TEXT = { fontFamily: FONT, fontStyle: 'bold', color: '#ffffff', stroke: '#
 
 // Where to put the clouds that hide an island you can't visit yet (around the island's middle).
 const CLOUD_SPOTS = [[-38, -16], [0, -24], [38, -14], [-26, 8], [24, 10], [0, -2]];
-const THEMES_WITH_TWINKLES = ['stars']; // islands where little stars blink over the map
+const THEMES_WITH_TWINKLES = ['stars', 'moon']; // islands where little stars blink over the map
 
 // The world map of one island group: fly the dragon to a level (or the shop) and go in. A
 // glittering gate leads to the next group once its boss is beaten, and another one leads back.

@@ -212,6 +212,27 @@ export class PreloadScene extends Phaser.Scene {
     octopus.fillStyle(0xffffff).fillRect(2, 3, 2, 2).fillRect(6, 3, 2, 2);
     octopus.fillStyle(0x2b1d2e).fillRect(2, 4, 1, 1).fillRect(6, 4, 1, 1);
     octopus.generateTexture('map-octopus', 10, 10).destroy();
+
+    // The Gewitterinsel's station: a little lightning bolt.
+    const bolt = this.add.graphics();
+    bolt.fillStyle(0xc77d00).fillPoints([{ x: 5, y: 0 }, { x: 1, y: 6 }, { x: 4, y: 6 }, { x: 2, y: 11 }, { x: 8, y: 4 }, { x: 5, y: 4 }, { x: 7, y: 0 }], true);
+    bolt.fillStyle(0xffe066).fillPoints([{ x: 5, y: 1 }, { x: 2.5, y: 5.5 }, { x: 5, y: 5.5 }, { x: 3.5, y: 9 }, { x: 7, y: 4.5 }, { x: 4.5, y: 4.5 }, { x: 6, y: 1 }], true);
+    bolt.generateTexture('map-storm', 9, 12).destroy();
+
+    // The Geisterinsel's station: a little white ghost.
+    const ghost = this.add.graphics();
+    ghost.fillStyle(0xf4f0ff).fillEllipse(4.5, 4, 9, 8).fillRect(0, 4, 9, 4);
+    ghost.fillTriangle(0, 8, 3, 8, 1.5, 10).fillTriangle(3, 8, 6, 8, 4.5, 10).fillTriangle(6, 8, 9, 8, 7.5, 10);
+    ghost.fillStyle(0x2b1d2e).fillRect(2, 3, 1, 2).fillRect(5, 3, 1, 2);
+    ghost.generateTexture('map-ghost', 9, 10).destroy();
+
+    // A lightning strike from the sky down to the ground (stretched to the ground's height in the game).
+    const strike = this.add.graphics();
+    const zigzag = [[10, 0], [5, 30], [13, 60], [6, 95], [14, 130], [7, 165], [13, 200], [9, 234]].map(([x, y]) => ({ x, y }));
+    strike.lineStyle(8, 0xffe066, 0.5).strokePoints(zigzag);
+    strike.lineStyle(4, 0xffe066).strokePoints(zigzag);
+    strike.lineStyle(2, 0xffffff).strokePoints(zigzag);
+    strike.generateTexture('strike', 20, 234).destroy();
   }
 
   // What the dragons spit (see SHOTS in src/objects/Shooter.js). Marshmallow uses the food picture.
