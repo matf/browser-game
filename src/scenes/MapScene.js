@@ -100,10 +100,7 @@ export class MapScene extends Phaser.Scene {
       .setDepth(10)
       .setInteractive({ useHandCursor: true })
       .on('pointerdown', () => this.toMenu());
-    const views = this.worldIndex === 0; // only the first group's islands can be visited
-    const hint = IS_TOUCH
-      ? `Tippe auf ein Level${views ? ' oder eine Insel' : ''}!`
-      : `Pfeiltasten: wählen   Leertaste: los!${views ? '   I: Insel' : ''}`;
+    const hint = IS_TOUCH ? 'Tippe auf ein Level oder eine Insel!' : 'Pfeiltasten: wählen   Leertaste: los!   I: Insel';
     this.add.text(WIDTH / 2, 14, hint, { ...TEXT, fontSize: '10px' }).setOrigin(0.5).setResolution(4).setDepth(10);
 
     // Key events instead of checking keys every frame, so even a very short tap counts.
@@ -174,10 +171,9 @@ export class MapScene extends Phaser.Scene {
     }
   }
 
-  // Tapping an island (not one of its stations) opens the island view (only islands that have one).
+  // Tapping an island (not one of its stations) opens the island view.
   addIslandTaps() {
-    if (this.worldIndex !== 0) return;
-    for (const island of [...ISLANDS, ...HOME_ISLANDS]) {
+    for (const island of [...this.world.islands, ...(this.worldIndex === 0 ? HOME_ISLANDS : [])]) {
       const [x, y, rx, ry] = island.area;
       this.add
         .zone(x, y, rx * 2, ry * 2)
@@ -627,8 +623,8 @@ export class MapScene extends Phaser.Scene {
     });
   }
 
-  // Go walking on an island: a level island that is open, or an island without levels. Only the
-  // islands of the first group have an island view.
+  // Go walking on an island: a level island that is open, or an island without levels (not the
+  // boss islands).
   visitIsland(island) {
     if (this.leaving || this.question) return;
     if (!ISLANDS.includes(island) && !HOME_ISLANDS.includes(island)) return;

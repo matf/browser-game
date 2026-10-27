@@ -4,7 +4,8 @@ Usage: python -I tools/make_worlds.py <tiny-town tilemap_packed.png> public/asse
 
 Needs Pillow and Kenney's Tiny Town pack (like tools/make_assets.py). Reads the green *-flowers.png
 level pictures from the assets folder and writes, for every new island theme, its ground, hills,
-pillars and falling thing, the critters that fly at you, the bosses, and one map per island group.
+pillars and falling thing, the critters that fly at you, the bosses, one map per island group and
+the big island-<theme>.png of each level island (island view, for building).
 Everything is seeded, so running it again gives the same pictures. The map positions in WORLDS below
 must match src/world.js. With a debug folder, it also writes big previews there.
 """
@@ -641,10 +642,12 @@ def crystal_rock(color):
 # One map per island group. Positions must match WORLDS in src/world.js.
 #   sea, wave: the water colours. islands: blobs (x, y, radius x, radius y), grass colour swap,
 #   decor (picture, x, y with x/y the bottom middle). little: small rocks for the gate back.
+#   themes: the themes of the three level islands (for their island views below).
 WORLDS = [
     {
         'name': 'map-sea',
         'sea': '#3fb3dc', 'wave': '#6ccbea', 'shallow': '#7fd6ef', 'foam': '#e6fbff', 'seed': 21,
+        'themes': ['beach', 'reef', 'treasure'],
         'islands': [
             {'blobs': [(100, 194, 80, 44), (58, 210, 40, 28), (146, 202, 40, 30)],
              'grass': ['#f7dc96', '#ecc878', '#fff0c0', '#d9b05a'],
@@ -669,6 +672,7 @@ WORLDS = [
     {
         'name': 'map-sky',
         'sea': '#8fd0f8', 'wave': '#c0e6ff', 'shallow': '#b4e2ff', 'foam': '#ffffff', 'seed': 31,
+        'themes': ['cloud', 'colors', 'moon'],
         'islands': [
             {'blobs': [(100, 194, 80, 44), (58, 210, 40, 28), (146, 202, 40, 30)],
              'grass': ['#f4f8ff', '#dfe9f8', '#ffffff', '#c8d8f0'],
@@ -691,6 +695,7 @@ WORLDS = [
     {
         'name': 'map-magic',
         'sea': '#4a3f8a', 'wave': '#6a5aaa', 'shallow': '#5e50a0', 'foam': '#c9b8ff', 'seed': 41,
+        'themes': ['mushroom', 'spooky', 'crystal'],
         'islands': [
             {'blobs': [(100, 194, 80, 44), (58, 210, 40, 28), (146, 202, 40, 30)],
              'grass': GRASS,
@@ -741,3 +746,59 @@ for world in WORLDS:
             layer.alpha_composite(thing, (x - thing.width // 2, y - thing.height))
         sea.alpha_composite(layer)
     save(sea, world['name'])
+
+# --- Island views ------------------------------------------------------------------------------
+# One big island per level island (island-beach.png, ...), for walking around and building, like
+# the first group's in tools/make_assets.py. BIG_ISLAND must match ISLAND_GROUND in src/world.js.
+# The decorations stay near the edge, so the middle is free for building.
+BIG_ISLAND = [(240, 160, 196, 78), (120, 176, 92, 58), (362, 150, 100, 64)]
+BIG_CLIFF = 8
+EDGE_SPOTS = [(62, 160), (92, 140), (426, 120), (48, 214), (432, 196), (150, 228), (330, 214), (400, 110)]
+BIG_DECOR = {  # per island theme: what stands at EDGE_SPOTS (in that order)
+    'beach': [palm(), palm(), palm(), shell(), starfish(), shell(), starfish(), palm()],
+    'reef': [coral('#ff7f9f'), coral('#ffb13b'), coral('#c86ad8'), starfish(), shell(), coral('#ff7f9f'), starfish(),
+             coral('#5fb3ff')],
+    'treasure': [palm(), palm(), flag(), BUSH, chest(), BUSH, chest(), palm()],
+    'cloud': [puff(26), puff(20), puff(24), little_star(), puff(18), little_star(), puff(16), puff(20)],
+    'colors': [mini_rainbow(), little_star(), mini_rainbow(), little_star(), puff(18), little_star(), little_star(), puff(16)],
+    'moon': [crater(), little_star(), crater(), crater(), little_star(), crater(), little_star(), crater()],
+    'mushroom': [big_mushroom('#e84537'), big_mushroom('#c06ad8'), big_mushroom('#5fb3ff'), MUSHROOMS,
+                 big_mushroom('#e84537'), MUSHROOMS, MUSHROOMS, big_mushroom('#c06ad8')],
+    'spooky': [grave(), pic(14, 14, pumpkin), grave(), pic(14, 14, pumpkin), grave(), pic(14, 14, pumpkin), grave(),
+               grave()],
+    'crystal': [crystal_rock('#8fe8ff'), crystal_rock('#ff9fd0'), crystal_rock('#c9a7ff'), crystal_rock('#8fe8ff'),
+                crystal_rock('#ff9fd0'), crystal_rock('#c9a7ff'), crystal_rock('#8fe8ff'), crystal_rock('#c9a7ff')],
+}
+big_mask = blob_mask(BIG_ISLAND)
+
+
+def big(thing):  # the map decorations are small, so they stand twice as big on the island view
+    return thing.resize((thing.width * 2, thing.height * 2), Image.NEAREST)
+
+
+for world in WORLDS:
+    for isl, theme in zip(world['islands'], world['themes']):
+        rng = random.Random(world['seed'] + len(theme))
+        sea = Image.new('RGBA', (W, H), hexc(world['sea']))
+        d = ImageDraw.Draw(sea)
+        for _ in range(40):
+            x, y = rng.randrange(0, W), rng.randrange(0, H)
+            d.line([(x, y), (x + 2, y - 1), (x + 4, y)], fill=hexc(world['wave']))
+        sea.paste(hexc(world['shallow']), (0, 0), grow(big_mask, 10))
+        sea.paste(hexc(world['foam']), (0, 0), ImageChops.subtract(grow(big_mask, 3), big_mask))
+        layer = Image.new('RGBA', (W, H))
+        top = ImageChops.multiply(ImageChops.offset(big_mask, 0, -BIG_CLIFF), big_mask)
+        layer.paste(CLIFF, (0, 0), big_mask)
+        layer.paste(SAND_DARK, (0, 0), ImageChops.offset(top, 0, 3))
+        layer.paste(SAND, (0, 0), top)
+        tex = Image.new('RGBA', (W, H))
+        for ty in range(0, H, 16):
+            for tx in range(0, W, 16):
+                tex.alpha_composite(tt(rng.choice([0, 0, 0, 1])), (tx, ty))
+        layer.paste(tex, (0, 0), shrink(top, 7))
+        layer = recolor(layer, dict(zip(GRASS, isl['grass'])))
+        decor = [(big(thing), x, y) for thing, (x, y) in zip(BIG_DECOR[theme], EDGE_SPOTS)]
+        for thing, x, y in sorted(decor, key=lambda e: e[2]):
+            layer.alpha_composite(thing, (x - thing.width // 2, y - thing.height))
+        sea.alpha_composite(layer)
+        save(sea, f'island-{theme}')

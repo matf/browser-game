@@ -32,7 +32,7 @@ export const THEMES = {
 //   shop:    where the shop house stands (x, y is the bottom middle of the house)
 //   islands: three levels each. stations: the spot of each level on the map (x, y in pixels).
 //            label: where the island's name is written. area: the island on the map (x, y, radius
-//            x, radius y); tapping there opens the island view (only islands with a view picture).
+//            x, radius y); tapping there opens the island view (island-<theme>.png).
 //   boss:    the island with one station, the fight against the group's big enemy. icon: the
 //            picture on its station. gate: the glittering gate to the next group that opens once
 //            the boss is beaten (gateHint: what the fireworks say about it).
@@ -91,9 +91,9 @@ export const WORLDS = [
     shop: { x: 96, y: 184 },
     back: [26, 36],
     islands: [
-      { name: 'Strandinsel', theme: 'beach', label: [100, 258], stations: [[50, 220], [100, 226], [148, 210]] },
-      { name: 'Korallenriff', theme: 'reef', label: [232, 46], stations: [[196, 112], [232, 120], [268, 100]] },
-      { name: 'Schatzinsel', theme: 'treasure', label: [340, 258], stations: [[302, 210], [342, 224], [382, 212]] },
+      { name: 'Strandinsel', theme: 'beach', label: [100, 258], stations: [[50, 220], [100, 226], [148, 210]], area: [100, 196, 84, 44] },
+      { name: 'Korallenriff', theme: 'reef', label: [232, 46], stations: [[196, 112], [232, 120], [268, 100]], area: [230, 98, 72, 40] },
+      { name: 'Schatzinsel', theme: 'treasure', label: [340, 258], stations: [[302, 210], [342, 224], [382, 212]], area: [340, 202, 74, 42] },
     ],
     boss: {
       name: 'Krakeninsel',
@@ -111,9 +111,9 @@ export const WORLDS = [
     shop: { x: 96, y: 184 },
     back: [26, 36],
     islands: [
-      { name: 'Wolkeninsel', theme: 'cloud', label: [100, 258], stations: [[50, 220], [100, 226], [148, 210]] },
-      { name: 'Regenbogeninsel', theme: 'colors', label: [232, 46], stations: [[196, 112], [232, 120], [268, 100]] },
-      { name: 'Mondinsel', theme: 'moon', label: [340, 258], stations: [[302, 210], [342, 224], [382, 212]] },
+      { name: 'Wolkeninsel', theme: 'cloud', label: [100, 258], stations: [[50, 220], [100, 226], [148, 210]], area: [100, 196, 84, 44] },
+      { name: 'Regenbogeninsel', theme: 'colors', label: [232, 46], stations: [[196, 112], [232, 120], [268, 100]], area: [230, 98, 72, 40] },
+      { name: 'Mondinsel', theme: 'moon', label: [340, 258], stations: [[302, 210], [342, 224], [382, 212]], area: [340, 202, 74, 42] },
     ],
     boss: {
       name: 'Gewitterinsel',
@@ -131,9 +131,9 @@ export const WORLDS = [
     shop: { x: 96, y: 184 },
     back: [26, 36],
     islands: [
-      { name: 'Pilzinsel', theme: 'mushroom', label: [100, 258], stations: [[50, 220], [100, 226], [148, 210]] },
-      { name: 'Gruselinsel', theme: 'spooky', label: [232, 46], stations: [[196, 112], [232, 120], [268, 100]] },
-      { name: 'Kristallinsel', theme: 'crystal', label: [340, 258], stations: [[302, 210], [342, 224], [382, 212]] },
+      { name: 'Pilzinsel', theme: 'mushroom', label: [100, 258], stations: [[50, 220], [100, 226], [148, 210]], area: [100, 196, 84, 44] },
+      { name: 'Gruselinsel', theme: 'spooky', label: [232, 46], stations: [[196, 112], [232, 120], [268, 100]], area: [230, 98, 72, 40] },
+      { name: 'Kristallinsel', theme: 'crystal', label: [340, 258], stations: [[302, 210], [342, 224], [382, 212]], area: [340, 202, 74, 42] },
     ],
     boss: {
       name: 'Geisterinsel',
@@ -161,8 +161,8 @@ WORLDS.forEach((world, w) => {
   world.bossLevel = LEVEL_SPOTS.length - 1;
 });
 
-// The islands of the first group (they have an island view for building).
-export const ISLANDS = WORLDS[0].islands;
+// All level islands, in playing order (each has an island view for building).
+export const ISLANDS = WORLDS.flatMap((world) => world.islands);
 
 // Islands without levels, where dragons just live (free, always open). The Brutinsel has the nest
 // with the dragon eggs.

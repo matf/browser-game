@@ -105,8 +105,9 @@ bosses she beats with shots (health bar); she let Claude pick the islands. Claud
 | Zauberinseln (`map-magic`) | Pilzinsel (firefly / swaying spore), Gruselinsel (bat / bouncing pumpkin), Kristallinsel (spinning crystal / icicle) | Geisterinsel: Gespenst Buhu (chasing little ghosts, aim, lob) |
 
 The gate to the next group is in the volcano (Anna: "Im Vulkan soll sich ein glitzerndes Tor
-öffnen"), later on each boss island; each later map has a gate back (top left). Only the first
-group has island views (building, residents); later islands have no `area`.
+öffnen"), later on each boss island; each later map has a gate back (top left). Every level
+island (not the boss islands) has an island view for building, the later ones too (Anna wanted them,
+but no more Brutinseln: "sonst gibt es zu viele Drachen"). Only the first map has `HOME_ISLANDS`.
 
 ### Where things live
 
@@ -117,8 +118,8 @@ group has island views (building, residents); later islands have no `area`.
   remembers these numbers; the first group is 0–12 as before, 12 = fire dragon, then 13–22, 23–32,
   33–42). Helpers: `islandOf`, `worldOf`, `isBossLevel`, `lastOnIsland`, `spotPosition(spot, world)`,
   `isOpen` (open when the level before is done, so a group opens with the boss before it). Each
-  world gets `first`/`bossLevel`, each island `firstLevel`/`world`. `ISLANDS` = the first group's
-  islands (the ones with island views). Also `HOME_ISLANDS`, `ISLAND_GROUND`/`onIslandGround`.
+  world gets `first`/`bossLevel`, each island `firstLevel`/`world`. `ISLANDS` = all level islands
+  of all groups (the ones with island views). Also `HOME_ISLANDS`, `ISLAND_GROUND`/`onIslandGround`.
 - `src/obstacles.js`: `CRITTERS` (spritesheet, frame size, hit body, `motion` bob/zigzag/swoop/spin)
   and `DROPS` (texture, body, `motion` fall/rise/bounce/arc/sway/streak, speed, spin).
   `src/objects/Critter.js` flies them; `GameScene.spawnDrop`/`moveDrop` does the falling things.
@@ -198,7 +199,9 @@ group has island views (building, residents); later islands have no `area`.
   venv; `python -I tools/make_worlds.py <tilemap_packed.png> public/assets [preview-folder]`): per
   theme `ground/hills/pillar-top/pillar-bottom-<theme>.png` (colour swaps of the `*-flowers.png`
   originals in `THEMES`) and `drop-<theme>.png`, the `critter-*.png` spritesheets, `boss-octopus`,
-  `boss-storm` (Wolke's row recoloured), `boss-ghost`, and the maps `map-sea/sky/magic.png` (its
+  `boss-storm` (Wolke's row recoloured), `boss-ghost`, the maps `map-sea/sky/magic.png` and the
+  island views `island-<theme>.png` of their level islands (`BIG_DECOR`: map decor drawn twice as big
+  at `EDGE_SPOTS`) (the maps'
   `WORLDS` blobs and decor must match `WORLDS` in `world.js`; all three later maps share the same
   layout). Pictures are drawn with Pillow shapes plus a dark outline (`pic`, `face` for the cute eye
   and cheek), in the style of the bee. Seeded, so re-running changes only what you edited. The map
@@ -242,8 +245,8 @@ Point her at these when she says something is too easy, too hard, too fast, etc.
   Mini-Drache; she hasn't picked yet. Ask her before building any.
 - Fire dragon look: also offered another colour or making it bigger; she only wanted red eyes.
 - Island groups: Claude picked the islands, critters and bosses of groups 2–4 (see the table); ask
-  Anna whether she wants to change any. Ideas not built: island views (building) on the later
-  islands, music per group.
+  Anna whether she wants to change any. Ideas not built: music per group; more islands without
+  levels on the later maps (Anna said no more Brutinseln).
 - Not yet tested on a real iPhone (only Chrome with touch emulation).
 
 ## Working with the daughter
