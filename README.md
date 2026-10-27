@@ -37,7 +37,8 @@ https://matf.github.io/browser-game/
   dragons without a house fly around high over the islands, spread over all of them. Tap a dragon
   to see its name.
 - Herbstinsel (small island bottom middle, no levels, free): just for living and building.
-- Brutinsel (the small island top left, no levels): every day there is a new dragon egg in the nest,
+- Brutinsel (the small island top left, no levels): every day there is a new dragon egg in the nest
+  (only while one of your houses is free),
   and the next day a baby hatches out of it: a new dragon in a colour no other dragon has, with its
   own name. When it hatches, you choose what it will spit. Babies stroll around the nest and grow
   up within a day; then they move into a free house (or stay at the nest when there is none).

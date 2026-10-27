@@ -1,6 +1,7 @@
-// The Brutinsel: every day there is a new dragon egg in the nest, and the next day a baby dragon
-// hatches out of it. The babies are new dragons: one of the dragon shapes in a colour no other
+// The Brutinsel: every day there is a new dragon egg in the nest (but only while a house is free,
+// Anna's choice, so there aren't too many dragons), and the next day a baby dragon hatches out of it. The babies are new dragons: one of the dragon shapes in a colour no other
 // dragon has. They grow up by themselves, and once grown they move into a free house.
+import { DECO } from './shop.js';
 
 export const GROW_HOURS = 24; // how long a baby takes to grow up
 export const BABY_SCALE = 0.3; // size of a just-hatched baby (1 = as big as in the levels)
@@ -20,8 +21,17 @@ export function today(now = new Date()) {
   return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
 }
 
-// A visit to the nest: an egg from an earlier day hatches, and if there was no egg yet today, a new
-// one is laid. Changes the save; returns { hatched (the new baby or null), laid (true/false) }.
+// How many houses (placed decorations a dragon can live in) have no dragon yet. Every dragon you
+// have counts, babies too (they will need a house when they are grown), except the one you fly with.
+export function freeHouses(save) {
+  const houses = save.placed.filter((thing) => DECO.find((d) => d.key === thing.key)?.home).length;
+  const dragons = save.dragons.length + save.hatchlings.length - 1;
+  return houses - dragons;
+}
+
+// A visit to the nest: an egg from an earlier day hatches, and if there was no egg yet today and a
+// house is free, a new one is laid. Changes the save; returns { hatched (the new baby or null),
+// laid (true/false), noHouse (true when there was no egg today only because no house is free) }.
 export function visitNest(save, now = Date.now()) {
   const day = today(new Date(now));
   let hatched = null;
@@ -31,12 +41,17 @@ export function visitNest(save, now = Date.now()) {
     save.egg = null;
   }
   let laid = false;
+  let noHouse = false;
   if (!save.egg && save.lastEgg !== day) {
-    save.egg = { day };
-    save.lastEgg = day;
-    laid = true;
+    if (freeHouses(save) > 0) {
+      save.egg = { day };
+      save.lastEgg = day;
+      laid = true;
+    } else {
+      noHouse = true;
+    }
   }
-  return { hatched, laid };
+  return { hatched, laid, noHouse };
 }
 
 function newHatchling(save, now) {

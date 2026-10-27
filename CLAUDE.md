@@ -81,7 +81,10 @@ asset credits.
   wanted islands just for living and let Claude pick the look; autumn, with `scatter_leaves`).
 - **Brutinsel** (`src/hatchery.js`): `visitNest` runs when the Brutinsel is shown. An egg from an
   earlier day (`save.egg.day`, local date string) hatches into `save.hatchlings`
-  (`{ id, name, shape, tint, born, shot }`), then there is a new egg if `save.lastEgg` isn't today.
+  (`{ id, name, shape, tint, born, shot }`), then there is a new egg if `save.lastEgg` isn't today and a house is free (`freeHouses`: placed
+  `home` decorations minus all your dragons, babies too, except the one you fly with; Anna's choice so
+  there aren't too many dragons). Otherwise the nest says "Das Nest ist leer", and the egg comes as soon
+  as a house is placed (`nestWaiting`, checked in `moveIn`).
   A hatchling is a shape from `dragons-white.png` (made by `tools/make_dragons.py`) tinted with one
   of `COLORS` (none like the 9 shop dragons), animation `white-<shape>-fly`, and a name from `NAMES`.
   After hatching, `chooseShot` asks what it spits (a SHOTS key; asked again on Mitfliegen if

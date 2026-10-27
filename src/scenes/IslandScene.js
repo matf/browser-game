@@ -4,7 +4,7 @@ import { BuildMode } from '../objects/BuildMode.js';
 import { Resident } from '../objects/Resident.js';
 import { DRAGONS } from './PreloadScene.js';
 import { loadSave, writeSave } from '../save.js';
-import { hatchlingLook, growth, visitNest } from '../hatchery.js';
+import { freeHouses, hatchlingLook, growth, visitNest } from '../hatchery.js';
 import { FONT, WIDTH, HEIGHT, ZOOM, setupCamera } from '../view.js';
 import { IS_TOUCH } from '../touch.js';
 import { addMuteButton, play, startMusic } from '../sound.js';
@@ -180,6 +180,12 @@ export class IslandScene extends Phaser.Scene {
     const babies = this.save.hatchlings.filter((h) => growth(h) < 1).map((h) => hatchlingLook(h));
     for (const look of babies) this.addNestDragon(look);
     this.started = true;
+    // The nest was waiting for a free house, and now there is one: today's egg comes after all.
+    if (this.nestWaiting && freeHouses(this.save) > 0) {
+      this.nestWaiting = false;
+      this.nestChecked = false;
+      if (this.islands[this.index].nest) this.checkNest();
+    }
   }
 
   // --- The Brutinsel ------------------------------------------------------------------------
@@ -202,15 +208,18 @@ export class IslandScene extends Phaser.Scene {
     return resident;
   }
 
-  // On the Brutinsel (once per visit): yesterday's egg hatches, and today's egg appears.
+  // On the Brutinsel (once per visit): yesterday's egg hatches, and today's egg appears (if a house
+  // is free; otherwise it says so).
   checkNest() {
     if (this.nestChecked) return;
     this.nestChecked = true;
-    const { hatched, laid } = visitNest(this.save);
+    const { hatched, laid, noHouse } = visitNest(this.save);
+    this.nestWaiting = noHouse;
     writeSave(this.save);
     const { x, y } = this.islands[this.nestIndex].nest;
     const left = this.nestIndex * WIDTH;
     const layEgg = () => {
+      if (noHouse) this.banner('Das Nest ist leer', 'Ein neues Ei kommt, wenn ein Haus frei ist.');
       if (!laid) return;
       this.egg.setVisible(true).setScale(0);
       this.tweens.add({ targets: this.egg, scale: 1, duration: 400, ease: 'Back.Out' });
