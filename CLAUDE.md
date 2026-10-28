@@ -135,7 +135,7 @@ but no more Brutinseln: "sonst gibt es zu viele Drachen"). Only the first map ha
   (`BOSSES`: look of each boss) hovers right, follows your height, floats up and down by itself
   (`ROAM`, Anna wanted it to move more) and attacks (mouth glows first): `aim`, `lob` (arcs with
   gravity), `strike` (lightning: a blinking line, then a `strike` bolt; shots fly through it,
-  `obstacle.strike`), `chase` (little ghosts follow you for `CHASE_MS`). A power-up always comes at
+  `obstacle.lightning`), `chase` (little ghosts follow you for `CHASE_MS`). A power-up always comes at
   `powerUpAt`. Each shot hit takes one `health` (the HUD shows a red boss bar instead of the rainbow
   bar); at 0 it says its `giveUp` line and flies away, the rainbow comes, and the win goes to
   `finale` (`FinaleScene`: fireworks, then "Zur Weltkarte"; after the last group it says "Danke fürs

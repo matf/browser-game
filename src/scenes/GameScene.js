@@ -359,7 +359,7 @@ export class GameScene extends Phaser.Scene {
   // A shot hit something: bees spin away, raindrops and fireballs go puff, pillars stop it, and
   // a boss loses some health. Shots fly through lightning.
   onShotHit(shot, obstacle) {
-    if (!shot.active || !obstacle.active || obstacle.strike) return;
+    if (!shot.active || !obstacle.active || obstacle.lightning) return;
     this.shooter.pop(shot);
     if (obstacle instanceof Critter || obstacle.pops) this.bonk(obstacle);
     else if (obstacle === this.boss) {
@@ -457,7 +457,7 @@ export class GameScene extends Phaser.Scene {
     this.boss.giveUp();
     for (const obstacle of this.obstacles.getChildren().slice()) {
       if (obstacle.pops) this.popDrop(obstacle);
-      else if (obstacle.strike) obstacle.destroy();
+      else if (obstacle.lightning) obstacle.destroy();
     }
     play(this, 'nope');
     const say = this.add

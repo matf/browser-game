@@ -147,7 +147,7 @@ export class Boss extends Phaser.Physics.Arcade.Sprite {
     this.shots = this.shots.filter((shot) => shot.active);
     for (const shot of this.shots) {
       if (shot.chaseUntil) this.chase(shot, elapsed, delta);
-      if (!shot.strike) this.trail.emitParticleAt(shot.x, shot.y, 1);
+      if (!shot.lightning) this.trail.emitParticleAt(shot.x, shot.y, 1);
     }
     if (this.gaveUp) return;
 
@@ -231,7 +231,7 @@ export class Boss extends Phaser.Physics.Arcade.Sprite {
         if (this.gaveUp) return;
         play(this.scene, 'fireball');
         const bolt = this.obstacles.create(x, 0, 'strike').setOrigin(0.5, 0).setDepth(this.depth);
-        bolt.strike = true; // shots fly through it
+        bolt.lightning = true; // shots fly through it (not `strike`: that is the boss's attack method)
         bolt.setDisplaySize(bolt.width, this.groundY);
         bolt.body.setSize(8, bolt.height).setOffset(bolt.width / 2 - 4, 0);
         this.shots.push(bolt);
